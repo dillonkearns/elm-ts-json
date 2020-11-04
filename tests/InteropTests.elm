@@ -16,6 +16,14 @@ suite =
                         , output = "Hello!"
                         , typeDef = "string"
                         }
+        , test "list string" <|
+            \() ->
+                list string
+                    |> expectInterop
+                        { input = "[\"Item 1\", \"Item 2\"]"
+                        , output = [ "Item 1", "Item 2" ]
+                        , typeDef = "string[]"
+                        }
         ]
 
 
@@ -39,6 +47,14 @@ typeDef (Interop jsonDecoder typeDef_) =
 string : Interop String
 string =
     Interop Json.Decode.string "string"
+
+
+
+--list : Interop decodesTo -> Interop (List decodesTo)
+
+
+list (Interop decoder1 annotation1) =
+    Interop (Json.Decode.list decoder1) (annotation1 ++ "[]")
 
 
 type Interop decodesTo
