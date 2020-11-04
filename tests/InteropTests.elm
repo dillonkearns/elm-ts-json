@@ -72,27 +72,24 @@ encoder interop =
     \_ -> Encode.list Encode.string [ "Item 1", "Item 2" ]
 
 
-typeDef (Interop jsonDecoder typeDef_) =
+typeDef (Interop jsonDecoder encoder_ typeDef_) =
     typeDef_
 
 
 string : Interop String
 string =
-    Interop Json.Decode.string "string"
+    Interop Json.Decode.string Encode.string "string"
 
 
-
---list : Interop decodesTo -> Interop (List decodesTo)
-
-
-list (Interop decoder1 annotation1) =
-    Interop (Json.Decode.list decoder1) (annotation1 ++ "[]")
+list : Interop decodesTo -> Interop (List decodesTo)
+list (Interop decoder1 encoder1 annotation1) =
+    Interop (Json.Decode.list decoder1) (Encode.list encoder1) (annotation1 ++ "[]")
 
 
 type Interop decodesTo
-    = Interop (Json.Decode.Decoder decodesTo) String
+    = Interop (Json.Decode.Decoder decodesTo) (decodesTo -> Encode.Value) String
 
 
 decoder : Interop value -> Json.Decode.Decoder value
-decoder (Interop jsonDecoder typeDef_) =
+decoder (Interop jsonDecoder encoder_ typeDef_) =
     jsonDecoder
