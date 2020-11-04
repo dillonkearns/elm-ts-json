@@ -41,8 +41,8 @@ suite =
 
 
 expectDecodes :
-    { input : String, output : value, typeDef : String }
-    -> Interop value
+    { input : String, output : decodesTo, typeDef : String }
+    -> Interop decodesTo encodesFrom
     -> Expect.Expectation
 expectDecodes expect interop =
     expect.input
@@ -54,8 +54,8 @@ expectDecodes expect interop =
 
 
 expectEncodes :
-    { output : String, input : value, typeDef : String }
-    -> Interop value
+    { output : String, input : encodesFrom, typeDef : String }
+    -> Interop decodesTo encodesFrom
     -> Expect.Expectation
 expectEncodes expect interop =
     expect.input
@@ -67,7 +67,7 @@ expectEncodes expect interop =
             ]
 
 
-encoder : Interop value -> (value -> Encode.Value)
+encoder : Interop decodesTo encodesFrom -> (encodesFrom -> Encode.Value)
 encoder interop =
     \_ -> Encode.list Encode.string [ "Item 1", "Item 2" ]
 
@@ -76,20 +76,20 @@ typeDef (Interop jsonDecoder encoder_ typeDef_) =
     typeDef_
 
 
-string : Interop String
+string : Interop String String
 string =
     Interop Json.Decode.string Encode.string "string"
 
 
-list : Interop decodesTo -> Interop (List decodesTo)
+list : Interop decodesTo encodesFrom -> Interop (List decodesTo) (List encodesFrom)
 list (Interop decoder1 encoder1 annotation1) =
     Interop (Json.Decode.list decoder1) (Encode.list encoder1) (annotation1 ++ "[]")
 
 
-type Interop decodesTo
-    = Interop (Json.Decode.Decoder decodesTo) (decodesTo -> Encode.Value) String
+type Interop decodesTo encodesFrom
+    = Interop (Json.Decode.Decoder decodesTo) (encodesFrom -> Encode.Value) String
 
 
-decoder : Interop value -> Json.Decode.Decoder value
+decoder : Interop decodesTo encodesFrom -> Json.Decode.Decoder decodesTo
 decoder (Interop jsonDecoder encoder_ typeDef_) =
     jsonDecoder
