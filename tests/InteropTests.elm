@@ -36,8 +36,48 @@ suite =
                             , output = "[\"Item 1\",\"Item 2\"]"
                             , typeDef = "string[]"
                             }
+            , test "custom type" <|
+                \() ->
+                    list string
+                        |> expectEncodes
+                            { input = [ "Item 1", "Item 2" ]
+                            , output = "[\"Item 1\",\"Item 2\"]"
+                            , typeDef = "string[]"
+                            }
             ]
         ]
+
+
+
+--topLevelEncoder : (encodeValue1 -> encodesFrom) -> Interop Never encodesFrom
+--initToJs : value -> Interop Never value
+
+
+initToJs =
+    Debug.todo ""
+
+
+builder : String -> (value -> toJsPayload) -> Interop Never (value -> encodesFrom) -> Interop Never encodesFrom
+builder variant function interop =
+    Debug.todo ""
+
+
+type ToJs
+    = Popup String
+    | Record { a : String, b : String }
+
+
+succeed : decodesTo -> Interop decodesTo Never
+succeed value =
+    Interop (Json.Decode.succeed value) (\_ -> Encode.null) ""
+
+
+
+--topLevelEncoderExample : Interop Never ToJs
+--topLevelEncoderExample =
+--    --succeed ()
+--    initToJs
+--        |> builder "Popup" string
 
 
 expectDecodes :
@@ -93,3 +133,18 @@ type Interop decodesTo encodesFrom
 decoder : Interop decodesTo encodesFrom -> Json.Decode.Decoder decodesTo
 decoder (Interop jsonDecoder encoder_ typeDef_) =
     jsonDecoder
+
+
+
+--example : Interop Never ToJs
+--example =
+--    Interop (Json.Decode.fail "")
+--        (\toJs ->
+--            case toJs of
+--                Popup string_ ->
+--                    ( "Popup", string_ "" )
+--
+--                Record record ->
+--                    ( "Record", string_ "" )
+--        )
+--        ""
