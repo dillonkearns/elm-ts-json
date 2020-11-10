@@ -28,7 +28,7 @@ suite =
           --                    }
           --    ],
           describe "encode"
-            [ test "list string" <|
+            [ test "object" <|
                 \() ->
                     TsPort.build
                         |> property "first" (TsPort.string .first)
