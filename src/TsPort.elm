@@ -4,34 +4,17 @@ import Json.Encode as Encode
 
 
 type Encoder encodesFrom
-    = Encoder (encodesFrom -> EncodeValue) TsType
+    = Encoder (encodesFrom -> Encode.Value) TsType
 
 
 encoder : Encoder encodesFrom -> (encodesFrom -> Encode.Value)
 encoder (Encoder encodeFn tsType_) encodesFrom =
     encodeFn encodesFrom
-        |> serializeEncodeValue
-
-
-serializeEncodeValue : EncodeValue -> Encode.Value
-serializeEncodeValue value =
-    case value of
-        Object list_ ->
-            list_
-                |> List.map
-                    (\( objectKey, objectValue, tsType ) ->
-                        ( objectKey, objectValue )
-                    )
-                |> Encode.object
 
 
 typeDef : Encoder encodesFrom -> String
 typeDef (Encoder encodeFn tsType_) =
     tsTypeToString tsType_
-
-
-type EncodeValue
-    = Object (List ( String, Encode.Value, TsType ))
 
 
 type ObjectBuilder encodesFrom
@@ -84,8 +67,13 @@ toEncoder (ObjectBuilder entries) =
     Encoder
         (\encodesFrom ->
             entries
-                |> List.map (\( key, encodeFn, tsType_ ) -> ( key, encodeFn encodesFrom, tsType_ ))
-                |> Object
+                |> List.map
+                    (\( key, encodeFn, tsType_ ) ->
+                        ( key
+                        , encodeFn encodesFrom
+                        )
+                    )
+                |> Encode.object
         )
         (entries
             |> List.map (\( key, encodeFn, tsType_ ) -> ( key, tsType_ ))
