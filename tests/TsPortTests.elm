@@ -48,15 +48,14 @@ suite =
                             , output = "\"Dillon\""
                             , typeDef = "string"
                             }
-
-            --, test "list" <|
-            --    \() ->
-            --        TsPort.list TsPort.string
-            --            |> expectEncodes
-            --                { input = [ "Item 1", "Item 2" ]
-            --                , output = "[\"Item 1\",\"Item 2\"]"
-            --                , typeDef = "string[]"
-            --                }
+            , test "list" <|
+                \() ->
+                    TsPort.list TsPort.stringNew
+                        |> expectEncodes
+                            { input = [ "Item 1", "Item 2" ]
+                            , output = "[\"Item 1\",\"Item 2\"]"
+                            , typeDef = "string[]"
+                            }
             ]
         ]
 

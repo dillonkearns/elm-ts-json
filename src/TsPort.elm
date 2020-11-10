@@ -64,28 +64,11 @@ map getter (Encoder encodeFn tsType_) =
     Encoder (\value -> value |> getter |> encodeFn) tsType_
 
 
-list : Encoder encodesFrom -> (encodesFrom -> List a) -> Encoder encodesFrom
-list (Encoder encodeFn tsType_) getter =
-    let
-        thing : a -> Encode.Value
-        thing =
-            Debug.todo ""
-    in
+list : Encoder a -> Encoder (List a)
+list (Encoder encodeFn tsType_) =
     Encoder
-        (\encodesFrom -> Encode.list thing (getter encodesFrom))
+        (\encodesFrom -> Encode.list encodeFn encodesFrom)
         (List tsType_)
-
-
-
---list : String -> (value -> List String) -> ObjectBuilder value -> ObjectBuilder value
---list keyName getter (ObjectBuilder entries) =
---    ObjectBuilder
---        (( keyName
---         , \encodesFrom -> Encode.list Encode.string (getter encodesFrom)
---         , String
---         )
---            :: entries
---        )
 
 
 personEncoder : Encoder { first : String, last : String }
@@ -122,8 +105,7 @@ tsTypeToString tsType =
             "string"
 
         List listType ->
-            --TODO
-            "[]"
+            tsTypeToString listType ++ "[]"
 
         TypeObject keyTypes ->
             "{ "
