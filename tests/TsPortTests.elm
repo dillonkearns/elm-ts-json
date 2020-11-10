@@ -3,7 +3,7 @@ module TsPortTests exposing (..)
 import Expect exposing (Expectation)
 import Json.Encode as Encode
 import Test exposing (..)
-import TsPort exposing (Encoder)
+import TsPort exposing (Encoder, property)
 
 
 suite : Test
@@ -31,8 +31,8 @@ suite =
             [ test "list string" <|
                 \() ->
                     TsPort.build
-                        |> TsPort.string "first" .first
-                        |> TsPort.string "last" .last
+                        |> property "first" (TsPort.string .first)
+                        |> property "last" (TsPort.string .last)
                         |> TsPort.toEncoder
                         |> expectEncodes
                             { input = { first = "Dillon", last = "Kearns" }

@@ -32,15 +32,22 @@ build =
     ObjectBuilder []
 
 
-string : String -> (value -> String) -> ObjectBuilder value -> ObjectBuilder value
-string keyName getter (ObjectBuilder entries) =
+property : String -> Encoder encodesFrom -> ObjectBuilder encodesFrom -> ObjectBuilder encodesFrom
+property keyName (Encoder encodeFn tsType_) (ObjectBuilder entries) =
     ObjectBuilder
         (( keyName
-         , \encodesFrom -> Encode.string (getter encodesFrom)
-         , String
+         , encodeFn
+         , tsType_
          )
             :: entries
         )
+
+
+string : (encodesFrom -> String) -> Encoder encodesFrom
+string getter =
+    Encoder
+        (\encodesFrom -> Encode.string (getter encodesFrom))
+        String
 
 
 list : String -> (value -> List String) -> ObjectBuilder value -> ObjectBuilder value
@@ -57,8 +64,8 @@ list keyName getter (ObjectBuilder entries) =
 personEncoder : Encoder { first : String, last : String }
 personEncoder =
     build
-        |> string "first" .first
-        |> string "last" .last
+        |> property "first" (string .first)
+        |> property "last" (string .last)
         |> toEncoder
 
 
