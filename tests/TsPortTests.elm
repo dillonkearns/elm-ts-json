@@ -9,30 +9,12 @@ import TsPort exposing (Encoder, property)
 suite : Test
 suite =
     describe "Interop"
-        [ --describe "decode"
-          --    [ test "string" <|
-          --        \() ->
-          --            string
-          --                |> expectDecodes
-          --                    { input = "\"Hello!\""
-          --                    , output = "Hello!"
-          --                    , typeDef = "string"
-          --                    }
-          --    , test "list string" <|
-          --        \() ->
-          --            list string
-          --                |> expectDecodes
-          --                    { input = "[\"Item 1\", \"Item 2\"]"
-          --                    , output = [ "Item 1", "Item 2" ]
-          --                    , typeDef = "string[]"
-          --                    }
-          --    ],
-          describe "encode"
+        [ describe "encode"
             [ test "object" <|
                 \() ->
                     TsPort.build
-                        |> property "first" (TsPort.stringNew |> TsPort.map .first)
-                        |> property "last" (TsPort.stringNew |> TsPort.map .last)
+                        |> property "first" (TsPort.string |> TsPort.map .first)
+                        |> property "last" (TsPort.string |> TsPort.map .last)
                         |> TsPort.toEncoder
                         |> expectEncodes
                             { input = { first = "Dillon", last = "Kearns" }
@@ -41,7 +23,7 @@ suite =
                             }
             , test "standalone string" <|
                 \() ->
-                    TsPort.stringNew
+                    TsPort.string
                         |> TsPort.map .first
                         |> expectEncodes
                             { input = { first = "Dillon", last = "Kearns" }
@@ -50,7 +32,7 @@ suite =
                             }
             , test "list" <|
                 \() ->
-                    TsPort.list TsPort.stringNew
+                    TsPort.list TsPort.string
                         |> expectEncodes
                             { input = [ "Item 1", "Item 2" ]
                             , output = "[\"Item 1\",\"Item 2\"]"

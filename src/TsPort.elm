@@ -43,19 +43,8 @@ property keyName (Encoder encodeFn tsType_) (ObjectBuilder entries) =
         )
 
 
-string : (encodesFrom -> String) -> Encoder encodesFrom
-string getter =
-    Encoder
-        (\encodesFrom -> Encode.string (getter encodesFrom))
-        String
-
-
-
---stringNew : Encoder ( encodesFrom -> String)
-
-
-stringNew : Encoder String
-stringNew =
+string : Encoder String
+string =
     Encoder Encode.string String
 
 
@@ -69,14 +58,6 @@ list (Encoder encodeFn tsType_) =
     Encoder
         (\encodesFrom -> Encode.list encodeFn encodesFrom)
         (List tsType_)
-
-
-personEncoder : Encoder { first : String, last : String }
-personEncoder =
-    build
-        |> property "first" (string .first)
-        |> property "last" (string .last)
-        |> toEncoder
 
 
 toEncoder : ObjectBuilder value -> Encoder value
