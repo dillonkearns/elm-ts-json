@@ -39,6 +39,14 @@ suite =
                             , output = """{"last":"Kearns","first":"Dillon"}"""
                             , typeDef = "{ last : string; first : string }"
                             }
+            , test "standalone string" <|
+                \() ->
+                    TsPort.string .first
+                        |> expectEncodes
+                            { input = { first = "Dillon", last = "Kearns" }
+                            , output = "\"Dillon\""
+                            , typeDef = "string"
+                            }
 
             --, test "custom type" <|
             --    \() ->
