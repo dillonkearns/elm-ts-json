@@ -31,8 +31,8 @@ suite =
             [ test "object" <|
                 \() ->
                     TsPort.build
-                        |> property "first" (TsPort.string .first)
-                        |> property "last" (TsPort.string .last)
+                        |> property "first" (TsPort.stringNew |> TsPort.map .first)
+                        |> property "last" (TsPort.stringNew |> TsPort.map .last)
                         |> TsPort.toEncoder
                         |> expectEncodes
                             { input = { first = "Dillon", last = "Kearns" }
@@ -41,16 +41,17 @@ suite =
                             }
             , test "standalone string" <|
                 \() ->
-                    TsPort.string .first
+                    TsPort.stringNew
+                        |> TsPort.map .first
                         |> expectEncodes
                             { input = { first = "Dillon", last = "Kearns" }
                             , output = "\"Dillon\""
                             , typeDef = "string"
                             }
 
-            --, test "custom type" <|
+            --, test "list" <|
             --    \() ->
-            --        list string
+            --        TsPort.list TsPort.string
             --            |> expectEncodes
             --                { input = [ "Item 1", "Item 2" ]
             --                , output = "[\"Item 1\",\"Item 2\"]"
