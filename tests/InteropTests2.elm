@@ -37,7 +37,7 @@ suite =
                         |> expectEncodes
                             { input = { first = "Dillon", last = "Kearns" }
                             , output = """{"last":"Kearns","first":"Dillon"}"""
-                            , typeDef = "{ first : string; last : string }"
+                            , typeDef = "{ last : string; first : string }"
                             }
 
             --, test "custom type" <|
@@ -72,11 +72,11 @@ expectEncodes expect interop =
 
 
 type Encoder encodesFrom
-    = Encoder (encodesFrom -> EncodeValue)
+    = Encoder (encodesFrom -> EncodeValue) TsType
 
 
 encoder : Encoder encodesFrom -> (encodesFrom -> Encode.Value)
-encoder (Encoder encodeFn) encodesFrom =
+encoder (Encoder encodeFn tsType_) encodesFrom =
     encodeFn encodesFrom
         |> serializeEncodeValue
 
@@ -96,8 +96,9 @@ serializeEncodeValue value =
 
 
 typeDef : Encoder encodesFrom -> String
-typeDef encoder_ =
-    "{ first : string; last : string }"
+typeDef (Encoder encodeFn tsType_) =
+    --"{ first : string; last : string }"
+    tsTypeToString tsType_
 
 
 type EncodeValue
@@ -105,34 +106,44 @@ type EncodeValue
 
 
 type ObjectBuilder encodesFrom
-    = ObjectBuilder (encodesFrom -> List ( String, Encode.Value, TsType ))
+    = ObjectBuilder (List ( String, encodesFrom -> Encode.Value, TsType ))
+
+
+
+--type ObjectBuildlerNew encodesFrom
+--    = ObjectBuilderNew (List ( String, encodesFrom -> Encode.Value, TsType ))
 
 
 type TsType
     = String
     | List TsType
+    | TypeObject (List ( String, TsType ))
 
 
 build : ObjectBuilder encodesFrom
 build =
-    ObjectBuilder (\_ -> [])
+    ObjectBuilder []
 
 
 string : String -> (value -> String) -> ObjectBuilder value -> ObjectBuilder value
-string keyName getter (ObjectBuilder builderFn) =
+string keyName getter (ObjectBuilder entries) =
     ObjectBuilder
-        (\encodesFrom ->
-            ( keyName, Encode.string (getter encodesFrom), String )
-                :: builderFn encodesFrom
+        (( keyName
+         , \encodesFrom -> Encode.string (getter encodesFrom)
+         , String
+         )
+            :: entries
         )
 
 
 list : String -> (value -> List String) -> ObjectBuilder value -> ObjectBuilder value
-list keyName getter (ObjectBuilder builderFn) =
+list keyName getter (ObjectBuilder entries) =
     ObjectBuilder
-        (\encodesFrom ->
-            ( keyName, Encode.list Encode.string (getter encodesFrom), List String )
-                :: builderFn encodesFrom
+        (( keyName
+         , \encodesFrom -> Encode.list Encode.string (getter encodesFrom)
+         , String
+         )
+            :: entries
         )
 
 
@@ -145,12 +156,26 @@ personEncoder =
 
 
 toEncoder : ObjectBuilder value -> Encoder value
-toEncoder (ObjectBuilder builderFn) =
-    Encoder (\encodesFrom -> Object (builderFn encodesFrom))
+toEncoder (ObjectBuilder entries) =
+    --TODO
+    --Encoder (\encodesFrom -> Object (builderFn encodesFrom)) String
+    let
+        actualType =
+            entries
+                |> List.map (\( key, encodeFn, tsType_ ) -> ( key, tsType_ ))
+                |> TypeObject
+    in
+    Encoder
+        (\encodesFrom ->
+            entries
+                |> List.map (\( key, encodeFn, tsType_ ) -> ( key, encodeFn encodesFrom, tsType_ ))
+                |> Object
+        )
+        actualType
 
 
 tsAnnotation : Encoder value -> value -> String
-tsAnnotation (Encoder encodeFn) value =
+tsAnnotation (Encoder encodeFn tsType_) value =
     case encodeFn value of
         Object list_ ->
             list_
@@ -165,7 +190,21 @@ tsTypeToString : TsType -> String
 tsTypeToString tsType =
     case tsType of
         String ->
-            ""
+            --TODO
+            "string"
 
         List listType ->
-            ""
+            --TODO
+            "[]"
+
+        TypeObject keyTypes ->
+            --TODO
+            "{ "
+                ++ (keyTypes
+                        |> List.map
+                            (\( key, tsType_ ) ->
+                                key ++ " : " ++ tsTypeToString tsType_
+                            )
+                        |> String.join "; "
+                   )
+                ++ " }"
