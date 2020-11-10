@@ -84,7 +84,6 @@ encoder (Encoder encodeFn tsType_) encodesFrom =
 serializeEncodeValue : EncodeValue -> Encode.Value
 serializeEncodeValue value =
     case value of
-        --(List ( String, Encode.Value, TsType ))
         Object list_ ->
             list_
                 |> Debug.log "value"
@@ -97,7 +96,6 @@ serializeEncodeValue value =
 
 typeDef : Encoder encodesFrom -> String
 typeDef (Encoder encodeFn tsType_) =
-    --"{ first : string; last : string }"
     tsTypeToString tsType_
 
 
@@ -107,11 +105,6 @@ type EncodeValue
 
 type ObjectBuilder encodesFrom
     = ObjectBuilder (List ( String, encodesFrom -> Encode.Value, TsType ))
-
-
-
---type ObjectBuildlerNew encodesFrom
---    = ObjectBuilderNew (List ( String, encodesFrom -> Encode.Value, TsType ))
 
 
 type TsType
@@ -157,40 +150,22 @@ personEncoder =
 
 toEncoder : ObjectBuilder value -> Encoder value
 toEncoder (ObjectBuilder entries) =
-    --TODO
-    --Encoder (\encodesFrom -> Object (builderFn encodesFrom)) String
-    let
-        actualType =
-            entries
-                |> List.map (\( key, encodeFn, tsType_ ) -> ( key, tsType_ ))
-                |> TypeObject
-    in
     Encoder
         (\encodesFrom ->
             entries
                 |> List.map (\( key, encodeFn, tsType_ ) -> ( key, encodeFn encodesFrom, tsType_ ))
                 |> Object
         )
-        actualType
-
-
-tsAnnotation : Encoder value -> value -> String
-tsAnnotation (Encoder encodeFn tsType_) value =
-    case encodeFn value of
-        Object list_ ->
-            list_
-                |> List.map
-                    (\( fieldName, encodeValue, tsType ) ->
-                        fieldName ++ " : " ++ tsTypeToString tsType
-                    )
-                |> String.join " ; "
+        (entries
+            |> List.map (\( key, encodeFn, tsType_ ) -> ( key, tsType_ ))
+            |> TypeObject
+        )
 
 
 tsTypeToString : TsType -> String
 tsTypeToString tsType =
     case tsType of
         String ->
-            --TODO
             "string"
 
         List listType ->
@@ -198,7 +173,6 @@ tsTypeToString tsType =
             "[]"
 
         TypeObject keyTypes ->
-            --TODO
             "{ "
                 ++ (keyTypes
                         |> List.map
