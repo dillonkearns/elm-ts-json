@@ -118,12 +118,6 @@ type ToJs
     | Alert String
 
 
-
---type ToJs
---    = Popup String
---    | Record { a : String, b : String }
-
-
 expectEncodes :
     { output : String, input : encodesFrom, typeDef : String }
     -> Encoder encodesFrom
