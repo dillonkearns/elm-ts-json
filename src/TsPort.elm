@@ -25,6 +25,7 @@ type TsType
     = String
     | List TsType
     | TypeObject (List ( String, TsType ))
+    | Custom
 
 
 build : ObjectBuilder encodesFrom
@@ -58,6 +59,64 @@ list (Encoder encodeFn tsType_) =
     Encoder
         (\encodesFrom -> Encode.list encodeFn encodesFrom)
         (List tsType_)
+
+
+
+--custom : a
+--custom : (match -> Encode.Value) -> CustomBuilder match value
+--custom : match -> CustomBuilder match ()
+
+
+custom :
+    --( Encode.Value -> match)
+    --(Encode.Value -> custom -> Encode.Value)
+    custom
+    -> CustomBuilder custom
+custom match =
+    --Debug.todo ""
+    CustomBuilder match
+
+
+
+--custom :
+--    --( Encode.Value -> match)
+--    (match -> Encode.Value)
+--    -> CustomBuilder match
+--custom match =
+--    --Debug.todo ""
+--    CustomBuilder match
+--CustomBuilder match
+
+
+type CustomBuilder match
+    = CustomBuilder match
+
+
+
+--variant0 : Encoder a
+--variant0 : a
+
+
+variant0 :
+    String
+    -> CustomBuilder (Encode.Value -> match)
+    -> CustomBuilder match
+variant0 variantName (CustomBuilder builder) =
+    CustomBuilder
+        (builder
+            (Encode.object
+                [ ( "type", Encode.string variantName ) ]
+            )
+        )
+
+
+buildCustom : CustomBuilder (match -> Encode.Value) -> Encoder match
+buildCustom (CustomBuilder toValue) =
+    Encoder toValue Custom
+
+
+
+--Debug.todo ""
 
 
 toEncoder : ObjectBuilder value -> Encoder value
@@ -98,3 +157,6 @@ tsTypeToString tsType =
                         |> String.join "; "
                    )
                 ++ " }"
+
+        Custom ->
+            """{ type : "SendPresenceHeartbeat" }"""

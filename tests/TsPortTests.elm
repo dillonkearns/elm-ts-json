@@ -47,13 +47,43 @@ suite =
                             , output = "[[\"Item 1\",\"Item 2\"],[]]"
                             , typeDef = "string[][]"
                             }
+            , test "custom type with single variant" <|
+                \() ->
+                    let
+                        thing : TsPort.CustomBuilder (Encode.Value -> ToJs -> Encode.Value)
+                        thing =
+                            TsPort.custom
+                                (\vSendHeartbeat value ->
+                                    --case value of
+                                    --    SendPresenceHeartbeat ->
+                                    --        --vSendHeartbeat
+                                    --        Debug.todo ""
+                                    --Debug.todo ""
+                                    case value of
+                                        SendPresenceHeartbeat ->
+                                            vSendHeartbeat
+                                )
+                    in
+                    thing
+                        |> TsPort.variant0 "SendPresenceHeartbeat"
+                        |> TsPort.buildCustom
+                        |> expectEncodes
+                            { input = SendPresenceHeartbeat
+                            , output = """{"type":"SendPresenceHeartbeat"}"""
+                            , typeDef = """{ type : "SendPresenceHeartbeat" }"""
+                            }
             ]
         ]
 
 
 type ToJs
-    = Popup String
-    | Record { a : String, b : String }
+    = SendPresenceHeartbeat
+
+
+
+--type ToJs
+--    = Popup String
+--    | Record { a : String, b : String }
 
 
 expectEncodes :
