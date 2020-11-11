@@ -70,7 +70,7 @@ suite =
                         |> expectEncodes
                             { input = SendPresenceHeartbeat
                             , output = """{"type":"SendPresenceHeartbeat"}"""
-                            , typeDef = """{ type : "SendPresenceHeartbeat" }"""
+                            , typeDef = """{ type : "Alert" ; args: [ string ] } | { type : "SendPresenceHeartbeat" ; args: [  ] }"""
                             }
             ]
         ]

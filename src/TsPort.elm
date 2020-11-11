@@ -25,7 +25,7 @@ type TsType
     = String
     | List TsType
     | TypeObject (List ( String, TsType ))
-    | Custom
+    | Custom (List ( String, List TsType ))
 
 
 build : ObjectBuilder encodesFrom
@@ -74,24 +74,25 @@ custom :
     -> CustomBuilder custom
 custom match =
     --Debug.todo ""
-    CustomBuilder match
+    CustomBuilder match []
 
 
 type CustomBuilder match
-    = CustomBuilder match
+    = CustomBuilder match (List ( String, List TsType ))
 
 
 variant0 :
     String
     -> CustomBuilder (Encode.Value -> match)
     -> CustomBuilder match
-variant0 variantName (CustomBuilder builder) =
+variant0 variantName (CustomBuilder builder tsTypes_) =
     CustomBuilder
         (builder
             (Encode.object
                 [ ( "type", Encode.string variantName ) ]
             )
         )
+        (( variantName, [] ) :: tsTypes_)
 
 
 variant1 :
@@ -99,9 +100,10 @@ variant1 :
     -> Encoder arg1
     -> CustomBuilder ((arg1 -> Encode.Value) -> match)
     -> CustomBuilder match
-variant1 variantName (Encoder encoder_ tsType_) (CustomBuilder builder) =
+variant1 variantName (Encoder encoder_ tsType_) (CustomBuilder builder tsTypes) =
     CustomBuilder
         (encoder_ |> builder)
+        (( variantName, [ tsType_ ] ) :: tsTypes)
 
 
 
@@ -113,8 +115,8 @@ variant1 variantName (Encoder encoder_ tsType_) (CustomBuilder builder) =
 
 
 buildCustom : CustomBuilder (match -> Encode.Value) -> Encoder match
-buildCustom (CustomBuilder toValue) =
-    Encoder toValue Custom
+buildCustom (CustomBuilder toValue tsTypes_) =
+    Encoder toValue (Custom tsTypes_)
 
 
 toEncoder : ObjectBuilder value -> Encoder value
@@ -156,5 +158,20 @@ tsTypeToString tsType =
                    )
                 ++ " }"
 
-        Custom ->
-            """{ type : "SendPresenceHeartbeat" }"""
+        Custom tsTypes_ ->
+            tsTypes_
+                |> List.map
+                    (\( variantName, variantTypes ) ->
+                        "{ type : \""
+                            ++ variantName
+                            ++ "\" ; args: [ "
+                            ++ (List.map
+                                    (\tsType_ ->
+                                        tsTypeToString tsType_
+                                    )
+                                    variantTypes
+                                    |> String.join ""
+                               )
+                            ++ " ] }"
+                    )
+                |> String.join " | "
