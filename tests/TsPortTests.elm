@@ -47,6 +47,21 @@ suite =
                             , output = "[[\"Item 1\",\"Item 2\"],[]]"
                             , typeDef = "string[][]"
                             }
+            , test "custom type with one variant" <|
+                \() ->
+                    TsPort.custom
+                        (\vOnlyVariant value ->
+                            case value of
+                                OnlyVariant ->
+                                    vOnlyVariant
+                        )
+                        |> TsPort.variant0 "OnlyVariant"
+                        |> TsPort.buildCustom
+                        |> expectEncodes
+                            { input = OnlyVariant
+                            , output = """{"type":"OnlyVariant"}"""
+                            , typeDef = """{ type : "OnlyVariant";  }"""
+                            }
             , test "custom type with two variants" <|
                 \() ->
                     TsPort.custom
@@ -68,6 +83,10 @@ suite =
                             }
             ]
         ]
+
+
+type WithOneVariant
+    = OnlyVariant
 
 
 type ToJs
