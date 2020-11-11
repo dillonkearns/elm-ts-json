@@ -117,14 +117,6 @@ variant1 variantName (Encoder encoder_ tsType_) (CustomBuilder builder tsTypes) 
         (( variantName, [ tsType_ ] ) :: tsTypes)
 
 
-
---(builder
---    (Encode.object
---        [ ( "type", Encode.string variantName ) ]
---    )
---)
-
-
 buildCustom : CustomBuilder (match -> Encode.Value) -> Encoder match
 buildCustom (CustomBuilder toValue tsTypes_) =
     Encoder toValue (Custom tsTypes_)

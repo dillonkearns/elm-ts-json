@@ -47,23 +47,17 @@ suite =
                             , output = "[[\"Item 1\",\"Item 2\"],[]]"
                             , typeDef = "string[][]"
                             }
-            , test "custom type with single variant" <|
+            , test "custom type with two variants" <|
                 \() ->
-                    let
-                        --thing : TsPort.CustomBuilder (Encode.Value -> ToJs -> Encode.Value)
-                        thing =
-                            TsPort.custom
-                                (\vSendHeartbeat vAlert value ->
-                                    case value of
-                                        SendPresenceHeartbeat ->
-                                            vSendHeartbeat
+                    TsPort.custom
+                        (\vSendHeartbeat vAlert value ->
+                            case value of
+                                SendPresenceHeartbeat ->
+                                    vSendHeartbeat
 
-                                        Alert string ->
-                                            --vSendHeartbeat
-                                            vAlert string
-                                )
-                    in
-                    thing
+                                Alert string ->
+                                    vAlert string
+                        )
                         |> TsPort.variant0 "SendPresenceHeartbeat"
                         |> TsPort.variant1 "Alert" TsPort.string
                         |> TsPort.buildCustom
