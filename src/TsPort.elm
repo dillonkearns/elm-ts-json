@@ -25,7 +25,11 @@ type TsType
     = String
     | List TsType
     | TypeObject (List ( String, TsType ))
-    | Custom (List ( String, List TsType ))
+    | Custom (List ( String, VariantTypeDef ))
+
+
+
+--(List ( String, List TsType ))
 
 
 build : ObjectBuilder encodesFrom
@@ -78,7 +82,15 @@ custom match =
 
 
 type CustomBuilder match
-    = CustomBuilder match (List ( String, List TsType ))
+    = CustomBuilder match (List ( String, VariantTypeDef ))
+
+
+type VariantTypeDef
+    = Positional (List TsType)
+
+
+
+--| KeyValue (List ( String, TsType ))
 
 
 variant0 :
@@ -92,7 +104,7 @@ variant0 variantName (CustomBuilder builder tsTypes_) =
                 [ ( "type", Encode.string variantName ) ]
             )
         )
-        (( variantName, [] ) :: tsTypes_)
+        (( variantName, Positional [] ) :: tsTypes_)
 
 
 variant1 :
@@ -114,12 +126,45 @@ variant1 variantName (Encoder encoder_ tsType_) (CustomBuilder builder tsTypes) 
     in
     CustomBuilder
         (builder mappedEncoder)
-        (( variantName, [ tsType_ ] ) :: tsTypes)
+        (( variantName, Positional [ tsType_ ] ) :: tsTypes)
+
+
+objectVariant :
+    String
+    -> ObjectBuilder arg1
+    -> CustomBuilder ((arg1 -> Encode.Value) -> match)
+    -> CustomBuilder match
+objectVariant variantName (ObjectBuilder entries) (CustomBuilder builder tsTypes) =
+    let
+        objectTypeDef =
+            entries
+                |> List.map (\( key, encodeFn, tsType_ ) -> ( key, tsType_ ))
+                |> TypeObject
+
+        mappedEncoder : arg1 -> Encode.Value
+        mappedEncoder arg1 =
+            Encode.object
+                (( "type", Encode.string variantName )
+                    :: (entries |> List.map (\( key, encodeFn, tsType_ ) -> ( key, encodeFn arg1 )))
+                )
+    in
+    CustomBuilder
+        (builder mappedEncoder)
+        -- TODO need special Variant to allow different format
+        (( variantName, Positional [ objectTypeDef ] ) :: tsTypes)
 
 
 buildCustom : CustomBuilder (match -> Encode.Value) -> Encoder match
 buildCustom (CustomBuilder toValue tsTypes_) =
     Encoder toValue (Custom tsTypes_)
+
+
+
+--
+--customVariantsToTsTypes : a -> List ( String, List TsType )
+--customVariantsToTsTypes tsTypes_ =
+--    Debug.todo ""
+--Positional
 
 
 toEncoder : ObjectBuilder value -> Encoder value
@@ -164,7 +209,7 @@ tsTypeToString tsType =
         Custom tsTypes_ ->
             tsTypes_
                 |> List.map
-                    (\( variantName, variantTypes ) ->
+                    (\( variantName, Positional variantTypes ) ->
                         "{ type : \""
                             ++ variantName
                             ++ "\"; "

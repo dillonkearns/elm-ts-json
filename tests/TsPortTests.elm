@@ -81,6 +81,30 @@ suite =
                             , output = """{"type":"Alert","args":["Hello!"]}"""
                             , typeDef = """{ type : "Alert"; args: [ string ]; } | { type : "SendPresenceHeartbeat";  }"""
                             }
+            , test "merge object to variant" <|
+                \() ->
+                    let
+                        alertObjectEncoder =
+                            TsPort.build
+                                |> property "message" TsPort.string
+                    in
+                    TsPort.custom
+                        (\vSendHeartbeat vAlert value ->
+                            case value of
+                                SendPresenceHeartbeat ->
+                                    vSendHeartbeat
+
+                                Alert string ->
+                                    vAlert string
+                        )
+                        |> TsPort.variant0 "SendPresenceHeartbeat"
+                        |> TsPort.objectVariant "Alert" alertObjectEncoder
+                        |> TsPort.buildCustom
+                        |> expectEncodes
+                            { input = Alert "Hello!"
+                            , output = """{"type":"Alert","message":"Hello!"}"""
+                            , typeDef = """{ type : "Alert"; message: string } | { type : "SendPresenceHeartbeat";  }"""
+                            }
             ]
         ]
 
