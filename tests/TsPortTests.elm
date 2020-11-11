@@ -83,11 +83,6 @@ suite =
                             }
             , test "merge object to variant" <|
                 \() ->
-                    let
-                        alertObjectEncoder =
-                            TsPort.build
-                                |> property "message" TsPort.string
-                    in
                     TsPort.custom
                         (\vSendHeartbeat vAlert value ->
                             case value of
@@ -98,7 +93,10 @@ suite =
                                     vAlert string
                         )
                         |> TsPort.variant0 "SendPresenceHeartbeat"
-                        |> TsPort.objectVariant "Alert" alertObjectEncoder
+                        |> TsPort.objectVariant "Alert"
+                            (TsPort.build
+                                |> property "message" TsPort.string
+                            )
                         |> TsPort.buildCustom
                         |> expectEncodes
                             { input = Alert "Hello!"
