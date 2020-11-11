@@ -38,6 +38,15 @@ suite =
                             , output = "[\"Item 1\",\"Item 2\"]"
                             , typeDef = "string[]"
                             }
+            , test "list of lists" <|
+                \() ->
+                    TsPort.list
+                        (TsPort.list TsPort.string)
+                        |> expectEncodes
+                            { input = [ [ "Item 1", "Item 2" ], [] ]
+                            , output = "[[\"Item 1\",\"Item 2\"],[]]"
+                            , typeDef = "string[][]"
+                            }
             ]
         ]
 
