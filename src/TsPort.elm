@@ -101,8 +101,19 @@ variant1 :
     -> CustomBuilder ((arg1 -> Encode.Value) -> match)
     -> CustomBuilder match
 variant1 variantName (Encoder encoder_ tsType_) (CustomBuilder builder tsTypes) =
+    let
+        mappedEncoder : arg1 -> Encode.Value
+        mappedEncoder arg1 =
+            Encode.object
+                [ ( "type", Encode.string variantName )
+                , ( "args"
+                  , Encode.list identity
+                        [ arg1 |> encoder_ ]
+                  )
+                ]
+    in
     CustomBuilder
-        (encoder_ |> builder)
+        (builder mappedEncoder)
         (( variantName, [ tsType_ ] ) :: tsTypes)
 
 

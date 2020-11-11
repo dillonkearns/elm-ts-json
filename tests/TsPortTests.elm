@@ -68,8 +68,8 @@ suite =
                         |> TsPort.variant1 "Alert" TsPort.string
                         |> TsPort.buildCustom
                         |> expectEncodes
-                            { input = SendPresenceHeartbeat
-                            , output = """{"type":"SendPresenceHeartbeat"}"""
+                            { input = Alert "Hello!"
+                            , output = """{"type":"Alert","args":["Hello!"]}"""
                             , typeDef = """{ type : "Alert"; args: [ string ]; } | { type : "SendPresenceHeartbeat";  }"""
                             }
             ]
