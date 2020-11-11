@@ -164,14 +164,25 @@ tsTypeToString tsType =
                     (\( variantName, variantTypes ) ->
                         "{ type : \""
                             ++ variantName
-                            ++ "\" ; args: [ "
-                            ++ (List.map
-                                    (\tsType_ ->
-                                        tsTypeToString tsType_
-                                    )
-                                    variantTypes
-                                    |> String.join ""
-                               )
-                            ++ " ] }"
+                            ++ "\"; "
+                            ++ argsToString variantTypes
+                            ++ " }"
                     )
                 |> String.join " | "
+
+
+argsToString : List TsType -> String
+argsToString variantTypes =
+    if List.isEmpty variantTypes then
+        ""
+
+    else
+        "args: [ "
+            ++ (List.map
+                    (\tsType_ ->
+                        tsTypeToString tsType_
+                    )
+                    variantTypes
+                    |> String.join ""
+               )
+            ++ " ];"

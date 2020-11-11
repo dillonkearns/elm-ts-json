@@ -70,7 +70,7 @@ suite =
                         |> expectEncodes
                             { input = SendPresenceHeartbeat
                             , output = """{"type":"SendPresenceHeartbeat"}"""
-                            , typeDef = """{ type : "Alert" ; args: [ string ] } | { type : "SendPresenceHeartbeat" ; args: [  ] }"""
+                            , typeDef = """{ type : "Alert"; args: [ string ]; } | { type : "SendPresenceHeartbeat";  }"""
                             }
             ]
         ]
@@ -97,5 +97,5 @@ expectEncodes expect interop =
         |> Encode.encode 0
         |> Expect.all
             [ \encodedString -> encodedString |> Expect.equal expect.output
-            , \decoded -> expect.typeDef |> Expect.equal (TsPort.typeDef interop)
+            , \decoded -> TsPort.typeDef interop |> Expect.equal expect.typeDef
             ]
