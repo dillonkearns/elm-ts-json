@@ -65,19 +65,10 @@ list (Encoder encodeFn tsType_) =
         (List tsType_)
 
 
-
---custom : a
---custom : (match -> Encode.Value) -> CustomBuilder match value
---custom : match -> CustomBuilder match ()
-
-
 custom :
-    --( Encode.Value -> match)
-    --(Encode.Value -> custom -> Encode.Value)
     custom
     -> CustomBuilder custom
 custom match =
-    --Debug.todo ""
     CustomBuilder match []
 
 
@@ -87,10 +78,7 @@ type CustomBuilder match
 
 type VariantTypeDef
     = Positional (List TsType)
-
-
-
---| KeyValue (List ( String, TsType ))
+    | KeyValue (List ( String, TsType ))
 
 
 variant0 :
@@ -139,8 +127,8 @@ objectVariant variantName (ObjectBuilder entries) (CustomBuilder builder tsTypes
         objectTypeDef =
             entries
                 |> List.map (\( key, encodeFn, tsType_ ) -> ( key, tsType_ ))
-                |> TypeObject
 
+        --|> TypeObject
         mappedEncoder : arg1 -> Encode.Value
         mappedEncoder arg1 =
             Encode.object
@@ -151,7 +139,7 @@ objectVariant variantName (ObjectBuilder entries) (CustomBuilder builder tsTypes
     CustomBuilder
         (builder mappedEncoder)
         -- TODO need special Variant to allow different format
-        (( variantName, Positional [ objectTypeDef ] ) :: tsTypes)
+        (( variantName, KeyValue objectTypeDef ) :: tsTypes)
 
 
 buildCustom : CustomBuilder (match -> Encode.Value) -> Encoder match
@@ -209,14 +197,33 @@ tsTypeToString tsType =
         Custom tsTypes_ ->
             tsTypes_
                 |> List.map
-                    (\( variantName, Positional variantTypes ) ->
-                        "{ type : \""
-                            ++ variantName
-                            ++ "\"; "
-                            ++ argsToString variantTypes
-                            ++ " }"
+                    (\( variantName, variantTypes ) ->
+                        case variantTypes of
+                            Positional positionalArgs ->
+                                "{ type : \""
+                                    ++ variantName
+                                    ++ "\"; "
+                                    ++ argsToString positionalArgs
+                                    ++ " }"
+
+                            KeyValue keyValueArgs ->
+                                "{ type : \""
+                                    ++ variantName
+                                    ++ "\"; "
+                                    ++ keyValueArgsToString keyValueArgs
+                                    ++ " }"
                     )
                 |> String.join " | "
+
+
+keyValueArgsToString : List ( String, TsType ) -> String
+keyValueArgsToString keyValueArgs =
+    List.map
+        (\( key, tsType_ ) ->
+            key ++ " : " ++ tsTypeToString tsType_
+        )
+        keyValueArgs
+        |> String.join ""
 
 
 argsToString : List TsType -> String

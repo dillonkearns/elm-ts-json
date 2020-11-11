@@ -103,7 +103,7 @@ suite =
                         |> expectEncodes
                             { input = Alert "Hello!"
                             , output = """{"type":"Alert","message":"Hello!"}"""
-                            , typeDef = """{ type : "Alert"; message: string } | { type : "SendPresenceHeartbeat";  }"""
+                            , typeDef = """{ type : "Alert"; message : string } | { type : "SendPresenceHeartbeat";  }"""
                             }
             ]
         ]
