@@ -77,24 +77,8 @@ custom match =
     CustomBuilder match
 
 
-
---custom :
---    --( Encode.Value -> match)
---    (match -> Encode.Value)
---    -> CustomBuilder match
---custom match =
---    --Debug.todo ""
---    CustomBuilder match
---CustomBuilder match
-
-
 type CustomBuilder match
     = CustomBuilder match
-
-
-
---variant0 : Encoder a
---variant0 : a
 
 
 variant0 :
@@ -110,13 +94,27 @@ variant0 variantName (CustomBuilder builder) =
         )
 
 
+variant1 :
+    String
+    -> Encoder arg1
+    -> CustomBuilder ((arg1 -> Encode.Value) -> match)
+    -> CustomBuilder match
+variant1 variantName (Encoder encoder_ tsType_) (CustomBuilder builder) =
+    CustomBuilder
+        (encoder_ |> builder)
+
+
+
+--(builder
+--    (Encode.object
+--        [ ( "type", Encode.string variantName ) ]
+--    )
+--)
+
+
 buildCustom : CustomBuilder (match -> Encode.Value) -> Encoder match
 buildCustom (CustomBuilder toValue) =
     Encoder toValue Custom
-
-
-
---Debug.todo ""
 
 
 toEncoder : ObjectBuilder value -> Encoder value

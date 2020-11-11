@@ -50,22 +50,22 @@ suite =
             , test "custom type with single variant" <|
                 \() ->
                     let
-                        thing : TsPort.CustomBuilder (Encode.Value -> ToJs -> Encode.Value)
+                        --thing : TsPort.CustomBuilder (Encode.Value -> ToJs -> Encode.Value)
                         thing =
                             TsPort.custom
-                                (\vSendHeartbeat value ->
-                                    --case value of
-                                    --    SendPresenceHeartbeat ->
-                                    --        --vSendHeartbeat
-                                    --        Debug.todo ""
-                                    --Debug.todo ""
+                                (\vSendHeartbeat vAlert value ->
                                     case value of
                                         SendPresenceHeartbeat ->
                                             vSendHeartbeat
+
+                                        Alert string ->
+                                            --vSendHeartbeat
+                                            vAlert string
                                 )
                     in
                     thing
                         |> TsPort.variant0 "SendPresenceHeartbeat"
+                        |> TsPort.variant1 "Alert" TsPort.string
                         |> TsPort.buildCustom
                         |> expectEncodes
                             { input = SendPresenceHeartbeat
@@ -78,6 +78,7 @@ suite =
 
 type ToJs
     = SendPresenceHeartbeat
+    | Alert String
 
 
 
