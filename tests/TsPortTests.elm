@@ -59,8 +59,8 @@ suite =
                         |> TsPort.buildCustom
                         |> expectEncodes
                             { input = OnlyVariant
-                            , output = """{"type":"OnlyVariant"}"""
-                            , typeDef = """{ type : "OnlyVariant";  }"""
+                            , output = """{"tag":"OnlyVariant"}"""
+                            , typeDef = """{ tag : "OnlyVariant";  }"""
                             }
             , test "custom type with two variants" <|
                 \() ->
@@ -78,8 +78,8 @@ suite =
                         |> TsPort.buildCustom
                         |> expectEncodes
                             { input = Alert "Hello!"
-                            , output = """{"type":"Alert","args":["Hello!"]}"""
-                            , typeDef = """{ type : "Alert"; args: [ string ]; } | { type : "SendPresenceHeartbeat";  }"""
+                            , output = """{"tag":"Alert","args":["Hello!"]}"""
+                            , typeDef = """{ tag : "Alert"; args: [ string ]; } | { tag : "SendPresenceHeartbeat";  }"""
                             }
             , test "merge object to variant" <|
                 \() ->
@@ -100,8 +100,8 @@ suite =
                         |> TsPort.buildCustom
                         |> expectEncodes
                             { input = Alert "Hello!"
-                            , output = """{"type":"Alert","message":"Hello!"}"""
-                            , typeDef = """{ type : "Alert"; message : string } | { type : "SendPresenceHeartbeat";  }"""
+                            , output = """{"tag":"Alert","message":"Hello!"}"""
+                            , typeDef = """{ tag : "Alert"; message : string } | { tag : "SendPresenceHeartbeat";  }"""
                             }
             ]
         ]

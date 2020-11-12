@@ -85,7 +85,7 @@ variant0 variantName (CustomBuilder builder tsTypes_) =
     CustomBuilder
         (builder
             (Encode.object
-                [ ( "type", Encode.string variantName ) ]
+                [ ( "tag", Encode.string variantName ) ]
             )
         )
         (( variantName, Positional [] ) :: tsTypes_)
@@ -101,7 +101,7 @@ variant1 variantName (Encoder encoder_ tsType_) (CustomBuilder builder tsTypes) 
         mappedEncoder : arg1 -> Encode.Value
         mappedEncoder arg1 =
             Encode.object
-                [ ( "type", Encode.string variantName )
+                [ ( "tag", Encode.string variantName )
                 , ( "args"
                   , Encode.list identity
                         [ arg1 |> encoder_ ]
@@ -127,7 +127,7 @@ objectVariant variantName (ObjectBuilder entries) (CustomBuilder builder tsTypes
         mappedEncoder : arg1 -> Encode.Value
         mappedEncoder arg1 =
             Encode.object
-                (( "type", Encode.string variantName )
+                (( "tag", Encode.string variantName )
                     :: (entries
                             |> List.map
                                 (\( key, encodeFn, tsType_ ) ->
@@ -191,14 +191,14 @@ tsTypeToString tsType =
                     (\( variantName, variantTypes ) ->
                         case variantTypes of
                             Positional positionalArgs ->
-                                "{ type : \""
+                                "{ tag : \""
                                     ++ variantName
                                     ++ "\"; "
                                     ++ argsToString positionalArgs
                                     ++ " }"
 
                             KeyValue keyValueArgs ->
-                                "{ type : \""
+                                "{ tag : \""
                                     ++ variantName
                                     ++ "\"; "
                                     ++ keyValueArgsToString keyValueArgs

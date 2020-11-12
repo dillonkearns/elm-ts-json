@@ -6,6 +6,8 @@ const app = Elm.Main.init({
 });
 
 app.ports.fromElm.subscribe((fromElm) => {
+  console.log({ fromElm });
+
   switch (fromElm.tag) {
     case "Alert":
       alert(fromElm.message);
