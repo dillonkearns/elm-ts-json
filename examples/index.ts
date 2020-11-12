@@ -1,5 +1,3 @@
-// import * as Elm from "./elm";
-// import Elm from "./elm";
 import { Elm } from "./src/Main";
 
 const app = Elm.Main.init({
