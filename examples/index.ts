@@ -1,4 +1,5 @@
 import { Elm } from "./src/Main";
+import Bugsnag, { NotifiableError, Event } from "@bugsnag/js";
 
 const app = Elm.Main.init({
   node: document.querySelector("main"),
@@ -16,6 +17,15 @@ app.ports.fromElm.subscribe((fromElm) => {
       console.log("sendPresenceHeartbeat");
       break;
     case "bugsnag":
+      {
+        // const error: NotifiableError = { name: "", message: "" };
+        // error.setUser("3", "bugs.nag@bugsnag.com", "Bugs Nag");
+        // const event: Event = { app: "", device: "" };
+        const event: Event = Event.create();
+        // error.setUser("3", "bugs.nag@bugsnag.com", "Bugs Nag");
+
+        Bugsnag.notify(event);
+      }
       console.log("context", fromElm.context);
       console.log("message", fromElm.message);
       break;

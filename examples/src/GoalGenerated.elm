@@ -30,6 +30,8 @@ bugsnag argument =
         |> fromElm
 
 
+{-| TODO only generate for temp file
+-}
 typeDefs : String
 typeDefs =
     TsPort.customTypeDefToString

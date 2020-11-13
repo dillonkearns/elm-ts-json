@@ -103,8 +103,39 @@ suite =
                             , output = """{"tag":"Alert","message":"Hello!"}"""
                             , typeDef = """{ tag : "Alert"; message : string } | { tag : "SendPresenceHeartbeat";  }"""
                             }
+            , describe "unions"
+                [ test "string literals" <|
+                    \() ->
+                        TsPort.custom
+                            (\vInfo vWarning vError value ->
+                                case value of
+                                    Info ->
+                                        vInfo
+
+                                    Warning ->
+                                        vWarning
+
+                                    Error ->
+                                        vError
+                            )
+                            |> TsPort.variantLiteral (Encode.string "info")
+                            |> TsPort.variantLiteral (Encode.string "warning")
+                            |> TsPort.variantLiteral (Encode.string "error")
+                            |> TsPort.buildCustom
+                            |> expectEncodes
+                                { input = Warning
+                                , output = "\"warning\""
+                                , typeDef = "\"error\" | \"warning\" | \"info\""
+                                }
+                ]
             ]
         ]
+
+
+type Severity
+    = Info
+    | Warning
+    | Error
 
 
 type WithOneVariant

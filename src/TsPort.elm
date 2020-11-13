@@ -82,6 +82,7 @@ type CustomBuilder match
 type VariantTypeDef
     = Positional (List TsType)
     | KeyValue (List ( String, TsType ))
+    | Literal Encode.Value
 
 
 variant0 :
@@ -118,6 +119,16 @@ variant1 variantName (Encoder encoder_ tsType_) (CustomBuilder builder tsTypes) 
     CustomBuilder
         (builder mappedEncoder)
         (( variantName, Positional [ tsType_ ] ) :: tsTypes)
+
+
+variantLiteral :
+    Encode.Value
+    -> CustomBuilder (Encode.Value -> match)
+    -> CustomBuilder match
+variantLiteral literalValue (CustomBuilder builder tsTypes) =
+    CustomBuilder
+        (builder literalValue)
+        (( "", Literal literalValue ) :: tsTypes)
 
 
 objectVariant :
@@ -241,6 +252,9 @@ customTypeDefToString tsTypes_ =
                             ++ "\"; "
                             ++ keyValueArgsToString keyValueArgs
                             ++ " }"
+
+                    Literal literalValue ->
+                        Encode.encode 0 literalValue
             )
         |> String.join " | "
 
