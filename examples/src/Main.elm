@@ -1,7 +1,8 @@
 module Main exposing (main)
 
 import Browser
-import GeneratedPort
+import GoalGenerated
+import GoalPorts
 import Html exposing (..)
 import Html.Events
 import Ports
@@ -39,7 +40,8 @@ update msg model =
     case msg of
         SendAlert ->
             ( model
-            , GeneratedPort.sendPort (Ports.Alert "Hello!")
+              --, GeneratedPort.sendPort (Ports.Alert "Hello!")
+            , GoalGenerated.alert "Hi!!!"
             )
 
 

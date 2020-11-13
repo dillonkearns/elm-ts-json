@@ -9,11 +9,15 @@ app.ports.fromElm.subscribe((fromElm) => {
   console.log({ fromElm });
 
   switch (fromElm.tag) {
-    case "Alert":
+    case "alert":
       alert(fromElm.message);
       break;
-    case "SendPresenceHeartbeat":
-      // ...
+    case "sendPresenceHeartbeat":
+      console.log("sendPresenceHeartbeat");
+      break;
+    case "bugsnag":
+      console.log("context", fromElm.context);
+      console.log("message", fromElm.message);
       break;
   }
 });

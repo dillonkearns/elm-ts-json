@@ -17,6 +17,13 @@ typeDef (Encoder encodeFn tsType_) =
     tsTypeToString tsType_
 
 
+rawType : ObjectBuilder a -> VariantTypeDef
+rawType (ObjectBuilder entries) =
+    entries
+        |> List.map (\( key, encodeFn, tsType_ ) -> ( key, tsType_ ))
+        |> KeyValue
+
+
 type ObjectBuilder encodesFrom
     = ObjectBuilder (List ( String, encodesFrom -> Encode.Value, TsType ))
 
@@ -141,6 +148,27 @@ objectVariant variantName (ObjectBuilder entries) (CustomBuilder builder tsTypes
         (( variantName, KeyValue objectTypeDef ) :: tsTypes)
 
 
+encodeProVariant :
+    String
+    -> ObjectBuilder arg1
+    -> arg1
+    -> Encode.Value
+encodeProVariant variantName (ObjectBuilder entries) arg1 =
+    Encode.object
+        (( "tag", Encode.string variantName )
+            :: (entries
+                    |> List.map
+                        (\( key, encodeFn, tsType_ ) ->
+                            ( key, encodeFn arg1 )
+                        )
+               )
+        )
+
+
+type VariantBuilder
+    = VariantBuilder
+
+
 buildCustom : CustomBuilder (match -> Encode.Value) -> Encoder match
 buildCustom (CustomBuilder toValue tsTypes_) =
     Encoder toValue (Custom tsTypes_)
@@ -165,6 +193,11 @@ toEncoder (ObjectBuilder entries) =
         )
 
 
+proTypeAnnotation : List ( String, VariantTypeDef ) -> String
+proTypeAnnotation entries =
+    customTypeDefToString entries
+
+
 tsTypeToString : TsType -> String
 tsTypeToString tsType =
     case tsType of
@@ -186,25 +219,30 @@ tsTypeToString tsType =
                 ++ " }"
 
         Custom tsTypes_ ->
-            tsTypes_
-                |> List.map
-                    (\( variantName, variantTypes ) ->
-                        case variantTypes of
-                            Positional positionalArgs ->
-                                "{ tag : \""
-                                    ++ variantName
-                                    ++ "\"; "
-                                    ++ argsToString positionalArgs
-                                    ++ " }"
+            customTypeDefToString tsTypes_
 
-                            KeyValue keyValueArgs ->
-                                "{ tag : \""
-                                    ++ variantName
-                                    ++ "\"; "
-                                    ++ keyValueArgsToString keyValueArgs
-                                    ++ " }"
-                    )
-                |> String.join " | "
+
+customTypeDefToString : List ( String, VariantTypeDef ) -> String
+customTypeDefToString tsTypes_ =
+    tsTypes_
+        |> List.map
+            (\( variantName, variantTypes ) ->
+                case variantTypes of
+                    Positional positionalArgs ->
+                        "{ tag : \""
+                            ++ variantName
+                            ++ "\"; "
+                            ++ argsToString positionalArgs
+                            ++ " }"
+
+                    KeyValue keyValueArgs ->
+                        "{ tag : \""
+                            ++ variantName
+                            ++ "\"; "
+                            ++ keyValueArgsToString keyValueArgs
+                            ++ " }"
+            )
+        |> String.join " | "
 
 
 keyValueArgsToString : List ( String, TsType ) -> String
@@ -214,7 +252,7 @@ keyValueArgsToString keyValueArgs =
             key ++ " : " ++ tsTypeToString tsType_
         )
         keyValueArgs
-        |> String.join ""
+        |> String.join "; "
 
 
 argsToString : List TsType -> String

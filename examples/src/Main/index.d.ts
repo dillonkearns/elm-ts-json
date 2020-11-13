@@ -1,6 +1,11 @@
-export type FromElm =
-  | { tag: "Alert"; message: string }
-  | { tag: "SendPresenceHeartbeat" };
+// export type FromElm =
+// | { tag: "alert"; message: string }
+// | { tag: "sendPresenceHeartbeat" };
+
+type FromElm =
+  | { tag: "alert"; message: string }
+  | { tag: "bugsnag"; context: string[]; message: string }
+  | { tag: "sendPresenceHeartbeat" };
 
 export interface ElmApp {
   ports: {
