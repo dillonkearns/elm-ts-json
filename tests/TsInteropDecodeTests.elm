@@ -29,11 +29,20 @@ suite =
                         , output = "Dillon"
                         , typeDef = "string"
                         }
+        , test "list of strings" <|
+            \() ->
+                list string
+                    |> expectDecodes
+                        { input = """["Hello", "World"]"""
+                        , output = [ "Hello", "World" ]
+                        , typeDef = "string[]"
+                        }
         ]
 
 
 type TsType
     = String
+    | List TsType
 
 
 type InteropDecoder value
@@ -45,6 +54,12 @@ string =
     InteropDecoder Decode.string String
 
 
+list : InteropDecoder value -> InteropDecoder (List value)
+list (InteropDecoder innerDecoder innerType) =
+    --InteropDecoder Decode.string String
+    InteropDecoder (Decode.list innerDecoder) (List innerType)
+
+
 decoder : InteropDecoder value -> Decoder value
 decoder (InteropDecoder decoder_ tsType_) =
     decoder_
@@ -52,9 +67,17 @@ decoder (InteropDecoder decoder_ tsType_) =
 
 tsTypeToString : InteropDecoder value -> String
 tsTypeToString (InteropDecoder decoder_ tsType_) =
+    tsTypeToString_ tsType_
+
+
+tsTypeToString_ : TsType -> String
+tsTypeToString_ tsType_ =
     case tsType_ of
         String ->
             "string"
+
+        List listType ->
+            tsTypeToString_ listType ++ "[]"
 
 
 expectDecodes :
