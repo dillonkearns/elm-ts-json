@@ -45,8 +45,6 @@ suite =
                         , output = Info
                         , typeDef = "\"info\" | \"warning\" | \"error\""
                         }
-
-        --, todo "map"
         , test "nullable" <|
             \() ->
                 nullable string
@@ -55,7 +53,21 @@ suite =
                         , output = Nothing
                         , typeDef = "string | null"
                         }
+        , test "map" <|
+            \() ->
+                string
+                    |> map String.toInt
+                    |> expectDecodes
+                        { input = "\"123\""
+                        , output = Just 123
+                        , typeDef = "string"
+                        }
         ]
+
+
+map : (value -> mapped) -> InteropDecoder value -> InteropDecoder mapped
+map mapFn (InteropDecoder innerDecoder innerType) =
+    InteropDecoder (Decode.map mapFn innerDecoder) innerType
 
 
 nullable : InteropDecoder value -> InteropDecoder (Maybe value)
