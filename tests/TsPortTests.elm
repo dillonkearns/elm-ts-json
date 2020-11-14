@@ -104,7 +104,7 @@ suite =
                             , typeDef = """{ tag : "Alert"; message : string } | { tag : "SendPresenceHeartbeat";  }"""
                             }
             , describe "unions"
-                [ test "string literals" <|
+                [ test "string literal" <|
                     \() ->
                         TsPort.custom
                             (\vInfo vWarning vError value ->
