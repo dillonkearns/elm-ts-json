@@ -1,6 +1,6 @@
 {
     "type": "package",
-    "name": "dillonkearns/elm-codec-interop",
+    "name": "dillonkearns/elm-ts-interop",
     "summary": "Keep your TypeScript type definitions in sync with your ports.",
     "license": "BSD-3-Clause",
     "version": "1.0.0",
