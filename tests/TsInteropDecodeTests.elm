@@ -4,7 +4,6 @@ import Expect exposing (Expectation)
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode
 import Test exposing (..)
-import TsPort exposing (Encoder, property)
 
 
 suite : Test
@@ -37,16 +36,49 @@ suite =
                         , output = [ "Hello", "World" ]
                         , typeDef = "string[]"
                         }
+        , test "literal" <|
+            \() ->
+                literal "Hello" (Encode.list Encode.string [ "Hello" ])
+                    |> expectDecodes
+                        { input = "[\"Hello\"]"
+                        , output = "Hello"
+                        , typeDef = "[\"Hello\"]"
+                        }
+        , test "literals" <|
+            \() ->
+                literal "Hello" (Encode.list Encode.string [ "Hello" ])
+                    |> expectDecodes
+                        { input = "[\"Hello\"]"
+                        , output = "Hello"
+                        , typeDef = "[\"Hello\"]"
+                        }
         ]
 
 
 type TsType
     = String
     | List TsType
+    | Literal Encode.Value
 
 
 type InteropDecoder value
     = InteropDecoder (Decoder value) TsType
+
+
+literal : value -> Encode.Value -> InteropDecoder value
+literal value literalValue =
+    InteropDecoder
+        (Decode.value
+            |> Decode.andThen
+                (\decodeValue ->
+                    if literalValue == decodeValue then
+                        Decode.succeed value
+
+                    else
+                        Decode.fail ("Expected the following literal value: " ++ Encode.encode 0 literalValue)
+                )
+        )
+        (Literal literalValue)
 
 
 string : InteropDecoder String
@@ -78,6 +110,9 @@ tsTypeToString_ tsType_ =
 
         List listType ->
             tsTypeToString_ listType ++ "[]"
+
+        Literal literalValue ->
+            Encode.encode 0 literalValue
 
 
 expectDecodes :
