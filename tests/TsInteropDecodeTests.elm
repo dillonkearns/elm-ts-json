@@ -9,18 +9,7 @@ import Test exposing (..)
 suite : Test
 suite =
     describe "Interop decode"
-        [ --test "object" <|
-          --    \() ->
-          --        TsPort.build
-          --            |> property "first" (TsPort.string |> TsPort.map .first)
-          --            |> property "last" (TsPort.string |> TsPort.map .last)
-          --            |> TsPort.toEncoder
-          --            |> expectEncodes
-          --                { input = { first = "Dillon", last = "Kearns" }
-          --                , output = """{"last":"Kearns","first":"Dillon"}"""
-          --                , typeDef = "{ last : string; first : string }"
-          --                }
-          test "standalone string" <|
+        [ test "standalone string" <|
             \() ->
                 string
                     |> expectDecodes
@@ -46,19 +35,49 @@ suite =
                         }
         , test "literals" <|
             \() ->
-                literal "Hello" (Encode.list Encode.string [ "Hello" ])
+                oneOf
+                    [ literal Info (Encode.string "info")
+                    , literal Warning (Encode.string "warning")
+                    , literal Error (Encode.string "error")
+                    ]
                     |> expectDecodes
-                        { input = "[\"Hello\"]"
-                        , output = "Hello"
-                        , typeDef = "[\"Hello\"]"
+                        { input = "\"info\""
+                        , output = Info
+                        , typeDef = "\"info\" | \"warning\" | \"error\""
                         }
         ]
+
+
+oneOf : List (InteropDecoder value) -> InteropDecoder value
+oneOf decoders =
+    InteropDecoder
+        (decoders
+            |> List.map
+                (\(InteropDecoder innerDecoder innerType) ->
+                    innerDecoder
+                )
+            |> Decode.oneOf
+        )
+        (decoders
+            |> List.map
+                (\(InteropDecoder innerDecoder innerType) ->
+                    innerType
+                )
+            |> Union
+        )
+
+
+type Severity
+    = Info
+    | Warning
+    | Error
 
 
 type TsType
     = String
     | List TsType
     | Literal Encode.Value
+    | Union (List TsType)
 
 
 type InteropDecoder value
@@ -113,6 +132,11 @@ tsTypeToString_ tsType_ =
 
         Literal literalValue ->
             Encode.encode 0 literalValue
+
+        Union tsTypes ->
+            tsTypes
+                |> List.map tsTypeToString_
+                |> String.join " | "
 
 
 expectDecodes :
