@@ -45,7 +45,22 @@ suite =
                         , output = Info
                         , typeDef = "\"info\" | \"warning\" | \"error\""
                         }
+
+        --, todo "map"
+        , test "nullable" <|
+            \() ->
+                nullable string
+                    |> expectDecodes
+                        { input = "null"
+                        , output = Nothing
+                        , typeDef = "string | null"
+                        }
         ]
+
+
+nullable : InteropDecoder value -> InteropDecoder (Maybe value)
+nullable (InteropDecoder innerDecoder innerType) =
+    InteropDecoder (Decode.nullable innerDecoder) (Union [ innerType, Null ])
 
 
 oneOf : List (InteropDecoder value) -> InteropDecoder value
@@ -78,6 +93,7 @@ type TsType
     | List TsType
     | Literal Encode.Value
     | Union (List TsType)
+    | Null
 
 
 type InteropDecoder value
@@ -107,7 +123,6 @@ string =
 
 list : InteropDecoder value -> InteropDecoder (List value)
 list (InteropDecoder innerDecoder innerType) =
-    --InteropDecoder Decode.string String
     InteropDecoder (Decode.list innerDecoder) (List innerType)
 
 
@@ -137,6 +152,9 @@ tsTypeToString_ tsType_ =
             tsTypes
                 |> List.map tsTypeToString_
                 |> String.join " | "
+
+        Null ->
+            "null"
 
 
 expectDecodes :

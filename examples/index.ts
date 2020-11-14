@@ -31,3 +31,5 @@ app.ports.fromElm.subscribe((fromElm) => {
       break;
   }
 });
+
+let something: string | null = null;
