@@ -26,6 +26,14 @@ suite =
                         , output = 123
                         , typeDef = "number"
                         }
+        , test "float" <|
+            \() ->
+                float
+                    |> expectDecodes
+                        { input = "123.45"
+                        , output = 123.45
+                        , typeDef = "number"
+                        }
         , test "list of strings" <|
             \() ->
                 list string
