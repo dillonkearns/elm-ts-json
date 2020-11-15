@@ -3,7 +3,7 @@ module TsPortTests exposing (..)
 import Expect exposing (Expectation)
 import Json.Encode as Encode
 import Test exposing (..)
-import TsPort exposing (Encoder, property)
+import TsInterop.Encode as Encoder exposing (Encoder, property)
 
 
 suite : Test
@@ -12,10 +12,10 @@ suite =
         [ describe "encode"
             [ test "object" <|
                 \() ->
-                    TsPort.build
-                        |> property "first" (TsPort.string |> TsPort.map .first)
-                        |> property "last" (TsPort.string |> TsPort.map .last)
-                        |> TsPort.toEncoder
+                    Encoder.build
+                        |> property "first" (Encoder.string |> Encoder.map .first)
+                        |> property "last" (Encoder.string |> Encoder.map .last)
+                        |> Encoder.toEncoder
                         |> expectEncodes
                             { input = { first = "Dillon", last = "Kearns" }
                             , output = """{"last":"Kearns","first":"Dillon"}"""
@@ -23,8 +23,8 @@ suite =
                             }
             , test "standalone string" <|
                 \() ->
-                    TsPort.string
-                        |> TsPort.map .first
+                    Encoder.string
+                        |> Encoder.map .first
                         |> expectEncodes
                             { input = { first = "Dillon", last = "Kearns" }
                             , output = "\"Dillon\""
@@ -32,7 +32,7 @@ suite =
                             }
             , test "list" <|
                 \() ->
-                    TsPort.list TsPort.string
+                    Encoder.list Encoder.string
                         |> expectEncodes
                             { input = [ "Item 1", "Item 2" ]
                             , output = "[\"Item 1\",\"Item 2\"]"
@@ -40,8 +40,8 @@ suite =
                             }
             , test "list of lists" <|
                 \() ->
-                    TsPort.list
-                        (TsPort.list TsPort.string)
+                    Encoder.list
+                        (Encoder.list Encoder.string)
                         |> expectEncodes
                             { input = [ [ "Item 1", "Item 2" ], [] ]
                             , output = "[[\"Item 1\",\"Item 2\"],[]]"
@@ -49,14 +49,14 @@ suite =
                             }
             , test "custom type with one variant" <|
                 \() ->
-                    TsPort.custom
+                    Encoder.custom
                         (\vOnlyVariant value ->
                             case value of
                                 OnlyVariant ->
                                     vOnlyVariant
                         )
-                        |> TsPort.variant0 "OnlyVariant"
-                        |> TsPort.buildCustom
+                        |> Encoder.variant0 "OnlyVariant"
+                        |> Encoder.buildCustom
                         |> expectEncodes
                             { input = OnlyVariant
                             , output = """{"tag":"OnlyVariant"}"""
@@ -64,7 +64,7 @@ suite =
                             }
             , test "custom type with two variants" <|
                 \() ->
-                    TsPort.custom
+                    Encoder.custom
                         (\vSendHeartbeat vAlert value ->
                             case value of
                                 SendPresenceHeartbeat ->
@@ -73,12 +73,12 @@ suite =
                                 Alert string ->
                                     vAlert string
                         )
-                        |> TsPort.variant0 "SendPresenceHeartbeat"
-                        |> TsPort.objectVariant "Alert"
-                            (TsPort.build
-                                |> property "message" TsPort.string
+                        |> Encoder.variant0 "SendPresenceHeartbeat"
+                        |> Encoder.objectVariant "Alert"
+                            (Encoder.build
+                                |> property "message" Encoder.string
                             )
-                        |> TsPort.buildCustom
+                        |> Encoder.buildCustom
                         |> expectEncodes
                             { input = Alert "Hello!"
                             , output = """{"tag":"Alert","message":"Hello!"}"""
@@ -86,7 +86,7 @@ suite =
                             }
             , test "merge object to variant" <|
                 \() ->
-                    TsPort.custom
+                    Encoder.custom
                         (\vSendHeartbeat vAlert value ->
                             case value of
                                 SendPresenceHeartbeat ->
@@ -95,12 +95,12 @@ suite =
                                 Alert string ->
                                     vAlert string
                         )
-                        |> TsPort.variant0 "SendPresenceHeartbeat"
-                        |> TsPort.objectVariant "Alert"
-                            (TsPort.build
-                                |> property "message" TsPort.string
+                        |> Encoder.variant0 "SendPresenceHeartbeat"
+                        |> Encoder.objectVariant "Alert"
+                            (Encoder.build
+                                |> property "message" Encoder.string
                             )
-                        |> TsPort.buildCustom
+                        |> Encoder.buildCustom
                         |> expectEncodes
                             { input = Alert "Hello!"
                             , output = """{"tag":"Alert","message":"Hello!"}"""
@@ -109,7 +109,7 @@ suite =
             , describe "unions"
                 [ test "string literal" <|
                     \() ->
-                        TsPort.custom
+                        Encoder.custom
                             (\vInfo vWarning vError value ->
                                 case value of
                                     Info ->
@@ -121,10 +121,10 @@ suite =
                                     Error ->
                                         vError
                             )
-                            |> TsPort.variantLiteral (Encode.string "info")
-                            |> TsPort.variantLiteral (Encode.string "warning")
-                            |> TsPort.variantLiteral (Encode.string "error")
-                            |> TsPort.buildCustom
+                            |> Encoder.variantLiteral (Encode.string "info")
+                            |> Encoder.variantLiteral (Encode.string "warning")
+                            |> Encoder.variantLiteral (Encode.string "error")
+                            |> Encoder.buildCustom
                             |> expectEncodes
                                 { input = Warning
                                 , output = "\"warning\""
@@ -156,9 +156,9 @@ expectEncodes :
     -> Expect.Expectation
 expectEncodes expect interop =
     expect.input
-        |> TsPort.encoder interop
+        |> Encoder.encoder interop
         |> Encode.encode 0
         |> Expect.all
             [ \encodedString -> encodedString |> Expect.equal expect.output
-            , \decoded -> TsPort.typeDef interop |> Expect.equal expect.typeDef
+            , \decoded -> Encoder.typeDef interop |> Expect.equal expect.typeDef
             ]

@@ -1,6 +1,6 @@
 module Ports exposing (..)
 
-import TsPort exposing (property)
+import Encoder exposing (property)
 
 
 type ToJs
@@ -8,9 +8,9 @@ type ToJs
     | Alert String
 
 
-toElm : TsPort.Encoder ToJs
+toElm : Encoder.Encoder ToJs
 toElm =
-    TsPort.custom
+    Encoder.custom
         (\vSendHeartbeat vAlert value ->
             case value of
                 SendPresenceHeartbeat ->
@@ -19,9 +19,9 @@ toElm =
                 Alert string ->
                     vAlert string
         )
-        |> TsPort.variant0 "SendPresenceHeartbeat"
-        |> TsPort.objectVariant "Alert"
-            (TsPort.build
-                |> property "message" TsPort.string
+        |> Encoder.variant0 "SendPresenceHeartbeat"
+        |> Encoder.objectVariant "Alert"
+            (Encoder.build
+                |> property "message" Encoder.string
             )
-        |> TsPort.buildCustom
+        |> Encoder.buildCustom

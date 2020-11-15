@@ -1,4 +1,4 @@
-module TsPort exposing (..)
+module TsInterop.Encode exposing (..)
 
 import Json.Encode as Encode
 import TsType exposing (TsType)

@@ -6,27 +6,27 @@ port module GoalGenerated exposing
 
 import GoalPorts
 import Json.Encode
-import TsPort
+import TsInterop.Encode as Encode
 
 
 sendPresenceHeartbeat : Cmd msg
 sendPresenceHeartbeat =
     ()
-        |> TsPort.encodeProVariant "sendPresenceHeartbeat" GoalPorts.sendPresenceHeartbeat
+        |> Encode.encodeProVariant "sendPresenceHeartbeat" GoalPorts.sendPresenceHeartbeat
         |> fromElm
 
 
 alert : String -> Cmd msg
 alert argument =
     argument
-        |> TsPort.encodeProVariant "alert" GoalPorts.alert
+        |> Encode.encodeProVariant "alert" GoalPorts.alert
         |> fromElm
 
 
 bugsnag : { a | context : List String, message : String } -> Cmd msg
 bugsnag argument =
     argument
-        |> TsPort.encodeProVariant "bugsnag" GoalPorts.bugsnag
+        |> Encode.encodeProVariant "bugsnag" GoalPorts.bugsnag
         |> fromElm
 
 
@@ -34,10 +34,10 @@ bugsnag argument =
 -}
 typeDefs : String
 typeDefs =
-    TsPort.customTypeDefToString
-        [ ( "alert", GoalPorts.alert |> TsPort.rawType )
-        , ( "bugsnag", GoalPorts.bugsnag |> TsPort.rawType )
-        , ( "sendPresenceHeartbeat", GoalPorts.sendPresenceHeartbeat |> TsPort.rawType )
+    Encode.customTypeDefToString
+        [ ( "alert", GoalPorts.alert |> Encode.rawType )
+        , ( "bugsnag", GoalPorts.bugsnag |> Encode.rawType )
+        , ( "sendPresenceHeartbeat", GoalPorts.sendPresenceHeartbeat |> Encode.rawType )
         ]
 
 
