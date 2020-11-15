@@ -1,6 +1,7 @@
 module TsPort exposing (..)
 
 import Json.Encode as Encode
+import TsType exposing (TsType)
 
 
 type Encoder encodesFrom
@@ -14,7 +15,7 @@ encoder (Encoder encodeFn tsType_) encodesFrom =
 
 typeDef : Encoder encodesFrom -> String
 typeDef (Encoder encodeFn tsType_) =
-    tsTypeToString tsType_
+    TsType.tsTypeToString_ tsType_
 
 
 rawType : ObjectBuilder a -> List ( String, TsType )
@@ -25,15 +26,6 @@ rawType (ObjectBuilder entries) =
 
 type ObjectBuilder encodesFrom
     = ObjectBuilder (List ( String, encodesFrom -> Encode.Value, TsType ))
-
-
-type TsType
-    = String
-    | List TsType
-    | TypeObject (List ( String, TsType ))
-    | Union (List TsType)
-    | Literal Encode.Value
-    | Array (List TsType)
 
 
 build : ObjectBuilder encodesFrom
@@ -54,7 +46,7 @@ property keyName (Encoder encodeFn tsType_) (ObjectBuilder entries) =
 
 string : Encoder String
 string =
-    Encoder Encode.string String
+    Encoder Encode.string TsType.String
 
 
 map : (encodesFrom -> value) -> Encoder value -> Encoder encodesFrom
@@ -66,7 +58,7 @@ list : Encoder a -> Encoder (List a)
 list (Encoder encodeFn tsType_) =
     Encoder
         (\encodesFrom -> Encode.list encodeFn encodesFrom)
-        (List tsType_)
+        (TsType.List tsType_)
 
 
 custom :
@@ -91,7 +83,7 @@ variant0 variantName (CustomBuilder builder tsTypes_) =
                 [ ( "tag", Encode.string variantName ) ]
             )
         )
-        (TypeObject [ ( "tag", Literal (Encode.string variantName) ) ]
+        (TsType.TypeObject [ ( "tag", TsType.Literal (Encode.string variantName) ) ]
             :: tsTypes_
         )
 
@@ -128,7 +120,7 @@ variantLiteral :
 variantLiteral literalValue (CustomBuilder builder tsTypes) =
     CustomBuilder
         (builder literalValue)
-        (Literal literalValue :: tsTypes)
+        (TsType.Literal literalValue :: tsTypes)
 
 
 objectVariant :
@@ -139,7 +131,7 @@ objectVariant :
 objectVariant variantName (ObjectBuilder entries) (CustomBuilder builder tsTypes) =
     let
         objectTypeDef =
-            ( "tag", Literal (Encode.string variantName) )
+            ( "tag", TsType.Literal (Encode.string variantName) )
                 :: (entries
                         |> List.map (\( key, encodeFn, tsType_ ) -> ( key, tsType_ ))
                    )
@@ -158,7 +150,7 @@ objectVariant variantName (ObjectBuilder entries) (CustomBuilder builder tsTypes
     in
     CustomBuilder
         (builder mappedEncoder)
-        (TypeObject objectTypeDef :: tsTypes)
+        (TsType.TypeObject objectTypeDef :: tsTypes)
 
 
 encodeProVariant :
@@ -184,7 +176,7 @@ type VariantBuilder
 
 buildCustom : CustomBuilder (match -> Encode.Value) -> Encoder match
 buildCustom (CustomBuilder toValue tsTypes_) =
-    Encoder toValue (Union tsTypes_)
+    Encoder toValue (TsType.Union tsTypes_)
 
 
 toEncoder : ObjectBuilder value -> Encoder value
@@ -202,7 +194,7 @@ toEncoder (ObjectBuilder entries) =
         )
         (entries
             |> List.map (\( key, encodeFn, tsType_ ) -> ( key, tsType_ ))
-            |> TypeObject
+            |> TsType.TypeObject
         )
 
 
@@ -211,79 +203,15 @@ proTypeAnnotation entries =
     customTypeDefToString entries
 
 
-tsTypeToString : TsType -> String
-tsTypeToString tsType =
-    case tsType of
-        String ->
-            "string"
-
-        List listType ->
-            tsTypeToString listType ++ "[]"
-
-        TypeObject keyTypes ->
-            "{ "
-                ++ (keyTypes
-                        |> List.map
-                            (\( key, tsType_ ) ->
-                                key ++ " : " ++ tsTypeToString tsType_
-                            )
-                        |> String.join "; "
-                   )
-                ++ " }"
-
-        Union tsTypes ->
-            tsTypes
-                |> List.map tsTypeToString
-                |> String.join " | "
-
-        Literal literalValue ->
-            Encode.encode 0 literalValue
-
-        Array tsTypes ->
-            "["
-                ++ (tsTypes
-                        |> List.map tsTypeToString
-                        |> String.join ", "
-                   )
-                ++ "]"
-
-
 customTypeDefToString : List ( String, List ( String, TsType ) ) -> String
 customTypeDefToString variants =
     variants
         |> List.map
             (\( variantName, objectProperties ) ->
-                TypeObject
-                    (( "tag", Literal (Encode.string variantName) )
+                TsType.TypeObject
+                    (( "tag", TsType.Literal (Encode.string variantName) )
                         :: objectProperties
                     )
             )
-        |> Union
-        |> tsTypeToString
-
-
-keyValueArgsToString : List ( String, TsType ) -> String
-keyValueArgsToString keyValueArgs =
-    List.map
-        (\( key, tsType_ ) ->
-            key ++ " : " ++ tsTypeToString tsType_
-        )
-        keyValueArgs
-        |> String.join "; "
-
-
-argsToString : List TsType -> String
-argsToString variantTypes =
-    if List.isEmpty variantTypes then
-        ""
-
-    else
-        "args: [ "
-            ++ (List.map
-                    (\tsType_ ->
-                        tsTypeToString tsType_
-                    )
-                    variantTypes
-                    |> String.join ""
-               )
-            ++ " ];"
+        |> TsType.Union
+        |> TsType.tsTypeToString_
