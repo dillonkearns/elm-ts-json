@@ -10,6 +10,7 @@ type TsType
     | List TsType
     | Literal Encode.Value
     | TypeObject (List ( String, TsType ))
+    | ObjectWithUniformValues TsType -- https://stackoverflow.com/a/13315210
     | Union (List TsType)
 
 
@@ -51,3 +52,6 @@ tsTypeToString_ tsType_ =
 
         Boolean ->
             "boolean"
+
+        ObjectWithUniformValues tsType ->
+            "{ [key: string]: " ++ tsTypeToString_ tsType ++ " }"

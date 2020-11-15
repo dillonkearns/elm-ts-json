@@ -1,5 +1,6 @@
 module TsPortTests exposing (..)
 
+import Dict
 import Expect exposing (Expectation)
 import Json.Encode as Encode
 import Test exposing (..)
@@ -46,6 +47,14 @@ suite =
                             { input = [ [ "Item 1", "Item 2" ], [] ]
                             , output = "[[\"Item 1\",\"Item 2\"],[]]"
                             , typeDef = "string[][]"
+                            }
+            , test "dict" <|
+                \() ->
+                    Encoder.dict identity Encoder.string
+                        |> expectEncodes
+                            { input = Dict.fromList [ ( "a", "123" ), ( "b", "456" ) ]
+                            , output = """{"a":"123","b":"456"}"""
+                            , typeDef = "{ [key: string]: string }"
                             }
             , test "custom type with one variant" <|
                 \() ->

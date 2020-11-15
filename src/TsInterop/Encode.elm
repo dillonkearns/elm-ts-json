@@ -1,5 +1,6 @@
 module TsInterop.Encode exposing (..)
 
+import Dict exposing (Dict)
 import Json.Encode as Encode
 import TsType exposing (TsType)
 
@@ -59,6 +60,13 @@ list (Encoder encodeFn tsType_) =
     Encoder
         (\encodesFrom -> Encode.list encodeFn encodesFrom)
         (TsType.List tsType_)
+
+
+dict : (comparableKey -> String) -> Encoder value -> Encoder (Dict comparableKey value)
+dict keyToString (Encoder encodeFn tsType_) =
+    Encoder
+        (\encodesFrom -> Encode.dict keyToString encodeFn encodesFrom)
+        (TsType.ObjectWithUniformValues tsType_)
 
 
 custom :
