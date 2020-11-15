@@ -5,6 +5,7 @@ import Json.Encode as Encode
 
 type TsType
     = String
+    | Number
     | List TsType
     | Literal Encode.Value
     | TypeObject (List ( String, TsType ))
@@ -51,6 +52,9 @@ tsTypeToString_ tsType_ =
 
         Custom tsTypes_ ->
             customTypeDefToString tsTypes_
+
+        Number ->
+            "number"
 
 
 customTypeDefToString : List ( String, VariantTypeDef ) -> String

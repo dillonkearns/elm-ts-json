@@ -18,6 +18,14 @@ suite =
                         , output = "Dillon"
                         , typeDef = "string"
                         }
+        , test "int" <|
+            \() ->
+                int
+                    |> expectDecodes
+                        { input = "123"
+                        , output = 123
+                        , typeDef = "number"
+                        }
         , test "list of strings" <|
             \() ->
                 list string
