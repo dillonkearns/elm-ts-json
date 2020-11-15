@@ -34,6 +34,14 @@ suite =
                         , output = 123.45
                         , typeDef = "number"
                         }
+        , test "bool" <|
+            \() ->
+                bool
+                    |> expectDecodes
+                        { input = "true"
+                        , output = True
+                        , typeDef = "boolean"
+                        }
         , test "list of strings" <|
             \() ->
                 list string

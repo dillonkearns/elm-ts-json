@@ -69,6 +69,11 @@ float =
     InteropDecoder Decode.float TsType.Number
 
 
+bool : InteropDecoder Bool
+bool =
+    InteropDecoder Decode.bool TsType.Boolean
+
+
 list : InteropDecoder value -> InteropDecoder (List value)
 list (InteropDecoder innerDecoder innerType) =
     InteropDecoder (Decode.list innerDecoder) (List innerType)

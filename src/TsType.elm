@@ -6,6 +6,7 @@ import Json.Encode as Encode
 type TsType
     = String
     | Number
+    | Boolean
     | List TsType
     | Literal Encode.Value
     | TypeObject (List ( String, TsType ))
@@ -47,3 +48,6 @@ tsTypeToString_ tsType_ =
 
         Number ->
             "number"
+
+        Boolean ->
+            "boolean"
