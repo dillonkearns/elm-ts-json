@@ -60,7 +60,7 @@ suite =
                         |> expectEncodes
                             { input = OnlyVariant
                             , output = """{"tag":"OnlyVariant"}"""
-                            , typeDef = """{ tag : "OnlyVariant";  }"""
+                            , typeDef = """{ tag : "OnlyVariant" }"""
                             }
             , test "custom type with two variants" <|
                 \() ->
@@ -74,12 +74,15 @@ suite =
                                     vAlert string
                         )
                         |> TsPort.variant0 "SendPresenceHeartbeat"
-                        |> TsPort.variant1 "Alert" TsPort.string
+                        |> TsPort.objectVariant "Alert"
+                            (TsPort.build
+                                |> property "message" TsPort.string
+                            )
                         |> TsPort.buildCustom
                         |> expectEncodes
                             { input = Alert "Hello!"
-                            , output = """{"tag":"Alert","args":["Hello!"]}"""
-                            , typeDef = """{ tag : "Alert"; args: [ string ]; } | { tag : "SendPresenceHeartbeat";  }"""
+                            , output = """{"tag":"Alert","message":"Hello!"}"""
+                            , typeDef = """{ tag : "Alert"; message : string } | { tag : "SendPresenceHeartbeat" }"""
                             }
             , test "merge object to variant" <|
                 \() ->
@@ -101,7 +104,7 @@ suite =
                         |> expectEncodes
                             { input = Alert "Hello!"
                             , output = """{"tag":"Alert","message":"Hello!"}"""
-                            , typeDef = """{ tag : "Alert"; message : string } | { tag : "SendPresenceHeartbeat";  }"""
+                            , typeDef = """{ tag : "Alert"; message : string } | { tag : "SendPresenceHeartbeat" }"""
                             }
             , describe "unions"
                 [ test "string literal" <|
