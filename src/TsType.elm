@@ -12,11 +12,6 @@ type TsType
     | Union (List TsType)
 
 
-type VariantTypeDef
-    = Positional (List TsType)
-    | KeyValue (List ( String, TsType ))
-
-
 null : TsType
 null =
     Literal Encode.null
@@ -52,30 +47,3 @@ tsTypeToString_ tsType_ =
 
         Number ->
             "number"
-
-
-keyValueArgsToString : List ( String, TsType ) -> String
-keyValueArgsToString keyValueArgs =
-    List.map
-        (\( key, tsType_ ) ->
-            key ++ " : " ++ tsTypeToString_ tsType_
-        )
-        keyValueArgs
-        |> String.join "; "
-
-
-argsToString : List TsType -> String
-argsToString variantTypes =
-    if List.isEmpty variantTypes then
-        ""
-
-    else
-        "args: [ "
-            ++ (List.map
-                    (\tsType_ ->
-                        tsTypeToString_ tsType_
-                    )
-                    variantTypes
-                    |> String.join ""
-               )
-            ++ " ];"
