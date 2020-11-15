@@ -10,7 +10,6 @@ type TsType
     | Literal Encode.Value
     | TypeObject (List ( String, TsType ))
     | Union (List TsType)
-    | Custom (List ( String, VariantTypeDef ))
 
 
 type VariantTypeDef
@@ -51,34 +50,8 @@ tsTypeToString_ tsType_ =
                    )
                 ++ " }"
 
-        Custom tsTypes_ ->
-            customTypeDefToString tsTypes_
-
         Number ->
             "number"
-
-
-customTypeDefToString : List ( String, VariantTypeDef ) -> String
-customTypeDefToString tsTypes_ =
-    tsTypes_
-        |> List.map
-            (\( variantName, variantTypes ) ->
-                case variantTypes of
-                    Positional positionalArgs ->
-                        "{ tag : \""
-                            ++ variantName
-                            ++ "\"; "
-                            ++ argsToString positionalArgs
-                            ++ " }"
-
-                    KeyValue keyValueArgs ->
-                        "{ tag : \""
-                            ++ variantName
-                            ++ "\"; "
-                            ++ keyValueArgsToString keyValueArgs
-                            ++ " }"
-            )
-        |> String.join " | "
 
 
 keyValueArgsToString : List ( String, TsType ) -> String
