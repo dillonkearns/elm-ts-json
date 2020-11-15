@@ -10,13 +10,17 @@ type TsType
     | Literal Encode.Value
     | TypeObject (List ( String, TsType ))
     | Union (List TsType)
-    | Null
     | Custom (List ( String, VariantTypeDef ))
 
 
 type VariantTypeDef
     = Positional (List TsType)
     | KeyValue (List ( String, TsType ))
+
+
+null : TsType
+null =
+    Literal Encode.null
 
 
 tsTypeToString_ : TsType -> String
@@ -35,9 +39,6 @@ tsTypeToString_ tsType_ =
             tsTypes
                 |> List.map tsTypeToString_
                 |> String.join " | "
-
-        Null ->
-            "null"
 
         TypeObject keyTypes ->
             "{ "
@@ -76,8 +77,6 @@ customTypeDefToString tsTypes_ =
                             ++ "\"; "
                             ++ keyValueArgsToString keyValueArgs
                             ++ " }"
-             --Literal literalValue ->
-             --    Encode.encode 0 literalValue
             )
         |> String.join " | "
 

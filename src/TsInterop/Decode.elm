@@ -12,7 +12,7 @@ map mapFn (InteropDecoder innerDecoder innerType) =
 
 nullable : InteropDecoder value -> InteropDecoder (Maybe value)
 nullable (InteropDecoder innerDecoder innerType) =
-    InteropDecoder (Decode.nullable innerDecoder) (Union [ innerType, Null ])
+    InteropDecoder (Decode.nullable innerDecoder) (Union [ innerType, TsType.null ])
 
 
 oneOf : List (InteropDecoder value) -> InteropDecoder value
