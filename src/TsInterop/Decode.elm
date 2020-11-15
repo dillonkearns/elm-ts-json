@@ -2,6 +2,7 @@ module TsInterop.Decode exposing (..)
 
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode
+import TsType exposing (TsType(..))
 
 
 map : (value -> mapped) -> InteropDecoder value -> InteropDecoder mapped
@@ -31,14 +32,6 @@ oneOf decoders =
                 )
             |> Union
         )
-
-
-type TsType
-    = String
-    | List TsType
-    | Literal Encode.Value
-    | Union (List TsType)
-    | Null
 
 
 type InteropDecoder value
@@ -78,25 +71,4 @@ decoder (InteropDecoder decoder_ tsType_) =
 
 tsTypeToString : InteropDecoder value -> String
 tsTypeToString (InteropDecoder decoder_ tsType_) =
-    tsTypeToString_ tsType_
-
-
-tsTypeToString_ : TsType -> String
-tsTypeToString_ tsType_ =
-    case tsType_ of
-        String ->
-            "string"
-
-        List listType ->
-            tsTypeToString_ listType ++ "[]"
-
-        Literal literalValue ->
-            Encode.encode 0 literalValue
-
-        Union tsTypes ->
-            tsTypes
-                |> List.map tsTypeToString_
-                |> String.join " | "
-
-        Null ->
-            "null"
+    TsType.tsTypeToString_ tsType_
