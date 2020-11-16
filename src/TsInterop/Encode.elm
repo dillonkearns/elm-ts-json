@@ -1,39 +1,96 @@
-module TsInterop.Encode exposing (..)
+module TsInterop.Encode exposing
+    ( Encoder
+    , string, int, float
+    , typeDef, encoder
+    , map
+    , ObjectBuilder, build, property, buildCustom, toEncoder
+    , CustomBuilder, custom, variant0, objectVariant, variantLiteral
+    , list, dict, tuple, triple
+    , customTypeDefToString, encodeProVariant, proTypeAnnotation, rawType, value
+    )
+
+{-|
+
+@docs Encoder
+
+
+## Built-Ins
+
+@docs string, int, float
+
+
+## Executing Encoders
+
+@docs typeDef, encoder
+
+
+## Transforming
+
+@docs map
+
+
+## Objects
+
+@docs ObjectBuilder, build, property, buildCustom, toEncoder
+
+
+## Custom Types
+
+@docs CustomBuilder, custom, variant0, objectVariant, variantLiteral
+
+
+## Collections
+
+@docs list, dict, tuple, triple
+
+
+## Internal
+
+@docs customTypeDefToString, encodeProVariant, proTypeAnnotation, rawType, value
+
+-}
 
 import Dict exposing (Dict)
 import Json.Encode as Encode
 import TsType exposing (TsType)
 
 
+{-| -}
 type Encoder encodesFrom
     = Encoder (encodesFrom -> Encode.Value) TsType
 
 
+{-| -}
 encoder : Encoder encodesFrom -> (encodesFrom -> Encode.Value)
 encoder (Encoder encodeFn tsType_) encodesFrom =
     encodeFn encodesFrom
 
 
+{-| -}
 typeDef : Encoder encodesFrom -> String
 typeDef (Encoder encodeFn tsType_) =
     TsType.tsTypeToString_ tsType_
 
 
+{-| -}
 rawType : ObjectBuilder a -> List ( String, TsType )
 rawType (ObjectBuilder entries) =
     entries
         |> List.map (\( key, encodeFn, tsType_ ) -> ( key, tsType_ ))
 
 
+{-| -}
 type ObjectBuilder encodesFrom
     = ObjectBuilder (List ( String, encodesFrom -> Encode.Value, TsType ))
 
 
+{-| -}
 build : ObjectBuilder encodesFrom
 build =
     ObjectBuilder []
 
 
+{-| -}
 property : String -> Encoder encodesFrom -> ObjectBuilder encodesFrom -> ObjectBuilder encodesFrom
 property keyName (Encoder encodeFn tsType_) (ObjectBuilder entries) =
     ObjectBuilder
@@ -45,31 +102,37 @@ property keyName (Encoder encodeFn tsType_) (ObjectBuilder entries) =
         )
 
 
+{-| -}
 int : Encoder Int
 int =
     Encoder Encode.int TsType.Number
 
 
+{-| -}
 float : Encoder Float
 float =
     Encoder Encode.float TsType.Number
 
 
+{-| -}
 string : Encoder String
 string =
     Encoder Encode.string TsType.String
 
 
+{-| -}
 value : Encoder Encode.Value
 value =
     Encoder identity TsType.Unknown
 
 
+{-| -}
 map : (encodesFrom -> value) -> Encoder value -> Encoder encodesFrom
 map getter (Encoder encodeFn tsType_) =
     Encoder (\value_ -> value_ |> getter |> encodeFn) tsType_
 
 
+{-| -}
 list : Encoder a -> Encoder (List a)
 list (Encoder encodeFn tsType_) =
     Encoder
@@ -77,6 +140,7 @@ list (Encoder encodeFn tsType_) =
         (TsType.List tsType_)
 
 
+{-| -}
 tuple : Encoder value1 -> Encoder value2 -> Encoder ( value1, value2 )
 tuple (Encoder encodeFn1 tsType1) (Encoder encodeFn2 tsType2) =
     Encoder
@@ -86,6 +150,7 @@ tuple (Encoder encodeFn1 tsType1) (Encoder encodeFn2 tsType2) =
         (TsType.Tuple [ tsType1, tsType2 ])
 
 
+{-| -}
 triple : Encoder value1 -> Encoder value2 -> Encoder value3 -> Encoder ( value1, value2, value3 )
 triple (Encoder encodeFn1 tsType1) (Encoder encodeFn2 tsType2) (Encoder encodeFn3 tsType3) =
     Encoder
@@ -99,6 +164,7 @@ triple (Encoder encodeFn1 tsType1) (Encoder encodeFn2 tsType2) (Encoder encodeFn
         (TsType.Tuple [ tsType1, tsType2, tsType3 ])
 
 
+{-| -}
 dict : (comparableKey -> String) -> Encoder value -> Encoder (Dict comparableKey value)
 dict keyToString (Encoder encodeFn tsType_) =
     Encoder
@@ -106,6 +172,7 @@ dict keyToString (Encoder encodeFn tsType_) =
         (TsType.ObjectWithUniformValues tsType_)
 
 
+{-| -}
 custom :
     custom
     -> CustomBuilder custom
@@ -113,10 +180,12 @@ custom match =
     CustomBuilder match []
 
 
+{-| -}
 type CustomBuilder match
     = CustomBuilder match (List TsType)
 
 
+{-| -}
 variant0 :
     String
     -> CustomBuilder (Encode.Value -> match)
@@ -158,6 +227,7 @@ variant0 variantName (CustomBuilder builder tsTypes_) =
 --        ( variantName, Positional [ tsType_ ] ) :: tsTypes)
 
 
+{-| -}
 variantLiteral :
     Encode.Value
     -> CustomBuilder (Encode.Value -> match)
@@ -168,6 +238,7 @@ variantLiteral literalValue (CustomBuilder builder tsTypes) =
         (TsType.Literal literalValue :: tsTypes)
 
 
+{-| -}
 objectVariant :
     String
     -> ObjectBuilder arg1
@@ -198,6 +269,7 @@ objectVariant variantName (ObjectBuilder entries) (CustomBuilder builder tsTypes
         (TsType.TypeObject objectTypeDef :: tsTypes)
 
 
+{-| -}
 encodeProVariant :
     String
     -> ObjectBuilder arg1
@@ -215,15 +287,13 @@ encodeProVariant variantName (ObjectBuilder entries) arg1 =
         )
 
 
-type VariantBuilder
-    = VariantBuilder
-
-
+{-| -}
 buildCustom : CustomBuilder (match -> Encode.Value) -> Encoder match
 buildCustom (CustomBuilder toValue tsTypes_) =
     Encoder toValue (TsType.Union tsTypes_)
 
 
+{-| -}
 toEncoder : ObjectBuilder value -> Encoder value
 toEncoder (ObjectBuilder entries) =
     Encoder
@@ -243,11 +313,13 @@ toEncoder (ObjectBuilder entries) =
         )
 
 
+{-| -}
 proTypeAnnotation : List ( String, List ( String, TsType ) ) -> String
 proTypeAnnotation entries =
     customTypeDefToString entries
 
 
+{-| -}
 customTypeDefToString : List ( String, List ( String, TsType ) ) -> String
 customTypeDefToString variants =
     variants
