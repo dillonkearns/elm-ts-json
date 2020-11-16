@@ -96,14 +96,6 @@ type Severity
     | Error
 
 
-type TsType
-    = String
-    | List TsType
-    | Literal Encode.Value
-    | Union (List TsType)
-    | Null
-
-
 expectDecodes :
     { output : decodesTo, input : String, typeDef : String }
     -> InteropDecoder decodesTo
