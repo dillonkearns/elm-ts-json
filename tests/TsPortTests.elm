@@ -56,6 +56,31 @@ suite =
                             , output = """{"a":"123","b":"456"}"""
                             , typeDef = "{ [key: string]: string }"
                             }
+            , test "dict with unions" <|
+                \() ->
+                    Encoder.dict identity
+                        (Encoder.custom
+                            (\vInfo vWarning vError value ->
+                                case value of
+                                    Info ->
+                                        vInfo
+
+                                    Warning ->
+                                        vWarning
+
+                                    Error ->
+                                        vError
+                            )
+                            |> Encoder.variantLiteral (Encode.string "info")
+                            |> Encoder.variantLiteral (Encode.string "warning")
+                            |> Encoder.variantLiteral (Encode.string "error")
+                            |> Encoder.buildCustom
+                        )
+                        |> expectEncodes
+                            { input = Dict.fromList [ ( "a", Info ), ( "b", Warning ) ]
+                            , output = """{"a":"info","b":"warning"}"""
+                            , typeDef = """{ [key: string]: "error" | "warning" | "info" }"""
+                            }
             , test "custom type with one variant" <|
                 \() ->
                     Encoder.custom
@@ -171,3 +196,25 @@ expectEncodes expect interop =
             [ \encodedString -> encodedString |> Expect.equal expect.output
             , \decoded -> Encoder.typeDef interop |> Expect.equal expect.typeDef
             ]
+
+
+expectEncodesNew :
+    List ( encodesFrom, String )
+    -> String
+    -> Encoder encodesFrom
+    -> Expect.Expectation
+expectEncodesNew cases expectedTypeDef interop =
+    ()
+        |> Expect.all
+            ((\() -> Encoder.typeDef interop |> Expect.equal expectedTypeDef)
+                :: (cases
+                        |> List.map
+                            (\( input, expectedOutput ) ->
+                                \() ->
+                                    input
+                                        |> Encoder.encoder interop
+                                        |> Encode.encode 0
+                                        |> Expect.equal expectedOutput
+                            )
+                   )
+            )
