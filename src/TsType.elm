@@ -8,6 +8,7 @@ type TsType
     | Number
     | Boolean
     | List TsType
+    | Tuple (List TsType)
     | Literal Encode.Value
     | TypeObject (List ( String, TsType ))
     | ObjectWithUniformValues TsType -- https://stackoverflow.com/a/13315210
@@ -59,3 +60,14 @@ tsTypeToString_ tsType_ =
 
         Unknown ->
             "unknown"
+
+        Tuple tsTypes ->
+            "[ "
+                ++ (tsTypes
+                        |> List.map
+                            (\type_ ->
+                                tsTypeToString_ type_
+                            )
+                        |> String.join ", "
+                   )
+                ++ " ]"

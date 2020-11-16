@@ -77,6 +77,15 @@ list (Encoder encodeFn tsType_) =
         (TsType.List tsType_)
 
 
+tuple : Encoder value1 -> Encoder value2 -> Encoder ( value1, value2 )
+tuple (Encoder encodeFn1 tsType1) (Encoder encodeFn2 tsType2) =
+    Encoder
+        (\( value1, value2 ) ->
+            Encode.list identity [ encodeFn1 value1, encodeFn2 value2 ]
+        )
+        (TsType.Tuple [ tsType1, tsType2 ])
+
+
 dict : (comparableKey -> String) -> Encoder value -> Encoder (Dict comparableKey value)
 dict keyToString (Encoder encodeFn tsType_) =
     Encoder
