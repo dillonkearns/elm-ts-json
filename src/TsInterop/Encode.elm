@@ -45,6 +45,11 @@ property keyName (Encoder encodeFn tsType_) (ObjectBuilder entries) =
         )
 
 
+int : Encoder Int
+int =
+    Encoder Encode.int TsType.Number
+
+
 string : Encoder String
 string =
     Encoder Encode.string TsType.String

@@ -31,6 +31,14 @@ suite =
                             , output = "\"Dillon\""
                             , typeDef = "string"
                             }
+            , test "int" <|
+                \() ->
+                    Encoder.int
+                        |> expectEncodes
+                            { input = 123
+                            , output = "123"
+                            , typeDef = "number"
+                            }
             , test "Encode.value escape hatch" <|
                 \() ->
                     Encoder.value
