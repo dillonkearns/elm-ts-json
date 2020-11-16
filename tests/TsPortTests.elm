@@ -31,6 +31,14 @@ suite =
                             , output = "\"Dillon\""
                             , typeDef = "string"
                             }
+            , test "Encode.value escape hatch" <|
+                \() ->
+                    Encoder.value
+                        |> expectEncodes
+                            { input = Encode.list Encode.string [ "Hello", "World" ]
+                            , output = """["Hello","World"]"""
+                            , typeDef = "unknown"
+                            }
             , test "list" <|
                 \() ->
                     Encoder.list Encoder.string

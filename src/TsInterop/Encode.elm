@@ -50,9 +50,14 @@ string =
     Encoder Encode.string TsType.String
 
 
+value : Encoder Encode.Value
+value =
+    Encoder identity TsType.Unknown
+
+
 map : (encodesFrom -> value) -> Encoder value -> Encoder encodesFrom
 map getter (Encoder encodeFn tsType_) =
-    Encoder (\value -> value |> getter |> encodeFn) tsType_
+    Encoder (\value_ -> value_ |> getter |> encodeFn) tsType_
 
 
 list : Encoder a -> Encoder (List a)

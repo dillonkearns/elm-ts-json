@@ -12,6 +12,7 @@ type TsType
     | TypeObject (List ( String, TsType ))
     | ObjectWithUniformValues TsType -- https://stackoverflow.com/a/13315210
     | Union (List TsType)
+    | Unknown
 
 
 null : TsType
@@ -55,3 +56,6 @@ tsTypeToString_ tsType_ =
 
         ObjectWithUniformValues tsType ->
             "{ [key: string]: " ++ tsTypeToString_ tsType ++ " }"
+
+        Unknown ->
+            "unknown"
