@@ -39,6 +39,14 @@ suite =
                             , output = "123"
                             , typeDef = "number"
                             }
+            , test "float" <|
+                \() ->
+                    Encoder.float
+                        |> expectEncodes
+                            { input = 123.45
+                            , output = "123.45"
+                            , typeDef = "number"
+                            }
             , test "Encode.value escape hatch" <|
                 \() ->
                     Encoder.value

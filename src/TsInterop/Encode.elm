@@ -50,6 +50,11 @@ int =
     Encoder Encode.int TsType.Number
 
 
+float : Encoder Float
+float =
+    Encoder Encode.float TsType.Number
+
+
 string : Encoder String
 string =
     Encoder Encode.string TsType.String
