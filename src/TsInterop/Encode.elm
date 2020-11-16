@@ -198,15 +198,25 @@ variant0 :
     -> UnionBuilder (Encode.Value -> match)
     -> UnionBuilder match
 variant0 variantName (UnionBuilder builder tsTypes_) =
-    UnionBuilder
-        (builder
-            (Encode.object
-                [ ( "tag", Encode.string variantName ) ]
-            )
+    let
+        thing : UnionBuilder ((() -> Encode.Value) -> match)
+        thing =
+            UnionBuilder
+                (builder
+                    |> transformBuilder
+                )
+                tsTypes_
+
+        transformBuilder : (Encode.Value -> match) -> (() -> Encode.Value) -> match
+        transformBuilder matchBuilder encoderFn =
+            matchBuilder (encoderFn ())
+    in
+    variant
+        (build
+            |> property "tag" (literal (Encode.string variantName))
+            |> toEncoder
         )
-        (TsType.TypeObject [ ( "tag", TsType.Literal (Encode.string variantName) ) ]
-            :: tsTypes_
-        )
+        thing
 
 
 {-| -}
