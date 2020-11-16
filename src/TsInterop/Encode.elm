@@ -1,12 +1,13 @@
 module TsInterop.Encode exposing
     ( Encoder
-    , string, int, float
+    , string, int, float, literal
     , typeDef, encoder
     , map
     , ObjectBuilder, build, property, buildUnion, toEncoder
     , UnionBuilder, union, variant0, variantObject, variantLiteral
     , list, dict, tuple, triple
     , unionTypeDefToString, encodeProVariant, proTypeAnnotation, rawType, value
+    , variant
     )
 
 {-|
@@ -16,7 +17,7 @@ module TsInterop.Encode exposing
 
 ## Built-Ins
 
-@docs string, int, float
+@docs string, int, float, literal
 
 
 ## Executing Encoders
@@ -36,7 +37,7 @@ module TsInterop.Encode exposing
 
 ## Union Types
 
-@docs UnionBuilder, union, variant0, variantObject, variantLiteral
+@docs UnionBuilder, union, variant0, variantObject, variantLiteral, variantValue
 
 
 ## Collections
@@ -121,6 +122,12 @@ string =
 
 
 {-| -}
+literal : Encode.Value -> Encoder ()
+literal literalValue =
+    Encoder (\_ -> literalValue) (TsType.Literal literalValue)
+
+
+{-| -}
 value : Encoder Encode.Value
 value =
     Encoder identity TsType.Unknown
@@ -200,6 +207,17 @@ variant0 variantName (UnionBuilder builder tsTypes_) =
         (TsType.TypeObject [ ( "tag", TsType.Literal (Encode.string variantName) ) ]
             :: tsTypes_
         )
+
+
+{-| -}
+variant :
+    Encoder encodesFrom
+    -> UnionBuilder ((encodesFrom -> Encode.Value) -> match)
+    -> UnionBuilder match
+variant (Encoder encoder_ tsType_) (UnionBuilder builder tsTypes_) =
+    UnionBuilder
+        (builder encoder_)
+        (tsType_ :: tsTypes_)
 
 
 

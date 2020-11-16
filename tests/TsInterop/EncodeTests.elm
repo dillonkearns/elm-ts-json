@@ -157,6 +157,39 @@ suite =
                         , output = """{"tag":"Alert","message":"Hello!"}"""
                         , typeDef = """{ tag : "Alert"; message : string } | { tag : "SendPresenceHeartbeat" }"""
                         }
+        , test "variant with encoders" <|
+            \() ->
+                Encoder.union
+                    (\vAdmin vRegular vGuest value ->
+                        case value of
+                            Admin name id ->
+                                vAdmin { name = name, id = id }
+
+                            Regular name ->
+                                vRegular { name = name }
+
+                            Guest ->
+                                vGuest ()
+                    )
+                    |> Encoder.variant
+                        (Encoder.build
+                            |> property "name" (Encoder.map .name Encoder.string)
+                            |> property "id" (Encoder.map .id Encoder.int)
+                            |> Encoder.toEncoder
+                        )
+                    |> Encoder.variant
+                        (Encoder.build
+                            |> property "name" (Encoder.map .name Encoder.string)
+                            |> Encoder.toEncoder
+                        )
+                    |> Encoder.variant
+                        (Encoder.build |> Encoder.toEncoder)
+                    |> Encoder.buildUnion
+                    |> expectEncodes
+                        { input = Admin "Dillon" 123
+                        , output = """{"id":123,"name":"Dillon"}"""
+                        , typeDef = """{  } | { name : string } | { id : number; name : string }"""
+                        }
         , test "merge object to variant" <|
             \() ->
                 Encoder.union
@@ -205,6 +238,12 @@ suite =
                             }
             ]
         ]
+
+
+type User
+    = Admin String Int
+    | Regular String
+    | Guest
 
 
 type Severity
