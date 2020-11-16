@@ -86,6 +86,19 @@ tuple (Encoder encodeFn1 tsType1) (Encoder encodeFn2 tsType2) =
         (TsType.Tuple [ tsType1, tsType2 ])
 
 
+triple : Encoder value1 -> Encoder value2 -> Encoder value3 -> Encoder ( value1, value2, value3 )
+triple (Encoder encodeFn1 tsType1) (Encoder encodeFn2 tsType2) (Encoder encodeFn3 tsType3) =
+    Encoder
+        (\( value1, value2, value3 ) ->
+            Encode.list identity
+                [ encodeFn1 value1
+                , encodeFn2 value2
+                , encodeFn3 value3
+                ]
+        )
+        (TsType.Tuple [ tsType1, tsType2, tsType3 ])
+
+
 dict : (comparableKey -> String) -> Encoder value -> Encoder (Dict comparableKey value)
 dict keyToString (Encoder encodeFn tsType_) =
     Encoder

@@ -71,6 +71,14 @@ suite =
                             , output = "[\"Item 1\",789]"
                             , typeDef = "[ string, number ]"
                             }
+            , test "triple" <|
+                \() ->
+                    Encoder.triple Encoder.string Encoder.int Encoder.int
+                        |> expectEncodes
+                            { input = ( "Item 1", 123, 789 )
+                            , output = "[\"Item 1\",123,789]"
+                            , typeDef = "[ string, number, number ]"
+                            }
             , test "list of lists" <|
                 \() ->
                     Encoder.list
