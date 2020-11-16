@@ -1,4 +1,4 @@
-module TsPortTests exposing (..)
+module TsInterop.EncodeTests exposing (..)
 
 import Dict
 import Expect exposing (Expectation)

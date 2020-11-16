@@ -1,4 +1,4 @@
-module TsInteropDecodeTests exposing (..)
+module TsInterop.DecodeTests exposing (..)
 
 import Expect exposing (Expectation)
 import Json.Decode as Decode exposing (Decoder)
