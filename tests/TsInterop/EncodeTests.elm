@@ -98,7 +98,7 @@ suite =
         , test "dict with unions" <|
             \() ->
                 Encoder.dict identity
-                    (Encoder.custom
+                    (Encoder.union
                         (\vInfo vWarning vError value ->
                             case value of
                                 Info ->
@@ -113,31 +113,31 @@ suite =
                         |> Encoder.variantLiteral (Encode.string "info")
                         |> Encoder.variantLiteral (Encode.string "warning")
                         |> Encoder.variantLiteral (Encode.string "error")
-                        |> Encoder.buildCustom
+                        |> Encoder.buildUnion
                     )
                     |> expectEncodes
                         { input = Dict.fromList [ ( "a", Info ), ( "b", Warning ) ]
                         , output = """{"a":"info","b":"warning"}"""
                         , typeDef = """{ [key: string]: "error" | "warning" | "info" }"""
                         }
-        , test "custom type with one variant" <|
+        , test "union type with one variant" <|
             \() ->
-                Encoder.custom
+                Encoder.union
                     (\vOnlyVariant value ->
                         case value of
                             OnlyVariant ->
                                 vOnlyVariant
                     )
                     |> Encoder.variant0 "OnlyVariant"
-                    |> Encoder.buildCustom
+                    |> Encoder.buildUnion
                     |> expectEncodes
                         { input = OnlyVariant
                         , output = """{"tag":"OnlyVariant"}"""
                         , typeDef = """{ tag : "OnlyVariant" }"""
                         }
-        , test "custom type with two variants" <|
+        , test "union type with two variants" <|
             \() ->
-                Encoder.custom
+                Encoder.union
                     (\vSendHeartbeat vAlert value ->
                         case value of
                             SendPresenceHeartbeat ->
@@ -147,11 +147,11 @@ suite =
                                 vAlert string
                     )
                     |> Encoder.variant0 "SendPresenceHeartbeat"
-                    |> Encoder.objectVariant "Alert"
+                    |> Encoder.variantObject "Alert"
                         (Encoder.build
                             |> property "message" Encoder.string
                         )
-                    |> Encoder.buildCustom
+                    |> Encoder.buildUnion
                     |> expectEncodes
                         { input = Alert "Hello!"
                         , output = """{"tag":"Alert","message":"Hello!"}"""
@@ -159,7 +159,7 @@ suite =
                         }
         , test "merge object to variant" <|
             \() ->
-                Encoder.custom
+                Encoder.union
                     (\vSendHeartbeat vAlert value ->
                         case value of
                             SendPresenceHeartbeat ->
@@ -169,11 +169,11 @@ suite =
                                 vAlert string
                     )
                     |> Encoder.variant0 "SendPresenceHeartbeat"
-                    |> Encoder.objectVariant "Alert"
+                    |> Encoder.variantObject "Alert"
                         (Encoder.build
                             |> property "message" Encoder.string
                         )
-                    |> Encoder.buildCustom
+                    |> Encoder.buildUnion
                     |> expectEncodes
                         { input = Alert "Hello!"
                         , output = """{"tag":"Alert","message":"Hello!"}"""
@@ -182,7 +182,7 @@ suite =
         , describe "unions"
             [ test "string literal" <|
                 \() ->
-                    Encoder.custom
+                    Encoder.union
                         (\vInfo vWarning vError value ->
                             case value of
                                 Info ->
@@ -197,7 +197,7 @@ suite =
                         |> Encoder.variantLiteral (Encode.string "info")
                         |> Encoder.variantLiteral (Encode.string "warning")
                         |> Encoder.variantLiteral (Encode.string "error")
-                        |> Encoder.buildCustom
+                        |> Encoder.buildUnion
                         |> expectEncodes
                             { input = Warning
                             , output = "\"warning\""

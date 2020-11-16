@@ -1,6 +1,6 @@
 module Ports exposing (..)
 
-import Encoder exposing (property)
+import TsInterop.Encode as Encoder exposing (property)
 
 
 type ToJs
@@ -10,7 +10,7 @@ type ToJs
 
 toElm : Encoder.Encoder ToJs
 toElm =
-    Encoder.custom
+    Encoder.union
         (\vSendHeartbeat vAlert value ->
             case value of
                 SendPresenceHeartbeat ->
@@ -20,8 +20,8 @@ toElm =
                     vAlert string
         )
         |> Encoder.variant0 "SendPresenceHeartbeat"
-        |> Encoder.objectVariant "Alert"
+        |> Encoder.variantObject "Alert"
             (Encoder.build
                 |> property "message" Encoder.string
             )
-        |> Encoder.buildCustom
+        |> Encoder.buildUnion

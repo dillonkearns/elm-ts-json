@@ -3,10 +3,10 @@ module TsInterop.Encode exposing
     , string, int, float
     , typeDef, encoder
     , map
-    , ObjectBuilder, build, property, buildCustom, toEncoder
-    , CustomBuilder, custom, variant0, objectVariant, variantLiteral
+    , ObjectBuilder, build, property, buildUnion, toEncoder
+    , UnionBuilder, union, variant0, variantObject, variantLiteral
     , list, dict, tuple, triple
-    , customTypeDefToString, encodeProVariant, proTypeAnnotation, rawType, value
+    , unionTypeDefToString, encodeProVariant, proTypeAnnotation, rawType, value
     )
 
 {-|
@@ -31,12 +31,12 @@ module TsInterop.Encode exposing
 
 ## Objects
 
-@docs ObjectBuilder, build, property, buildCustom, toEncoder
+@docs ObjectBuilder, build, property, buildUnion, toEncoder
 
 
-## Custom Types
+## Union Types
 
-@docs CustomBuilder, custom, variant0, objectVariant, variantLiteral
+@docs UnionBuilder, union, variant0, variantObject, variantLiteral
 
 
 ## Collections
@@ -46,7 +46,7 @@ module TsInterop.Encode exposing
 
 ## Internal
 
-@docs customTypeDefToString, encodeProVariant, proTypeAnnotation, rawType, value
+@docs unionTypeDefToString, encodeProVariant, proTypeAnnotation, rawType, value
 
 -}
 
@@ -173,25 +173,25 @@ dict keyToString (Encoder encodeFn tsType_) =
 
 
 {-| -}
-custom :
-    custom
-    -> CustomBuilder custom
-custom match =
-    CustomBuilder match []
+union :
+    constructor
+    -> UnionBuilder constructor
+union constructor =
+    UnionBuilder constructor []
 
 
 {-| -}
-type CustomBuilder match
-    = CustomBuilder match (List TsType)
+type UnionBuilder match
+    = UnionBuilder match (List TsType)
 
 
 {-| -}
 variant0 :
     String
-    -> CustomBuilder (Encode.Value -> match)
-    -> CustomBuilder match
-variant0 variantName (CustomBuilder builder tsTypes_) =
-    CustomBuilder
+    -> UnionBuilder (Encode.Value -> match)
+    -> UnionBuilder match
+variant0 variantName (UnionBuilder builder tsTypes_) =
+    UnionBuilder
         (builder
             (Encode.object
                 [ ( "tag", Encode.string variantName ) ]
@@ -230,21 +230,21 @@ variant0 variantName (CustomBuilder builder tsTypes_) =
 {-| -}
 variantLiteral :
     Encode.Value
-    -> CustomBuilder (Encode.Value -> match)
-    -> CustomBuilder match
-variantLiteral literalValue (CustomBuilder builder tsTypes) =
-    CustomBuilder
+    -> UnionBuilder (Encode.Value -> match)
+    -> UnionBuilder match
+variantLiteral literalValue (UnionBuilder builder tsTypes) =
+    UnionBuilder
         (builder literalValue)
         (TsType.Literal literalValue :: tsTypes)
 
 
 {-| -}
-objectVariant :
+variantObject :
     String
     -> ObjectBuilder arg1
-    -> CustomBuilder ((arg1 -> Encode.Value) -> match)
-    -> CustomBuilder match
-objectVariant variantName (ObjectBuilder entries) (CustomBuilder builder tsTypes) =
+    -> UnionBuilder ((arg1 -> Encode.Value) -> match)
+    -> UnionBuilder match
+variantObject variantName (ObjectBuilder entries) (UnionBuilder builder tsTypes) =
     let
         objectTypeDef =
             ( "tag", TsType.Literal (Encode.string variantName) )
@@ -264,7 +264,7 @@ objectVariant variantName (ObjectBuilder entries) (CustomBuilder builder tsTypes
                        )
                 )
     in
-    CustomBuilder
+    UnionBuilder
         (builder mappedEncoder)
         (TsType.TypeObject objectTypeDef :: tsTypes)
 
@@ -288,8 +288,8 @@ encodeProVariant variantName (ObjectBuilder entries) arg1 =
 
 
 {-| -}
-buildCustom : CustomBuilder (match -> Encode.Value) -> Encoder match
-buildCustom (CustomBuilder toValue tsTypes_) =
+buildUnion : UnionBuilder (match -> Encode.Value) -> Encoder match
+buildUnion (UnionBuilder toValue tsTypes_) =
     Encoder toValue (TsType.Union tsTypes_)
 
 
@@ -316,12 +316,12 @@ toEncoder (ObjectBuilder entries) =
 {-| -}
 proTypeAnnotation : List ( String, List ( String, TsType ) ) -> String
 proTypeAnnotation entries =
-    customTypeDefToString entries
+    unionTypeDefToString entries
 
 
 {-| -}
-customTypeDefToString : List ( String, List ( String, TsType ) ) -> String
-customTypeDefToString variants =
+unionTypeDefToString : List ( String, List ( String, TsType ) ) -> String
+unionTypeDefToString variants =
     variants
         |> List.map
             (\( variantName, objectProperties ) ->

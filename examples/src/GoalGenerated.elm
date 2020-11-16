@@ -34,7 +34,7 @@ bugsnag argument =
 -}
 typeDefs : String
 typeDefs =
-    Encode.customTypeDefToString
+    Encode.unionTypeDefToString
         [ ( "alert", GoalPorts.alert |> Encode.rawType )
         , ( "bugsnag", GoalPorts.bugsnag |> Encode.rawType )
         , ( "sendPresenceHeartbeat", GoalPorts.sendPresenceHeartbeat |> Encode.rawType )
