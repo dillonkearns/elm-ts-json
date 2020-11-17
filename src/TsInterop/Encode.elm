@@ -17,7 +17,7 @@ module TsInterop.Encode exposing
 
 ## Built-Ins
 
-@docs string, int, float, literal
+@docs string, int, float, literal, bool
 
 
 ## Executing Encoders
@@ -101,6 +101,12 @@ property keyName (Encoder encodeFn tsType_) (ObjectBuilder entries) =
          )
             :: entries
         )
+
+
+{-| -}
+bool : Encoder Bool
+bool =
+    Encoder Encode.bool TsType.Boolean
 
 
 {-| -}
