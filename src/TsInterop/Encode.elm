@@ -122,7 +122,7 @@ string =
 
 
 {-| -}
-literal : Encode.Value -> Encoder ()
+literal : Encode.Value -> Encoder a
 literal literalValue =
     Encoder (\_ -> literalValue) (TsType.Literal literalValue)
 
@@ -272,29 +272,13 @@ variantObject :
     -> ObjectBuilder arg1
     -> UnionBuilder ((arg1 -> Encode.Value) -> match)
     -> UnionBuilder match
-variantObject variantName (ObjectBuilder entries) (UnionBuilder builder tsTypes) =
-    let
-        objectTypeDef =
-            ( "tag", TsType.Literal (Encode.string variantName) )
-                :: (entries
-                        |> List.map (\( key, encodeFn, tsType_ ) -> ( key, tsType_ ))
-                   )
-
-        mappedEncoder : arg1 -> Encode.Value
-        mappedEncoder arg1 =
-            Encode.object
-                (( "tag", Encode.string variantName )
-                    :: (entries
-                            |> List.map
-                                (\( key, encodeFn, tsType_ ) ->
-                                    ( key, encodeFn arg1 )
-                                )
-                       )
-                )
-    in
-    UnionBuilder
-        (builder mappedEncoder)
-        (TsType.TypeObject objectTypeDef :: tsTypes)
+variantObject variantName objectBuilder unionBuilder =
+    variant
+        (objectBuilder
+            |> property "tag" (literal (Encode.string variantName))
+            |> toEncoder
+        )
+        unionBuilder
 
 
 {-| -}
