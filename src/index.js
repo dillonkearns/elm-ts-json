@@ -12,17 +12,19 @@ const data = compileToStringSync(["src/CodeGenTarget.elm"], {});
 
   eval(data.toString());
   const app = Elm.CodeGenTarget.init();
-  app.ports.log.subscribe((message) => {
+  app.ports.log.subscribe((typeDefinitions) => {
     fs.writeFileSync(
       `./src/${moduleName}/index.d.ts`,
-      declarationFileContent({ fromJsType: message })
+      declarationFileContent(typeDefinitions)
     );
   });
   console.warn = warnOriginal;
 })();
 
-function declarationFileContent({ fromJsType }) {
-  return `type FromElm = ${fromJsType}
+function declarationFileContent({ fromElm, flags }) {
+  return `type FromElm = ${fromElm}
+
+type Flags = ${flags}
 
 export interface ElmApp {
   ports: {
@@ -37,7 +39,7 @@ export interface ElmApp {
 
 declare const Elm: {
   ${moduleName}: {
-    init(options: { node?: HTMLElement | null; flags: null }): ElmApp;
+    init(options: { node?: HTMLElement | null; flags: Flags }): ElmApp;
   };
 };
 export { Elm };

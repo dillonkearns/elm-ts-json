@@ -5,10 +5,11 @@ import GoalGenerated
 import GoalPorts
 import Html exposing (..)
 import Html.Events
+import Json.Decode
 import Ports
 
 
-main : Program () Model Msg
+main : Program Json.Decode.Value Model Msg
 main =
     Browser.element
         { init = init
@@ -24,7 +25,7 @@ type alias Model =
     }
 
 
-init : () -> ( Model, Cmd Msg )
+init : Json.Decode.Value -> ( Model, Cmd Msg )
 init flags =
     ( { draft = "", messages = [] }
     , Cmd.none

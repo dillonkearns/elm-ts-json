@@ -1,5 +1,7 @@
 type FromElm = { tag : "alert"; message : string } | { tag : "bugsnag"; context : string[]; message : string } | { tag : "sendPresenceHeartbeat" }
 
+type Flags = "info" | "warning" | "error"
+
 export interface ElmApp {
   ports: {
     fromElm: {
@@ -13,7 +15,7 @@ export interface ElmApp {
 
 declare const Elm: {
   Main: {
-    init(options: { node?: HTMLElement | null; flags: null }): ElmApp;
+    init(options: { node?: HTMLElement | null; flags: Flags }): ElmApp;
   };
 };
 export { Elm };

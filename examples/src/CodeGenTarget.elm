@@ -1,31 +1,65 @@
 port module CodeGenTarget exposing (..)
 
 import GoalPorts
-import Json.Encode
-import TsInterop.Encode as Encode
+import Json.Encode as Encode
+import TsInterop.Decode as Decode
+import TsInterop.Encode as Encoder
 
 
 {-| TODO only generate for temp file
 -}
 typeDefs : String
 typeDefs =
-    Encode.unionTypeDefToString
-        [ ( "alert", GoalPorts.alert |> Encode.rawType )
-        , ( "bugsnag", GoalPorts.bugsnag |> Encode.rawType )
-        , ( "sendPresenceHeartbeat", GoalPorts.sendPresenceHeartbeat |> Encode.rawType )
+    Encoder.unionTypeDefToString
+        [ ( "alert", GoalPorts.alert |> Encoder.rawType )
+        , ( "bugsnag", GoalPorts.bugsnag |> Encoder.rawType )
+        , ( "sendPresenceHeartbeat", GoalPorts.sendPresenceHeartbeat |> Encoder.rawType )
         ]
 
 
-port fromElm : Json.Encode.Value -> Cmd msg
+allTypeDefs : { fromElm : String, toElm : String, flags : String }
+allTypeDefs =
+    { fromElm = typeDefs
+    , toElm = typeDefs
+    , flags = flagDecoder
+    }
 
 
-port log : String -> Cmd msg
+flagDecoder : String
+flagDecoder =
+    Decode.oneOf
+        [ Decode.literal Info (Encode.string "info")
+        , Decode.literal Warning (Encode.string "warning")
+        , Decode.literal Error (Encode.string "error")
+        ]
+        |> Decode.tsTypeToString
+
+
+type Severity
+    = Info
+    | Warning
+    | Error
+
+
+port fromElm : Encode.Value -> Cmd msg
+
+
+port log :
+    { fromElm : String
+    , toElm : String
+    , flags : String
+    }
+    -> Cmd msg
 
 
 main : Program () () ()
 main =
     Platform.worker
-        { init = \() -> ( (), log typeDefs )
+        { init =
+            \() ->
+                ( ()
+                , log allTypeDefs
+                )
         , update = \msg model -> ( model, Cmd.none )
         , subscriptions = \() -> Sub.none
         }
