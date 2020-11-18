@@ -134,7 +134,21 @@ literal value literalValue =
         (Literal literalValue)
 
 
-{-| -}
+{-|
+
+    import Json.Decode
+
+
+    runExample : String -> InteropDecoder value -> { decoded : Result String value, tsType : String }
+    runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
+
+    field "first" string
+        |> runExample """{"first":"James", "middle":"Tiberius", "last":"Kirk"}"""
+    --> { decoded = Ok "James"
+    --> , tsType = "{ first : string }"
+    --> }
+
+-}
 field : String -> InteropDecoder value -> InteropDecoder value
 field fieldName (InteropDecoder innerDecoder innerType) =
     InteropDecoder
