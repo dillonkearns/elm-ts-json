@@ -2,11 +2,11 @@ module TsInterop.Decode exposing
     ( InteropDecoder
     , succeed
     , bool, float, int, string
+    , field
     , list, nullable, oneOf
-    , map, map2
+    , map, map2, map3
     , literal
     , decoder, tsTypeToString
-    , field, map3
     )
 
 {-|
@@ -24,6 +24,11 @@ module TsInterop.Decode exposing
 @docs bool, float, int, string
 
 
+## Objects
+
+@docs field
+
+
 ## Composite Types
 
 @docs list, nullable, oneOf
@@ -31,7 +36,7 @@ module TsInterop.Decode exposing
 
 ## Transformations
 
-@docs map, map2
+@docs map, map2, map3
 
 
 ## TypeScript Literals
