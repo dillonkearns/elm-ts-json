@@ -3,7 +3,7 @@ module TsInterop.Decode exposing
     , succeed
     , bool, float, int, string
     , field
-    , list, array, nullable, oneOf
+    , list, array, nullable, oneOf, keyValuePairs
     , map, map2, map3
     , literal
     , decoder, tsTypeToString
@@ -31,7 +31,7 @@ module TsInterop.Decode exposing
 
 ## Composite Types
 
-@docs list, array, nullable, oneOf
+@docs list, array, nullable, oneOf, keyValuePairs
 
 
 ## Transformations
@@ -176,6 +176,20 @@ list (InteropDecoder innerDecoder innerType) =
 array : InteropDecoder value -> InteropDecoder (Array value)
 array (InteropDecoder innerDecoder innerType) =
     InteropDecoder (Decode.array innerDecoder) (List innerType)
+
+
+{-| Example:
+
+    import Json.Decode
+
+
+    "{ \"alice\": 42, \"bob\": 99 }" |> Json.Decode.decodeString  (decoder (keyValuePairs int))
+    --> Ok [ ( "alice", 42 ), ( "bob", 99 ) ]
+
+-}
+keyValuePairs : InteropDecoder value -> InteropDecoder (List ( String, value ))
+keyValuePairs (InteropDecoder innerDecoder innerType) =
+    InteropDecoder (Decode.keyValuePairs innerDecoder) (List innerType)
 
 
 {-| -}
