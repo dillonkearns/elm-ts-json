@@ -1,11 +1,12 @@
 module TsInterop.Decode exposing
     ( InteropDecoder
+    , succeed
     , bool, float, int, string
     , list, nullable, oneOf
-    , map
+    , map, map2
     , literal
     , decoder, tsTypeToString
-    , field, map2
+    , field
     )
 
 {-|
@@ -14,6 +15,8 @@ module TsInterop.Decode exposing
 ## Decoders
 
 @docs InteropDecoder
+
+@docs succeed
 
 
 ## Built-Ins
@@ -28,7 +31,7 @@ module TsInterop.Decode exposing
 
 ## Transformations
 
-@docs map
+@docs map, map2
 
 
 ## TypeScript Literals
@@ -88,6 +91,12 @@ oneOf decoders =
 {-| -}
 type InteropDecoder value
     = InteropDecoder (Decoder value) TsType
+
+
+{-| -}
+succeed : value -> InteropDecoder value
+succeed value =
+    InteropDecoder (Decode.succeed value) TsType.Unknown
 
 
 {-| TypeScript has support for literals.

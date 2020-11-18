@@ -87,6 +87,14 @@ suite =
                         , output = Just 123
                         , typeDef = "string"
                         }
+        , test "succeed" <|
+            \() ->
+                succeed "Hello"
+                    |> expectDecodes
+                        { input = "null"
+                        , output = "Hello"
+                        , typeDef = "unknown"
+                        }
         , describe "objects"
             [ test "single field" <|
                 \() ->
