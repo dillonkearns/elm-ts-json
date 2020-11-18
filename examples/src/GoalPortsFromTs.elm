@@ -10,8 +10,22 @@ type Severity
     | Error
 
 
-flags : InteropDecoder Severity
+type alias Person =
+    { first : String
+    , last : String
+    , severity : Severity
+    }
+
+
+flags : InteropDecoder Person
 flags =
+    Decode.map3 Person
+        (Decode.field "first" Decode.string)
+        (Decode.field "last" Decode.string)
+        (Decode.field "severity" severityDecoder)
+
+
+severityDecoder =
     oneOf
         [ literal Info (Encode.string "info")
         , literal Warning (Encode.string "warning")

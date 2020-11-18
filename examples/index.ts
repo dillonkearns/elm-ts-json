@@ -3,7 +3,11 @@ import Bugsnag, { NotifiableError, Event } from "@bugsnag/js";
 
 const app = Elm.Main.init({
   node: document.querySelector("main"),
-  flags: "error",
+  flags: {
+    first: "Dillon",
+    last: "Kearns",
+    severity: "error",
+  },
 });
 
 app.ports.fromElm.subscribe((fromElm) => {

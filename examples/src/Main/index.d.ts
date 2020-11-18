@@ -1,6 +1,6 @@
 type FromElm = { tag : "alert"; message : string } | { tag : "bugsnag"; context : string[]; message : string } | { tag : "sendPresenceHeartbeat" }
 
-type Flags = "info" | "warning" | "error"
+type Flags = { severity : "info" | "warning" | "error"; first : string; last : string }
 
 export interface ElmApp {
   ports: {

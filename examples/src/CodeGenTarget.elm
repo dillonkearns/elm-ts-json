@@ -1,6 +1,7 @@
 port module CodeGenTarget exposing (..)
 
 import GoalPorts
+import GoalPortsFromTs
 import Json.Encode as Encode
 import TsInterop.Decode as Decode
 import TsInterop.Encode as Encoder
@@ -27,11 +28,7 @@ allTypeDefs =
 
 flagDecoder : String
 flagDecoder =
-    Decode.oneOf
-        [ Decode.literal Info (Encode.string "info")
-        , Decode.literal Warning (Encode.string "warning")
-        , Decode.literal Error (Encode.string "error")
-        ]
+    GoalPortsFromTs.flags
         |> Decode.tsTypeToString
 
 
