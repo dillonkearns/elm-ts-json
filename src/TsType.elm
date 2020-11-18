@@ -14,6 +14,7 @@ type TsType
     | ObjectWithUniformValues TsType -- https://stackoverflow.com/a/13315210
     | Union (List TsType)
     | Unknown
+    | TsNever
 
 
 combine : TsType -> TsType -> TsType
@@ -21,6 +22,12 @@ combine type1 type2 =
     case ( type1, type2 ) of
         ( TypeObject fields1, TypeObject fields2 ) ->
             TypeObject (fields1 ++ fields2)
+
+        ( TypeObject fields1, ObjectWithUniformValues valueType ) ->
+            Debug.todo ""
+
+        ( TypeObject fields1, _ ) ->
+            TsNever
 
         _ ->
             type1
@@ -81,3 +88,6 @@ tsTypeToString_ tsType_ =
                         |> String.join ", "
                    )
                 ++ " ]"
+
+        TsNever ->
+            "never"

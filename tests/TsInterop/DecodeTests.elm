@@ -106,6 +106,15 @@ suite =
                             , output = ( True, False )
                             , typeDef = "{ field1 : boolean; field2 : boolean }"
                             }
+            , test "combining contradictory types" <|
+                \() ->
+                    map2 Tuple.pair
+                        (field "field1" bool)
+                        int
+                        |> expectDecodeError
+                            { input = """{"field1": true, "field2": false}"""
+                            , typeDef = "never"
+                            }
             ]
         ]
 
@@ -125,5 +134,24 @@ expectDecodes expect interop =
         |> Decode.decodeString (decoder interop)
         |> Expect.all
             [ \decoded -> decoded |> Expect.equal (Ok expect.output)
+            , \decoded -> tsTypeToString interop |> Expect.equal expect.typeDef
+            ]
+
+
+expectDecodeError :
+    { input : String, typeDef : String }
+    -> InteropDecoder decodesTo
+    -> Expect.Expectation
+expectDecodeError expect interop =
+    expect.input
+        |> Decode.decodeString (decoder interop)
+        |> Expect.all
+            [ \decoded ->
+                case decoded of
+                    Err error ->
+                        Expect.pass
+
+                    Ok value ->
+                        Expect.fail <| "Expected decode failure, but got " ++ Debug.toString value
             , \decoded -> tsTypeToString interop |> Expect.equal expect.typeDef
             ]
