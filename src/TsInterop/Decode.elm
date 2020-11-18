@@ -160,13 +160,41 @@ float =
     InteropDecoder Decode.float TsType.Number
 
 
-{-| -}
+{-|
+
+    import Json.Decode
+
+
+    runExample : String -> InteropDecoder value -> { decoded : Result String value, tsType : String }
+    runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
+
+    bool
+        |> runExample "true"
+    --> { decoded = Ok True
+    --> , tsType = "boolean"
+    --> }
+
+-}
 bool : InteropDecoder Bool
 bool =
     InteropDecoder Decode.bool TsType.Boolean
 
 
-{-| -}
+{-|
+
+    import Json.Decode
+
+
+    runExample : String -> InteropDecoder value -> { decoded : Result String value, tsType : String }
+    runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
+
+    list int
+        |> runExample "[1,2,3]"
+    --> { decoded = Ok [ 1, 2, 3 ]
+    --> , tsType = "number[]"
+    --> }
+
+-}
 list : InteropDecoder value -> InteropDecoder (List value)
 list (InteropDecoder innerDecoder innerType) =
     InteropDecoder (Decode.list innerDecoder) (List innerType)
@@ -178,13 +206,19 @@ array (InteropDecoder innerDecoder innerType) =
     InteropDecoder (Decode.array innerDecoder) (List innerType)
 
 
-{-| Example:
+{-|
 
     import Json.Decode
 
 
-    "{ \"alice\": 42, \"bob\": 99 }" |> Json.Decode.decodeString  (decoder (keyValuePairs int))
-    --> Ok [ ( "alice", 42 ), ( "bob", 99 ) ]
+    runExample : String -> InteropDecoder value -> { decoded : Result String value, tsType : String }
+    runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
+
+    keyValuePairs int
+        |> runExample """{ "alice": 42, "bob": 99 }"""
+    --> { decoded = Ok [ ( "alice", 42 ), ( "bob", 99 ) ]
+    --> , tsType = "number[]"
+    --> }
 
 -}
 keyValuePairs : InteropDecoder value -> InteropDecoder (List ( String, value ))
@@ -202,3 +236,10 @@ decoder (InteropDecoder decoder_ tsType_) =
 tsTypeToString : InteropDecoder value -> String
 tsTypeToString (InteropDecoder decoder_ tsType_) =
     TsType.tsTypeToString_ tsType_
+
+
+runExample : String -> InteropDecoder value -> { decoded : Result String value, tsType : String }
+runExample inputJson interopDecoder =
+    { tsType = tsTypeToString interopDecoder
+    , decoded = Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Decode.errorToString
+    }

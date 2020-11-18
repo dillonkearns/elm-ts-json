@@ -1,13 +1,12 @@
 module TsInterop.Encode exposing
     ( Encoder
-    , string, int, float, literal
+    , string, int, float, literal, bool
     , typeDef, encoder
     , map
     , ObjectBuilder, build, property, buildUnion, toEncoder
-    , UnionBuilder, union, variant0, variantObject, variantLiteral
+    , UnionBuilder, union, variant, variant0, variantObject, variantLiteral
     , list, dict, tuple, triple
     , unionTypeDefToString, encodeProVariant, proTypeAnnotation, rawType, value
-    , variant
     )
 
 {-|
@@ -37,7 +36,7 @@ module TsInterop.Encode exposing
 
 ## Union Types
 
-@docs UnionBuilder, union, variant0, variantObject, variantLiteral, variantValue
+@docs UnionBuilder, union, variant, variant0, variantObject, variantLiteral
 
 
 ## Collections
