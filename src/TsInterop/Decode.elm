@@ -5,6 +5,7 @@ module TsInterop.Decode exposing
     , map
     , literal
     , decoder, tsTypeToString
+    , field
     )
 
 {-|
@@ -99,6 +100,14 @@ literal value literalValue =
                 )
         )
         (Literal literalValue)
+
+
+{-| -}
+field : String -> InteropDecoder value -> InteropDecoder value
+field fieldName (InteropDecoder innerDecoder innerType) =
+    InteropDecoder
+        (Decode.field fieldName innerDecoder)
+        (TsType.TypeObject [ ( fieldName, innerType ) ])
 
 
 {-| -}

@@ -87,6 +87,16 @@ suite =
                         , output = Just 123
                         , typeDef = "string"
                         }
+        , describe "objects"
+            [ test "single field" <|
+                \() ->
+                    field "field" bool
+                        |> expectDecodes
+                            { input = """{"field": true}"""
+                            , output = True
+                            , typeDef = "{ field : boolean }"
+                            }
+            ]
         ]
 
 
