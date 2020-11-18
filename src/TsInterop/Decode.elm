@@ -5,7 +5,7 @@ module TsInterop.Decode exposing
     , map
     , literal
     , decoder, tsTypeToString
-    , field
+    , field, map2
     )
 
 {-|
@@ -51,6 +51,12 @@ import TsType exposing (TsType(..))
 map : (value -> mapped) -> InteropDecoder value -> InteropDecoder mapped
 map mapFn (InteropDecoder innerDecoder innerType) =
     InteropDecoder (Decode.map mapFn innerDecoder) innerType
+
+
+{-| -}
+map2 : (value1 -> value2 -> mapped) -> InteropDecoder value1 -> InteropDecoder value2 -> InteropDecoder mapped
+map2 mapFn (InteropDecoder innerDecoder1 innerType1) (InteropDecoder innerDecoder2 innerType2) =
+    InteropDecoder (Decode.map2 mapFn innerDecoder1 innerDecoder2) (TsType.combine innerType1 innerType2)
 
 
 {-| -}

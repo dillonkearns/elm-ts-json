@@ -16,6 +16,16 @@ type TsType
     | Unknown
 
 
+combine : TsType -> TsType -> TsType
+combine type1 type2 =
+    case ( type1, type2 ) of
+        ( TypeObject fields1, TypeObject fields2 ) ->
+            TypeObject (fields1 ++ fields2)
+
+        _ ->
+            type1
+
+
 null : TsType
 null =
     Literal Encode.null

@@ -96,6 +96,16 @@ suite =
                             , output = True
                             , typeDef = "{ field : boolean }"
                             }
+            , test "multiple fields" <|
+                \() ->
+                    map2 Tuple.pair
+                        (field "field1" bool)
+                        (field "field2" bool)
+                        |> expectDecodes
+                            { input = """{"field1": true, "field2": false}"""
+                            , output = ( True, False )
+                            , typeDef = "{ field1 : boolean; field2 : boolean }"
+                            }
             ]
         ]
 
