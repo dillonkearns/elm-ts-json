@@ -1,5 +1,6 @@
 module TsInterop.DecodeTests exposing (..)
 
+import Array
 import Expect exposing (Expectation)
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode
@@ -48,6 +49,14 @@ suite =
                     |> expectDecodes
                         { input = """["Hello", "World"]"""
                         , output = [ "Hello", "World" ]
+                        , typeDef = "string[]"
+                        }
+        , test "array of strings" <|
+            \() ->
+                array string
+                    |> expectDecodes
+                        { input = """["Hello", "World"]"""
+                        , output = Array.fromList [ "Hello", "World" ]
                         , typeDef = "string[]"
                         }
         , test "literal" <|
