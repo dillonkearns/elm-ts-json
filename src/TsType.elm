@@ -29,6 +29,12 @@ combine type1 type2 =
         ( TypeObject fields1, _ ) ->
             TsNever
 
+        ( String, Number ) ->
+            TsNever
+
+        ( Number, String ) ->
+            TsNever
+
         _ ->
             type1
 
