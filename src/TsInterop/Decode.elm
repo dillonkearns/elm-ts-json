@@ -113,8 +113,14 @@ type InteropDecoder value
 
 {-| -}
 succeed : value -> InteropDecoder value
-succeed value =
-    InteropDecoder (Decode.succeed value) TsType.Unknown
+succeed value_ =
+    InteropDecoder (Decode.succeed value_) TsType.Unknown
+
+
+{-| -}
+value : InteropDecoder Decode.Value
+value =
+    InteropDecoder Decode.value TsType.Unknown
 
 
 {-|
@@ -152,20 +158,20 @@ fail message =
 
 -}
 null : value -> InteropDecoder value
-null value =
-    literal value Encode.null
+null value_ =
+    literal value_ Encode.null
 
 
 {-| TypeScript has support for literals.
 -}
 literal : value -> Encode.Value -> InteropDecoder value
-literal value literalValue =
+literal value_ literalValue =
     InteropDecoder
         (Decode.value
             |> Decode.andThen
                 (\decodeValue ->
                     if literalValue == decodeValue then
-                        Decode.succeed value
+                        Decode.succeed value_
 
                     else
                         Decode.fail ("Expected the following literal value: " ++ Encode.encode 0 literalValue)
