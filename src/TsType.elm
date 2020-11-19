@@ -8,7 +8,7 @@ type TsType
     | Number
     | Boolean
     | List TsType
-    | Tuple (List TsType)
+    | Tuple (List TsType) (Maybe TsType) -- Maybe is a rest type - can be used for non-empty lists https://stackoverflow.com/a/56006703
     | Literal Encode.Value
     | TypeObject (List ( String, TsType ))
     | ObjectWithUniformValues TsType -- https://stackoverflow.com/a/13315210
@@ -84,13 +84,25 @@ tsTypeToString_ tsType_ =
         Unknown ->
             "unknown"
 
-        Tuple tsTypes ->
+        Tuple tsTypes maybeRestType ->
+            let
+                restTypePart =
+                    maybeRestType
+                        |> Maybe.map
+                            (\restType ->
+                                "...(" ++ tsTypeToString_ restType ++ ")[]"
+                            )
+            in
             "[ "
-                ++ (tsTypes
+                ++ (((tsTypes
                         |> List.map
                             (\type_ ->
-                                tsTypeToString_ type_
+                                tsTypeToString_ type_ |> Just
                             )
+                     )
+                        ++ [ restTypePart ]
+                    )
+                        |> List.filterMap identity
                         |> String.join ", "
                    )
                 ++ " ]"

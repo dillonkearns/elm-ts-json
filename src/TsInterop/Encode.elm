@@ -159,7 +159,7 @@ tuple (Encoder encodeFn1 tsType1) (Encoder encodeFn2 tsType2) =
         (\( value1, value2 ) ->
             Encode.list identity [ encodeFn1 value1, encodeFn2 value2 ]
         )
-        (TsType.Tuple [ tsType1, tsType2 ])
+        (TsType.Tuple [ tsType1, tsType2 ] Nothing)
 
 
 {-| -}
@@ -173,7 +173,7 @@ triple (Encoder encodeFn1 tsType1) (Encoder encodeFn2 tsType2) (Encoder encodeFn
                 , encodeFn3 value3
                 ]
         )
-        (TsType.Tuple [ tsType1, tsType2, tsType3 ])
+        (TsType.Tuple [ tsType1, tsType2, tsType3 ] Nothing)
 
 
 {-| -}

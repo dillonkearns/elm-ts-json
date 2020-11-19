@@ -3,7 +3,7 @@ module TsInterop.Decode exposing
     , succeed
     , bool, float, int, string
     , field
-    , list, array, nullable, oneOf, keyValuePairs
+    , list, array, nullable, oneOf, keyValuePairs, oneOrMore
     , map, map2, map3
     , literal
     , decoder, tsTypeToString
@@ -31,7 +31,7 @@ module TsInterop.Decode exposing
 
 ## Composite Types
 
-@docs list, array, nullable, oneOf, keyValuePairs
+@docs list, array, nullable, oneOf, keyValuePairs, oneOrMore
 
 
 ## Transformations
@@ -215,6 +215,40 @@ bool =
 list : InteropDecoder value -> InteropDecoder (List value)
 list (InteropDecoder innerDecoder innerType) =
     InteropDecoder (Decode.list innerDecoder) (List innerType)
+
+
+{-|
+
+    import Json.Decode
+    import Json.Encode
+
+
+    runExample : String -> InteropDecoder value -> { decoded : Result String value, tsType : String }
+    runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
+
+    type TestResult
+        = Pass
+        | Fail String
+
+    testCaseDecoder : InteropDecoder TestResult
+    testCaseDecoder =
+        oneOf [
+            field "tag" (literal Pass (Json.Encode.string "pass"))
+          , map2 (\() message -> Fail message)
+              ( field "tag" (literal () (Json.Encode.string "pass")) )
+              ( field "message" string )
+        ]
+
+    oneOrMore (::) testCaseDecoder
+        |> runExample """[ { "tag": "pass" } ]"""
+    --> { decoded = Ok [ Pass ]
+    --> , tsType = """[ { tag : "pass" } | { tag : "pass"; message : string }, ...({ tag : "pass" } | { tag : "pass"; message : string })[] ]"""
+    --> }
+
+-}
+oneOrMore : (a -> List a -> value) -> InteropDecoder a -> InteropDecoder value
+oneOrMore constructor (InteropDecoder innerDecoder innerType) =
+    InteropDecoder (Decode.oneOrMore constructor innerDecoder) (Tuple [ innerType ] (Just innerType))
 
 
 {-| -}
