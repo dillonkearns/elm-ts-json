@@ -3,7 +3,7 @@ module TsInterop.Decode exposing
     , succeed
     , bool, float, int, string
     , field
-    , list, array, nullable, oneOf, keyValuePairs, oneOrMore
+    , list, array, nullable, oneOf, dict, keyValuePairs, oneOrMore
     , map, map2, map3
     , literal
     , decoder, tsTypeToString
@@ -31,7 +31,7 @@ module TsInterop.Decode exposing
 
 ## Composite Types
 
-@docs list, array, nullable, oneOf, keyValuePairs, oneOrMore
+@docs list, array, nullable, oneOf, dict, keyValuePairs, oneOrMore
 
 
 ## Transformations
@@ -51,6 +51,7 @@ module TsInterop.Decode exposing
 -}
 
 import Array exposing (Array)
+import Dict exposing (Dict)
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode
 import TsType exposing (TsType(..))
@@ -261,6 +262,28 @@ oneOrMore constructor (InteropDecoder innerDecoder innerType) =
 array : InteropDecoder value -> InteropDecoder (Array value)
 array (InteropDecoder innerDecoder innerType) =
     InteropDecoder (Decode.array innerDecoder) (List innerType)
+
+
+{-|
+
+    import Json.Decode
+    import Json.Encode
+    import Dict exposing (Dict)
+
+
+    runExample : String -> InteropDecoder value -> { decoded : Result String value, tsType : String }
+    runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
+
+    dict int
+        |> runExample """{"alice":42,"bob":99}"""
+    --> { decoded = Ok (Dict.fromList [ ( "alice", 42 ), ( "bob", 99 ) ])
+    --> , tsType = "{ [key: string]: number }"
+    --> }
+
+-}
+dict : InteropDecoder value -> InteropDecoder (Dict String value)
+dict (InteropDecoder innerDecoder innerType) =
+    InteropDecoder (Decode.dict innerDecoder) (TsType.ObjectWithUniformValues innerType)
 
 
 {-|
