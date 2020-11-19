@@ -6,6 +6,7 @@ module TsInterop.Decode exposing
     , list, array, nullable, oneOf, dict, keyValuePairs, oneOrMore, maybe
     , map, map2, map3
     , literal, null
+    , andThen
     , decoder, tsTypeToString
     )
 
@@ -42,6 +43,11 @@ module TsInterop.Decode exposing
 ## TypeScript Literals
 
 @docs literal, null
+
+
+## Continuation
+
+@docs andThen
 
 
 ## Using Decoders
@@ -115,6 +121,38 @@ type InteropDecoder value
 succeed : value -> InteropDecoder value
 succeed value_ =
     InteropDecoder (Decode.succeed value_) TsType.Unknown
+
+
+{-|
+
+    import Json.Decode
+
+
+    runExample : String -> InteropDecoder value -> { decoded : Result String value, tsType : String }
+    runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
+
+    field "version" int |> andThen (\versionNumber ->
+        if versionNumber == 1 then
+          field "payload" string
+        else
+          at [ "data", "payload" ] string
+    )
+        |> runExample """{"version": 1, "payload": "Hello"}"""
+    --> { decoded = Ok "Hello"
+    --> , tsType = "{ version : number }"
+    --> }
+
+-}
+andThen : (a -> InteropDecoder b) -> InteropDecoder a -> InteropDecoder b
+andThen function (InteropDecoder innerDecoder innerType) =
+    let
+        andThenDecoder =
+            \value_ ->
+                case function value_ of
+                    InteropDecoder innerDecoder_ innerType_ ->
+                        innerDecoder_
+    in
+    InteropDecoder (Decode.andThen andThenDecoder innerDecoder) innerType
 
 
 {-| -}
