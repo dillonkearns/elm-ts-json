@@ -179,7 +179,7 @@ null value_ =
     --> }
 
     field "height" (maybe float) |> runExample json
-    --> { decoded = Ok Nothing
+    --> { decoded = Err "Problem with the given value:\n\n{\n        \"name\": \"tom\",\n        \"age\": 42\n    }\n\nExpecting an OBJECT with a field named `height`"
     --> , tsType = "{ height : number | unknown }"
     --> }
 
