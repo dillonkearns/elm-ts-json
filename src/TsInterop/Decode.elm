@@ -1,6 +1,6 @@
 module TsInterop.Decode exposing
     ( InteropDecoder
-    , succeed
+    , succeed, fail
     , bool, float, int, string
     , field
     , list, array, nullable, oneOf, dict, keyValuePairs, oneOrMore
@@ -16,7 +16,7 @@ module TsInterop.Decode exposing
 
 @docs InteropDecoder
 
-@docs succeed
+@docs succeed, fail
 
 
 ## Built-Ins
@@ -115,6 +115,26 @@ type InteropDecoder value
 succeed : value -> InteropDecoder value
 succeed value =
     InteropDecoder (Decode.succeed value) TsType.Unknown
+
+
+{-|
+
+    import Json.Decode
+
+
+    runExample : String -> InteropDecoder value -> { decoded : Result String value, tsType : String }
+    runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
+
+    fail "Failure message"
+        |> runExample "123.45"
+    --> { decoded = Err "Problem with the given value:\n\n123.45\n\nFailure message"
+    --> , tsType = "unknown"
+    --> }
+
+-}
+fail : String -> InteropDecoder value
+fail message =
+    InteropDecoder (Decode.fail message) TsType.Unknown
 
 
 {-| TypeScript has support for literals.
