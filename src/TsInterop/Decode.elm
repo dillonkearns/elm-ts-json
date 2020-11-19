@@ -5,7 +5,7 @@ module TsInterop.Decode exposing
     , field
     , list, array, nullable, oneOf, dict, keyValuePairs, oneOrMore
     , map, map2, map3
-    , literal
+    , literal, null
     , decoder, tsTypeToString
     )
 
@@ -41,7 +41,7 @@ module TsInterop.Decode exposing
 
 ## TypeScript Literals
 
-@docs literal
+@docs literal, null
 
 
 ## Using Decoders
@@ -135,6 +135,25 @@ succeed value =
 fail : String -> InteropDecoder value
 fail message =
     InteropDecoder (Decode.fail message) TsType.Unknown
+
+
+{-|
+
+    import Json.Decode
+
+
+    runExample : String -> InteropDecoder value -> { decoded : Result String value, tsType : String }
+    runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
+
+    null False |> runExample "null"
+    --> { decoded = Ok False
+    --> , tsType = "null"
+    --> }
+
+-}
+null : value -> InteropDecoder value
+null value =
+    literal value Encode.null
 
 
 {-| TypeScript has support for literals.
