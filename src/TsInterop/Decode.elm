@@ -2,7 +2,7 @@ module TsInterop.Decode exposing
     ( InteropDecoder
     , succeed, fail
     , bool, float, int, string
-    , field
+    , field, at
     , list, array, nullable, oneOf, dict, keyValuePairs, oneOrMore
     , map, map2, map3
     , literal, null
@@ -26,7 +26,7 @@ module TsInterop.Decode exposing
 
 ## Objects
 
-@docs field
+@docs field, at
 
 
 ## Composite Types
@@ -203,6 +203,42 @@ field fieldName (InteropDecoder innerDecoder innerType) =
     InteropDecoder
         (Decode.field fieldName innerDecoder)
         (TsType.TypeObject [ ( fieldName, innerType ) ])
+
+
+{-|
+
+    import Json.Decode
+    import Json.Encode
+
+    runExample : InteropDecoder value -> String -> { decoded : Result String value, tsType : String }
+    runExample interopDecoder inputJson = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
+
+    type Mode = DarkMode | LightMode
+
+    modeDecoder : InteropDecoder Mode
+    modeDecoder =
+        oneOf [ literal DarkMode <| Json.Encode.string "dark", literal LightMode <| Json.Encode.string "light" ]
+
+    """{"options":
+           { "mode": "dark" },
+        "version": "1.2.3"}"""
+        |> runExample (at [ "options", "mode" ] modeDecoder)
+    --> { decoded = Ok DarkMode
+    --> , tsType = """{ options : { mode : "dark" | "light" } }"""
+    --> }
+
+-}
+at : List String -> InteropDecoder value -> InteropDecoder value
+at location (InteropDecoder innerDecoder innerType) =
+    InteropDecoder
+        (Decode.at location innerDecoder)
+        (location
+            |> List.foldr
+                (\fieldName typeSoFar ->
+                    TsType.TypeObject [ ( fieldName, typeSoFar ) ]
+                )
+                innerType
+        )
 
 
 {-| -}
