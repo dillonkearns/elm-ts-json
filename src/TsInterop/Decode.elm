@@ -226,6 +226,12 @@ list (InteropDecoder innerDecoder innerType) =
     runExample : String -> InteropDecoder value -> { decoded : Result String value, tsType : String }
     runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
 
+    oneOrMore (::) int
+        |> runExample "[12345]"
+    --> { decoded = Ok [ 12345 ]
+    --> , tsType = """[ number, ...(number)[] ]"""
+    --> }
+
     type TestResult
         = Pass
         | Fail String
