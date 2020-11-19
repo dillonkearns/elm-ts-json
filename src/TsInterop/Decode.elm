@@ -3,7 +3,7 @@ module TsInterop.Decode exposing
     , succeed, fail
     , bool, float, int, string
     , field, at
-    , list, array, nullable, oneOf, dict, keyValuePairs, oneOrMore
+    , list, array, nullable, oneOf, dict, keyValuePairs, oneOrMore, maybe
     , map, map2, map3
     , literal, null
     , decoder, tsTypeToString
@@ -31,7 +31,7 @@ module TsInterop.Decode exposing
 
 ## Composite Types
 
-@docs list, array, nullable, oneOf, dict, keyValuePairs, oneOrMore
+@docs list, array, nullable, oneOf, dict, keyValuePairs, oneOrMore, maybe
 
 
 ## Transformations
@@ -160,6 +160,36 @@ fail message =
 null : value -> InteropDecoder value
 null value_ =
     literal value_ Encode.null
+
+
+{-|
+
+    import Json.Decode
+
+
+    runExample : String -> InteropDecoder value -> { decoded : Result String value, tsType : String }
+    runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
+
+    json : String
+    json = """{ "name": "tom", "age": 42 }"""
+
+    maybe (field "height" float) |> runExample json
+    --> { decoded = Ok Nothing
+    --> , tsType = "{ height : number } | unknown"
+    --> }
+
+    field "height" (maybe float) |> runExample json
+    --> { decoded = Ok Nothing
+    --> , tsType = "{ height : number | unknown }"
+    --> }
+
+-}
+maybe : InteropDecoder value -> InteropDecoder (Maybe value)
+maybe interopDecoder =
+    oneOf
+        [ map Just interopDecoder
+        , succeed Nothing
+        ]
 
 
 {-| TypeScript has support for literals.
