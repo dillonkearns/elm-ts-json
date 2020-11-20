@@ -1,6 +1,6 @@
 module TsInterop.Encode exposing
     ( Encoder
-    , string, int, float, literal, bool
+    , string, int, float, literal, bool, null
     , typeDef, encoder
     , map
     , object
@@ -16,7 +16,7 @@ module TsInterop.Encode exposing
 
 ## Built-Ins
 
-@docs string, int, float, literal, bool
+@docs string, int, float, literal, bool, null
 
 
 ## Executing Encoders
@@ -132,6 +132,31 @@ string =
 literal : Encode.Value -> Encoder a
 literal literalValue =
     Encoder (\_ -> literalValue) (TsType.Literal literalValue)
+
+
+{-| Equivalent to `literal Encode.null`.
+
+    import Json.Encode as Encode
+
+    runExample : Encoder encodeFrom -> encodeFrom -> { output : String, tsType : String }
+    runExample encoder_ encodeFrom = { tsType = typeDef encoder_ , output = encodeFrom |> encoder encoder_ |> Encode.encode 0 }
+
+
+    ()
+        |> runExample null
+    --> { output = "null"
+    --> , tsType = "null"
+    --> }
+
+-}
+null : Encoder value
+null =
+    literal Encode.null
+
+
+runExample : Encoder encodeFrom -> encodeFrom -> { output : String, tsType : String }
+runExample encoder_ encodeFrom =
+    { tsType = typeDef encoder_, output = encodeFrom |> encoder encoder_ |> Encode.encode 0 }
 
 
 {-| -}

@@ -1,4 +1,4 @@
 {
   "root": "../src",
-  "tests": ["TsInterop.Decode"]
+  "tests": ["TsInterop.Decode", "TsInterop.Encode"]
 }
