@@ -3,7 +3,7 @@ module TsInterop.Encode exposing
     , string, int, float, literal, bool
     , typeDef, encoder
     , map
-    , ObjectBuilder, build, property, buildUnion, toEncoder
+    , buildUnion
     , UnionBuilder, union, variant, variant0, variantObject, variantLiteral
     , list, dict, tuple, triple
     , unionTypeDefToString, encodeProVariant, proTypeAnnotation, rawType, value
@@ -84,11 +84,6 @@ rawType entries =
 
 
 {-| -}
-type ObjectBuilder encodesFrom
-    = ObjectBuilder (List ( String, encodesFrom -> Encode.Value, TsType ))
-
-
-{-| -}
 objectNew : List ( String, Encoder value ) -> Encoder value
 objectNew propertyEncoders =
     let
@@ -108,24 +103,6 @@ objectNew propertyEncoders =
                 |> Encode.object
     in
     Encoder encodeObject propertyTypes
-
-
-{-| -}
-build : ObjectBuilder encodesFrom
-build =
-    ObjectBuilder []
-
-
-{-| -}
-property : String -> Encoder encodesFrom -> ObjectBuilder encodesFrom -> ObjectBuilder encodesFrom
-property keyName (Encoder encodeFn tsType_) (ObjectBuilder entries) =
-    ObjectBuilder
-        (( keyName
-         , encodeFn
-         , tsType_
-         )
-            :: entries
-        )
 
 
 {-| -}
@@ -243,10 +220,7 @@ variant0 variantName (UnionBuilder builder tsTypes_) =
             matchBuilder (encoderFn ())
     in
     variant
-        (build
-            |> property "tag" (literal (Encode.string variantName))
-            |> toEncoder
-        )
+        (objectNew [ ( "tag", literal (Encode.string variantName) ) ])
         thing
 
 
@@ -329,26 +303,6 @@ encodeProVariant variantName entries arg1 =
 buildUnion : UnionBuilder (match -> Encode.Value) -> Encoder match
 buildUnion (UnionBuilder toValue tsTypes_) =
     Encoder toValue (TsType.Union tsTypes_)
-
-
-{-| -}
-toEncoder : ObjectBuilder value -> Encoder value
-toEncoder (ObjectBuilder entries) =
-    Encoder
-        (\encodesFrom ->
-            entries
-                |> List.map
-                    (\( key, encodeFn, tsType_ ) ->
-                        ( key
-                        , encodeFn encodesFrom
-                        )
-                    )
-                |> Encode.object
-        )
-        (entries
-            |> List.map (\( key, encodeFn, tsType_ ) -> ( key, tsType_ ))
-            |> TsType.TypeObject
-        )
 
 
 {-| -}
