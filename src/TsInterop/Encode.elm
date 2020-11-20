@@ -74,10 +74,13 @@ typeDef (Encoder encodeFn tsType_) =
 
 
 {-| -}
-rawType : ObjectBuilder a -> List ( String, TsType )
-rawType (ObjectBuilder entries) =
+rawType : List ( String, Encoder value ) -> List ( String, TsType )
+rawType entries =
     entries
-        |> List.map (\( key, encodeFn, tsType_ ) -> ( key, tsType_ ))
+        |> List.map
+            (\( key, Encoder encodeFn tsType_ ) ->
+                ( key, tsType_ )
+            )
 
 
 {-| -}
