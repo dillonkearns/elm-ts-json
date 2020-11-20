@@ -21,6 +21,17 @@ suite =
                         , output = """{"last":"Kearns","first":"Dillon"}"""
                         , typeDef = "{ last : string; first : string }"
                         }
+        , test "object new" <|
+            \() ->
+                Encoder.objectNew
+                    [ ( "first", Encoder.string |> Encoder.map .first )
+                    , ( "last", Encoder.string |> Encoder.map .last )
+                    ]
+                    |> expectEncodes
+                        { input = { first = "Dillon", last = "Kearns" }
+                        , output = """{"first":"Dillon","last":"Kearns"}"""
+                        , typeDef = "{ first : string; last : string }"
+                        }
         , test "standalone string" <|
             \() ->
                 Encoder.string

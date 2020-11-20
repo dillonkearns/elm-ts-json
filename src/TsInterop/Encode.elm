@@ -7,6 +7,7 @@ module TsInterop.Encode exposing
     , UnionBuilder, union, variant, variant0, variantObject, variantLiteral
     , list, dict, tuple, triple
     , unionTypeDefToString, encodeProVariant, proTypeAnnotation, rawType, value
+    , objectNew
     )
 
 {-|
@@ -82,6 +83,28 @@ rawType (ObjectBuilder entries) =
 {-| -}
 type ObjectBuilder encodesFrom
     = ObjectBuilder (List ( String, encodesFrom -> Encode.Value, TsType ))
+
+
+{-| -}
+objectNew : List ( String, Encoder value ) -> Encoder value
+objectNew propertyEncoders =
+    let
+        propertyTypes : TsType
+        propertyTypes =
+            propertyEncoders
+                |> List.map (Tuple.mapSecond (\(Encoder encodeFn tsType_) -> tsType_))
+                |> TsType.TypeObject
+
+        encodeObject : value -> Encode.Value
+        encodeObject encodesFrom =
+            propertyEncoders
+                |> List.map
+                    (Tuple.mapSecond
+                        (\(Encoder encodeFn tsType_) -> encodeFn encodesFrom)
+                    )
+                |> Encode.object
+    in
+    Encoder encodeObject propertyTypes
 
 
 {-| -}
