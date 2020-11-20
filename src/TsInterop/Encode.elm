@@ -3,11 +3,10 @@ module TsInterop.Encode exposing
     , string, int, float, literal, bool
     , typeDef, encoder
     , map
-    , buildUnion
-    , UnionBuilder, union, variant, variant0, variantObject, variantLiteral
+    , object
+    , UnionBuilder, union, variant, variant0, variantObject, variantLiteral, buildUnion
     , list, dict, tuple, triple
     , unionTypeDefToString, encodeProVariant, proTypeAnnotation, rawType, value
-    , objectNew
     )
 
 {-|
@@ -32,12 +31,12 @@ module TsInterop.Encode exposing
 
 ## Objects
 
-@docs ObjectBuilder, build, property, buildUnion, toEncoder
+@docs object
 
 
 ## Union Types
 
-@docs UnionBuilder, union, variant, variant0, variantObject, variantLiteral
+@docs UnionBuilder, union, variant, variant0, variantObject, variantLiteral, buildUnion
 
 
 ## Collections
@@ -84,8 +83,8 @@ rawType entries =
 
 
 {-| -}
-objectNew : List ( String, Encoder value ) -> Encoder value
-objectNew propertyEncoders =
+object : List ( String, Encoder value ) -> Encoder value
+object propertyEncoders =
     let
         propertyTypes : TsType
         propertyTypes =
@@ -220,7 +219,7 @@ variant0 variantName (UnionBuilder builder tsTypes_) =
             matchBuilder (encoderFn ())
     in
     variant
-        (objectNew [ ( "tag", literal (Encode.string variantName) ) ])
+        (object [ ( "tag", literal (Encode.string variantName) ) ])
         thing
 
 
@@ -279,7 +278,7 @@ variantObject :
     -> UnionBuilder match
 variantObject variantName objectFields unionBuilder =
     variant
-        (objectNew (( "tag", literal (Encode.string variantName) ) :: objectFields))
+        (object (( "tag", literal (Encode.string variantName) ) :: objectFields))
         unionBuilder
 
 
@@ -291,7 +290,7 @@ encodeProVariant :
     -> Encode.Value
 encodeProVariant variantName entries arg1 =
     arg1
-        |> (objectNew
+        |> (object
                 (( "tag", literal (Encode.string variantName) )
                     :: entries
                 )

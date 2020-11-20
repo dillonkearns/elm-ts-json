@@ -23,7 +23,7 @@ suite =
                         }
         , test "object new" <|
             \() ->
-                Encoder.objectNew
+                Encoder.object
                     [ ( "first", Encoder.string |> Encoder.map .first )
                     , ( "last", Encoder.string |> Encoder.map .last )
                     ]
