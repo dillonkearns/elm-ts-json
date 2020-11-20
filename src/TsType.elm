@@ -8,6 +8,7 @@ type TsType
     | Number
     | Boolean
     | List TsType
+    | ArrayIndex Int TsType
     | Tuple (List TsType) (Maybe TsType) -- Maybe is a rest type - can be used for non-empty lists https://stackoverflow.com/a/56006703
     | Literal Encode.Value
     | TypeObject (List ( String, TsType ))
@@ -40,7 +41,7 @@ combine type1 type2 =
             TsNever
 
         _ ->
-            type1
+            Intersection type1 type2
 
 
 null : TsType
@@ -119,6 +120,15 @@ tsTypeToString_ tsType_ =
                 |> List.map tsTypeToString_
                 |> String.join " & "
                 |> parenthesize
+
+        ArrayIndex index tsType ->
+            "["
+                ++ ((List.repeat index "unknown"
+                        ++ [ tsTypeToString_ tsType, "...unknown[]" ]
+                    )
+                        |> String.join ","
+                   )
+                ++ "]"
 
 
 parenthesize : String -> String

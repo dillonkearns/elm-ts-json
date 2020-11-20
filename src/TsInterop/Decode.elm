@@ -4,6 +4,7 @@ module TsInterop.Decode exposing
     , bool, float, int, string
     , field, at
     , list, array, nullable, oneOf, dict, keyValuePairs, oneOrMore, maybe
+    , index
     , map, map2, map3
     , literal, null
     , andThen, staticAndThen
@@ -34,6 +35,8 @@ module TsInterop.Decode exposing
 ## Composite Types
 
 @docs list, array, nullable, oneOf, dict, keyValuePairs, oneOrMore, maybe
+
+@docs index
 
 
 ## Transformations
@@ -446,6 +449,34 @@ bool =
 list : InteropDecoder value -> InteropDecoder (List value)
 list (InteropDecoder innerDecoder innerType) =
     InteropDecoder (Decode.list innerDecoder) (List innerType)
+
+
+{-|
+
+    import Json.Decode
+
+
+    runExample : String -> InteropDecoder value -> { decoded : Result String value, tsType : String }
+    runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
+
+    index 1 int
+        |> runExample "[0,100,200]"
+    --> { decoded = Ok 100
+    --> , tsType = "[unknown,number,...unknown[]]"
+    --> }
+
+    map2 Tuple.pair
+        ( index 1 int )
+        ( index 3 string )
+        |> runExample """[0,100,"a","b"]"""
+    --> { decoded = Ok ( 100, "b" )
+    --> , tsType = ""
+    --> }
+
+-}
+index : Int -> InteropDecoder value -> InteropDecoder value
+index n (InteropDecoder innerDecoder innerType) =
+    InteropDecoder (Decode.index n innerDecoder) (TsType.ArrayIndex n innerType)
 
 
 {-|
