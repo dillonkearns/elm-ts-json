@@ -297,15 +297,12 @@ variantLiteral literalValue (UnionBuilder builder tsTypes) =
 {-| -}
 variantObject :
     String
-    -> ObjectBuilder arg1
+    -> List ( String, Encoder arg1 )
     -> UnionBuilder ((arg1 -> Encode.Value) -> match)
     -> UnionBuilder match
-variantObject variantName objectBuilder unionBuilder =
+variantObject variantName objectFields unionBuilder =
     variant
-        (objectBuilder
-            |> property "tag" (literal (Encode.string variantName))
-            |> toEncoder
-        )
+        (objectNew (( "tag", literal (Encode.string variantName) ) :: objectFields))
         unionBuilder
 
 

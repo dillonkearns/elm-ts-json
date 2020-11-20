@@ -158,10 +158,7 @@ suite =
                                 vAlert string
                     )
                     |> Encoder.variant0 "SendPresenceHeartbeat"
-                    |> Encoder.variantObject "Alert"
-                        (Encoder.build
-                            |> property "message" Encoder.string
-                        )
+                    |> Encoder.variantObject "Alert" [ ( "message", Encoder.string ) ]
                     |> Encoder.buildUnion
                     |> expectEncodes
                         { input = Alert "Hello!"
@@ -213,10 +210,7 @@ suite =
                                 vAlert string
                     )
                     |> Encoder.variant0 "SendPresenceHeartbeat"
-                    |> Encoder.variantObject "Alert"
-                        (Encoder.build
-                            |> property "message" Encoder.string
-                        )
+                    |> Encoder.variantObject "Alert" [ ( "message", Encoder.string ) ]
                     |> Encoder.buildUnion
                     |> expectEncodes
                         { input = Alert "Hello!"
