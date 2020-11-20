@@ -7,9 +7,8 @@ module TsInterop.Decode exposing
     , index
     , map, map2, map3
     , literal, null
-    , andThen, staticAndThen
+    , andThen, staticAndThen, StaticAndThen, init, option
     , decoder, tsTypeToString
-    , StaticAndThen, init, option
     )
 
 {-|
@@ -51,7 +50,7 @@ module TsInterop.Decode exposing
 
 ## Continuation
 
-@docs andThen, staticAndThen
+@docs andThen, staticAndThen, StaticAndThen, init, option
 
 
 ## Using Decoders
@@ -198,19 +197,18 @@ staticAndThen (StaticAndThen function tsTypes) (InteropDecoder innerDecoder inne
     InteropDecoder (Decode.andThen andThenDecoder innerDecoder) (TsType.combine innerType (TsType.Union tsTypes))
 
 
+{-| -}
 type StaticAndThen a
     = StaticAndThen a (List TsType)
 
 
+{-| -}
 init : a -> StaticAndThen a
 init constructor =
     StaticAndThen constructor []
 
 
-
---option : InteropDecoder value -> StaticAndThen (value -> a) -> StaticAndThen a
-
-
+{-| -}
 option :
     InteropDecoder value
     -> StaticAndThen (InteropDecoder value -> final)
