@@ -4,7 +4,7 @@ import Dict
 import Expect exposing (Expectation)
 import Json.Encode as Encode
 import Test exposing (..)
-import TsInterop.Encode as Encoder exposing (Encoder, property)
+import TsInterop.Encode as Encoder exposing (Encoder)
 
 
 suite : Test
@@ -12,14 +12,14 @@ suite =
     describe "encode"
         [ test "object" <|
             \() ->
-                Encoder.build
-                    |> property "first" (Encoder.string |> Encoder.map .first)
-                    |> property "last" (Encoder.string |> Encoder.map .last)
-                    |> Encoder.toEncoder
+                Encoder.object
+                    [ ( "first", Encoder.string |> Encoder.map .first )
+                    , ( "last", Encoder.string |> Encoder.map .last )
+                    ]
                     |> expectEncodes
                         { input = { first = "Dillon", last = "Kearns" }
-                        , output = """{"last":"Kearns","first":"Dillon"}"""
-                        , typeDef = "{ last : string; first : string }"
+                        , output = """{"first":"Dillon","last":"Kearns"}"""
+                        , typeDef = "{ first : string; last : string }"
                         }
         , test "object new" <|
             \() ->
@@ -180,23 +180,22 @@ suite =
                                 vGuest ()
                     )
                     |> Encoder.variant
-                        (Encoder.build
-                            |> property "name" (Encoder.map .name Encoder.string)
-                            |> property "id" (Encoder.map .id Encoder.int)
-                            |> Encoder.toEncoder
+                        (Encoder.object
+                            [ ( "name", Encoder.map .name Encoder.string )
+                            , ( "id", Encoder.map .id Encoder.int )
+                            ]
                         )
                     |> Encoder.variant
-                        (Encoder.build
-                            |> property "name" (Encoder.map .name Encoder.string)
-                            |> Encoder.toEncoder
+                        (Encoder.object
+                            [ ( "name", Encoder.map .name Encoder.string ) ]
                         )
                     |> Encoder.variant
-                        (Encoder.build |> Encoder.toEncoder)
+                        (Encoder.object [])
                     |> Encoder.buildUnion
                     |> expectEncodes
                         { input = Admin "Dillon" 123
-                        , output = """{"id":123,"name":"Dillon"}"""
-                        , typeDef = """{  } | { name : string } | { id : number; name : string }"""
+                        , output = """{"name":"Dillon","id":123}"""
+                        , typeDef = """{  } | { name : string } | { name : string; id : number }"""
                         }
         , test "merge object to variant" <|
             \() ->

@@ -27,12 +27,12 @@ suite =
                         )
                         |> Expect.equal
                             (TsType.Intersection
-                                (TsType.TypeObject [ ( "version", Number ) ])
-                                (TsType.Union
+                                [ TsType.TypeObject [ ( "version", Number ) ]
+                                , TsType.Union
                                     [ TypeObject [ ( "data", TypeObject [ ( "payload", String ) ] ) ]
                                     , TypeObject [ ( "payload", String ) ]
                                     ]
-                                )
+                                ]
                             )
             , test "contradictory scalars" <|
                 \() ->
