@@ -1,25 +1,24 @@
 module GoalPorts exposing (..)
 
-import TsInterop.Encode as Encode exposing (property)
+import TsInterop.Encode as Encode exposing (Encoder, property)
 
 
 {-| Generates `Ports.sendPresenceHeartbeat : Cmd msg`
 -}
-sendPresenceHeartbeat : Encode.ObjectBuilder encodesFrom
+sendPresenceHeartbeat : List ( String, Encoder encodesFrom )
 sendPresenceHeartbeat =
-    Encode.build
+    []
 
 
 {-| Generates `Ports.alert : String -> Cmd msg`
 -}
-alert : Encode.ObjectBuilder String
+alert : List ( String, Encoder String )
 alert =
-    Encode.build
-        |> property "message" Encode.string
+    [ ( "message", Encode.string ) ]
 
 
-bugsnag : Encode.ObjectBuilder { a | context : List String, message : String }
+bugsnag : List ( String, Encoder { a | context : List String, message : String } )
 bugsnag =
-    Encode.build
-        |> property "message" (Encode.string |> Encode.map .message)
-        |> property "context" (Encode.list Encode.string |> Encode.map .context)
+    [ ( "message", Encode.string |> Encode.map .message )
+    , ( "context", Encode.list Encode.string |> Encode.map .context )
+    ]

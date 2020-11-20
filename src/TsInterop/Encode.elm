@@ -309,19 +309,17 @@ variantObject variantName objectFields unionBuilder =
 {-| -}
 encodeProVariant :
     String
-    -> ObjectBuilder arg1
+    -> List ( String, Encoder arg1 )
     -> arg1
     -> Encode.Value
-encodeProVariant variantName (ObjectBuilder entries) arg1 =
-    Encode.object
-        (( "tag", Encode.string variantName )
-            :: (entries
-                    |> List.map
-                        (\( key, encodeFn, tsType_ ) ->
-                            ( key, encodeFn arg1 )
-                        )
-               )
-        )
+encodeProVariant variantName entries arg1 =
+    arg1
+        |> (objectNew
+                (( "tag", literal (Encode.string variantName) )
+                    :: entries
+                )
+                |> encoder
+           )
 
 
 {-| -}
