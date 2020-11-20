@@ -16,7 +16,7 @@ type TsType
     | Union (List TsType)
     | Unknown
     | TsNever
-    | Intersection TsType TsType
+    | Intersection (List TsType)
 
 
 combine : TsType -> TsType -> TsType
@@ -29,7 +29,7 @@ combine type1 type2 =
             Debug.todo ""
 
         ( TypeObject fields1, Union unionedTypes ) ->
-            Intersection type1 type2
+            Intersection [ type1, type2 ]
 
         ( TypeObject fields1, _ ) ->
             TsNever
@@ -41,7 +41,7 @@ combine type1 type2 =
             TsNever
 
         _ ->
-            Intersection type1 type2
+            Intersection [ type1, type2 ]
 
 
 null : TsType
@@ -115,8 +115,8 @@ tsTypeToString_ tsType_ =
         TsNever ->
             "never"
 
-        Intersection type1 type2 ->
-            [ type1, type2 ]
+        Intersection types ->
+            types
                 |> List.map tsTypeToString_
                 |> String.join " & "
                 |> parenthesize

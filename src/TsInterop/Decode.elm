@@ -5,7 +5,8 @@ module TsInterop.Decode exposing
     , field, at
     , list, array, nullable, oneOf, dict, keyValuePairs, oneOrMore, maybe
     , index
-    , map, map2, map3
+    , map, map2
+    , map3, map4, map5, map6, map7, map8
     , literal, null
     , andThen, staticAndThen, StaticAndThen, init, option
     , decoder, tsTypeToString
@@ -40,7 +41,9 @@ module TsInterop.Decode exposing
 
 ## Transformations
 
-@docs map, map2, map3
+@docs map, map2
+
+@docs map3, map4, map5, map6, map7, map8
 
 
 ## TypeScript Literals
@@ -86,6 +89,121 @@ map3 mapFn (InteropDecoder innerDecoder1 innerType1) (InteropDecoder innerDecode
             innerType1
             innerType2
             |> TsType.combine innerType3
+        )
+
+
+{-| -}
+map4 :
+    (value1 -> value2 -> value3 -> value4 -> mapped)
+    -> InteropDecoder value1
+    -> InteropDecoder value2
+    -> InteropDecoder value3
+    -> InteropDecoder value4
+    -> InteropDecoder mapped
+map4 mapFn (InteropDecoder innerDecoder1 innerType1) (InteropDecoder innerDecoder2 innerType2) (InteropDecoder innerDecoder3 innerType3) (InteropDecoder innerDecoder4 innerType4) =
+    InteropDecoder (Decode.map4 mapFn innerDecoder1 innerDecoder2 innerDecoder3 innerDecoder4)
+        (TsType.Intersection
+            [ innerType1
+            , innerType2
+            , innerType3
+            , innerType4
+            ]
+        )
+
+
+{-| -}
+map5 :
+    (value1 -> value2 -> value3 -> value4 -> value5 -> mapped)
+    -> InteropDecoder value1
+    -> InteropDecoder value2
+    -> InteropDecoder value3
+    -> InteropDecoder value4
+    -> InteropDecoder value5
+    -> InteropDecoder mapped
+map5 mapFn (InteropDecoder innerDecoder1 innerType1) (InteropDecoder innerDecoder2 innerType2) (InteropDecoder innerDecoder3 innerType3) (InteropDecoder innerDecoder4 innerType4) (InteropDecoder innerDecoder5 innerType5) =
+    InteropDecoder (Decode.map5 mapFn innerDecoder1 innerDecoder2 innerDecoder3 innerDecoder4 innerDecoder5)
+        (TsType.Intersection
+            [ innerType1
+            , innerType2
+            , innerType3
+            , innerType4
+            , innerType5
+            ]
+        )
+
+
+{-| -}
+map6 :
+    (value1 -> value2 -> value3 -> value4 -> value5 -> value6 -> mapped)
+    -> InteropDecoder value1
+    -> InteropDecoder value2
+    -> InteropDecoder value3
+    -> InteropDecoder value4
+    -> InteropDecoder value5
+    -> InteropDecoder value6
+    -> InteropDecoder mapped
+map6 mapFn (InteropDecoder innerDecoder1 innerType1) (InteropDecoder innerDecoder2 innerType2) (InteropDecoder innerDecoder3 innerType3) (InteropDecoder innerDecoder4 innerType4) (InteropDecoder innerDecoder5 innerType5) (InteropDecoder innerDecoder6 innerType6) =
+    InteropDecoder (Decode.map6 mapFn innerDecoder1 innerDecoder2 innerDecoder3 innerDecoder4 innerDecoder5 innerDecoder6)
+        (TsType.Intersection
+            [ innerType1
+            , innerType2
+            , innerType3
+            , innerType4
+            , innerType5
+            , innerType6
+            ]
+        )
+
+
+{-| -}
+map7 :
+    (value1 -> value2 -> value3 -> value4 -> value5 -> value6 -> value7 -> mapped)
+    -> InteropDecoder value1
+    -> InteropDecoder value2
+    -> InteropDecoder value3
+    -> InteropDecoder value4
+    -> InteropDecoder value5
+    -> InteropDecoder value6
+    -> InteropDecoder value7
+    -> InteropDecoder mapped
+map7 mapFn (InteropDecoder innerDecoder1 innerType1) (InteropDecoder innerDecoder2 innerType2) (InteropDecoder innerDecoder3 innerType3) (InteropDecoder innerDecoder4 innerType4) (InteropDecoder innerDecoder5 innerType5) (InteropDecoder innerDecoder6 innerType6) (InteropDecoder innerDecoder7 innerType7) =
+    InteropDecoder (Decode.map7 mapFn innerDecoder1 innerDecoder2 innerDecoder3 innerDecoder4 innerDecoder5 innerDecoder6 innerDecoder7)
+        (TsType.Intersection
+            [ innerType1
+            , innerType2
+            , innerType3
+            , innerType4
+            , innerType5
+            , innerType6
+            , innerType7
+            ]
+        )
+
+
+{-| -}
+map8 :
+    (value1 -> value2 -> value3 -> value4 -> value5 -> value6 -> value7 -> value8 -> mapped)
+    -> InteropDecoder value1
+    -> InteropDecoder value2
+    -> InteropDecoder value3
+    -> InteropDecoder value4
+    -> InteropDecoder value5
+    -> InteropDecoder value6
+    -> InteropDecoder value7
+    -> InteropDecoder value8
+    -> InteropDecoder mapped
+map8 mapFn (InteropDecoder innerDecoder1 innerType1) (InteropDecoder innerDecoder2 innerType2) (InteropDecoder innerDecoder3 innerType3) (InteropDecoder innerDecoder4 innerType4) (InteropDecoder innerDecoder5 innerType5) (InteropDecoder innerDecoder6 innerType6) (InteropDecoder innerDecoder7 innerType7) (InteropDecoder innerDecoder8 innerType8) =
+    InteropDecoder (Decode.map8 mapFn innerDecoder1 innerDecoder2 innerDecoder3 innerDecoder4 innerDecoder5 innerDecoder6 innerDecoder7 innerDecoder8)
+        (TsType.Intersection
+            [ innerType1
+            , innerType2
+            , innerType3
+            , innerType4
+            , innerType5
+            , innerType6
+            , innerType7
+            , innerType8
+            ]
         )
 
 
