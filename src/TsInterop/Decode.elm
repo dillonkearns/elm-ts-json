@@ -470,7 +470,7 @@ list (InteropDecoder innerDecoder innerType) =
         ( index 3 string )
         |> runExample """[0,100,"a","b"]"""
     --> { decoded = Ok ( 100, "b" )
-    --> , tsType = ""
+    --> , tsType = "([unknown,number,...unknown[]] & [unknown,unknown,unknown,string,...unknown[]])"
     --> }
 
 -}
