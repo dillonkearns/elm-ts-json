@@ -122,7 +122,29 @@ float =
     Encoder Encode.float TsType.Number
 
 
-{-| -}
+{-| Encode a string.
+
+    import Json.Encode as Encode
+
+    runExample : Encoder encodeFrom -> encodeFrom -> { output : String, tsType : String }
+    runExample encoder_ encodeFrom = { tsType = typeDef encoder_ , output = encodeFrom |> encoder encoder_ |> Encode.encode 0 }
+
+
+    "Hello!"
+        |> runExample string
+    --> { output = "\"Hello!\""
+    --> , tsType = "string"
+    --> }
+
+You can use `map` to apply an accessor function for how to get that String.
+
+    { data = { first = "James", last = "Kirk" } }
+        |> runExample ( string |> map .first |> map .data )
+    --> { output = "\"James\""
+    --> , tsType = "string"
+    --> }
+
+-}
 string : Encoder String
 string =
     Encoder Encode.string TsType.String
