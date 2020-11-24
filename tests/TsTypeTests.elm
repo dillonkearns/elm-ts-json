@@ -16,6 +16,13 @@ suite =
                         (TsType.TypeObject [])
                         |> Expect.equal
                             (TsType.TypeObject [])
+            , test "arrays with complementary indices are merged" <|
+                \() ->
+                    TsType.combine
+                        (TsType.ArrayIndex ( 0, TsType.String ) [])
+                        (TsType.ArrayIndex ( 1, TsType.Number ) [])
+                        |> Expect.equal
+                            (TsType.ArrayIndex ( 0, TsType.String ) [ ( 1, TsType.Number ) ])
             , test "merge object type into union of objects" <|
                 \() ->
                     TsType.combine

@@ -608,7 +608,7 @@ list (InteropDecoder innerDecoder innerType) =
 -}
 index : Int -> InteropDecoder value -> InteropDecoder value
 index n (InteropDecoder innerDecoder innerType) =
-    InteropDecoder (Decode.index n innerDecoder) (TsType.ArrayIndex n innerType)
+    InteropDecoder (Decode.index n innerDecoder) (TsType.ArrayIndex ( n, innerType ) [])
 
 
 {-|

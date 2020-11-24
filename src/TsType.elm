@@ -8,7 +8,7 @@ type TsType
     | Number
     | Boolean
     | List TsType
-    | ArrayIndex Int TsType
+    | ArrayIndex ( Int, TsType ) (List ( Int, TsType ))
     | Tuple (List TsType) (Maybe TsType) -- Maybe is a rest type - can be used for non-empty lists https://stackoverflow.com/a/56006703
     | Literal Encode.Value
     | TypeObject (List ( String, TsType ))
@@ -46,6 +46,9 @@ union tsTypes =
 combine : TsType -> TsType -> TsType
 combine type1 type2 =
     case ( type1, type2 ) of
+        ( ArrayIndex ( index1, indexType1 ) [], ArrayIndex ( index2, indexType2 ) [] ) ->
+            ArrayIndex ( index1, indexType1 ) [ ( index2, indexType2 ) ]
+
         ( TypeObject fields1, TypeObject fields2 ) ->
             TypeObject (fields1 ++ fields2)
 
@@ -145,14 +148,19 @@ tsTypeToString_ tsType_ =
                 |> String.join " & "
                 |> parenthesize
 
-        ArrayIndex index tsType ->
-            "["
-                ++ ((List.repeat index "unknown"
-                        ++ [ tsTypeToString_ tsType, "...unknown[]" ]
-                    )
-                        |> String.join ","
-                   )
-                ++ "]"
+        ArrayIndex ( index, tsType ) otherIndices ->
+            case otherIndices of
+                [] ->
+                    "["
+                        ++ ((List.repeat index "unknown"
+                                ++ [ tsTypeToString_ tsType, "...unknown[]" ]
+                            )
+                                |> String.join ","
+                           )
+                        ++ "]"
+
+                _ ->
+                    "Unhandled"
 
 
 parenthesize : String -> String
