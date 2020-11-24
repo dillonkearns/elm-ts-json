@@ -56,7 +56,7 @@ tsTypeToString_ tsType_ =
             "string"
 
         List listType ->
-            tsTypeToString_ listType ++ "[]"
+            parenthesizeToString listType ++ "[]"
 
         Literal literalValue ->
             Encode.encode 0 literalValue
@@ -134,3 +134,21 @@ tsTypeToString_ tsType_ =
 parenthesize : String -> String
 parenthesize string =
     "(" ++ string ++ ")"
+
+
+parenthesizeToString : TsType -> String
+parenthesizeToString type_ =
+    let
+        needsParens =
+            case type_ of
+                Union types ->
+                    True
+
+                _ ->
+                    False
+    in
+    if needsParens then
+        "(" ++ tsTypeToString_ type_ ++ ")"
+
+    else
+        tsTypeToString_ type_

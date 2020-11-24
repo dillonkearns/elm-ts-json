@@ -41,6 +41,18 @@ suite =
                 \() ->
                     combinesToNever TsType.Number TsType.String
             ]
+        , describe "parenthesized when needed"
+            [ test "list of union" <|
+                \() ->
+                    TsType.List
+                        (TsType.Union
+                            [ TsType.String
+                            , TsType.Number
+                            ]
+                        )
+                        |> TsType.tsTypeToString_
+                        |> Expect.equal "(string | number)[]"
+            ]
         ]
 
 
