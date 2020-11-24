@@ -619,14 +619,14 @@ index n (InteropDecoder innerDecoder innerType) =
         oneOf [
             field "tag" (literal Pass (Json.Encode.string "pass"))
           , map2 (\() message -> Fail message)
-              ( field "tag" (literal () (Json.Encode.string "pass")) )
+              ( field "tag" (literal () (Json.Encode.string "fail")) )
               ( field "message" string )
         ]
 
     oneOrMore (::) testCaseDecoder
         |> runExample """[ { "tag": "pass" } ]"""
     --> { decoded = Ok [ Pass ]
-    --> , tsType = """[ { tag : "pass" } | { tag : "pass"; message : string }, ...({ tag : "pass" } | { tag : "pass"; message : string })[] ]"""
+    --> , tsType = """[ { tag : "pass" } | { tag : "fail"; message : string }, ...({ tag : "pass" } | { tag : "fail"; message : string })[] ]"""
     --> }
 
 -}
