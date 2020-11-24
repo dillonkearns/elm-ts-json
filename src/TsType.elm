@@ -133,9 +133,23 @@ null =
 toString : TsType -> String
 toString tsType_ =
     case tsType_ of
+        -- leaf types
+        TsNever ->
+            "never"
+
         String ->
             "string"
 
+        Number ->
+            "number"
+
+        Boolean ->
+            "boolean"
+
+        Unknown ->
+            "unknown"
+
+        -- compound types
         List listType ->
             parenthesizeToString listType ++ "[]"
 
@@ -158,17 +172,8 @@ toString tsType_ =
                    )
                 ++ " }"
 
-        Number ->
-            "number"
-
-        Boolean ->
-            "boolean"
-
         ObjectWithUniformValues tsType ->
             "{ [key: string]: " ++ toString tsType ++ " }"
-
-        Unknown ->
-            "unknown"
 
         Tuple tsTypes maybeRestType ->
             let
@@ -192,9 +197,6 @@ toString tsType_ =
                         |> String.join ", "
                    )
                 ++ " ]"
-
-        TsNever ->
-            "never"
 
         Intersection types ->
             types
