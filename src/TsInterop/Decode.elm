@@ -213,7 +213,23 @@ nullable (InteropDecoder innerDecoder innerType) =
     InteropDecoder (Decode.nullable innerDecoder) (Union [ innerType, TsType.null ])
 
 
-{-| -}
+{-| You can express quite a bit with `oneOf`! The resulting TypeScript types will be a Union of all the TypeScript types
+for each Decoder in the List.
+
+    import Json.Decode
+    import Json.Encode
+
+    runExample : InteropDecoder value -> String -> { decoded : Result String value, tsType : String }
+    runExample interopDecoder inputJson = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
+
+
+    "[1, 2, 3.14159, 4]"
+        |> runExample ( list ( oneOf [ int |> map toFloat, float ] ) )
+    --> { decoded = Ok [1.0, 2.0, 3.14159, 4.0]
+    --> , tsType = """(number | number)[]"""
+    --> }
+
+-}
 oneOf : List (InteropDecoder value) -> InteropDecoder value
 oneOf decoders =
     InteropDecoder
