@@ -635,7 +635,8 @@ oneOrMore constructor (InteropDecoder innerDecoder innerType) =
     InteropDecoder (Decode.oneOrMore constructor innerDecoder) (Tuple [ innerType ] (Just innerType))
 
 
-{-| -}
+{-| Exactly the same as the `list` Decoder except that it wraps the decoded `List` into an Elm `Array`.
+-}
 array : InteropDecoder value -> InteropDecoder (Array value)
 array (InteropDecoder innerDecoder innerType) =
     InteropDecoder (Decode.array innerDecoder) (List innerType)
@@ -683,7 +684,8 @@ keyValuePairs (InteropDecoder innerDecoder innerType) =
     InteropDecoder (Decode.keyValuePairs innerDecoder) (List innerType)
 
 
-{-| -}
+{-| Get a regular JSON Decoder that you can run using the `elm/json` API.
+-}
 decoder : InteropDecoder value -> Decoder value
 decoder (InteropDecoder decoder_ tsType_) =
     decoder_
