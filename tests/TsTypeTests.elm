@@ -41,6 +41,17 @@ suite =
                                     ]
                                 ]
                             )
+            , test "object fields are merged together" <|
+                \() ->
+                    TsType.combine
+                        (TsType.TypeObject [ ( "version", Number ) ])
+                        (TsType.TypeObject [ ( "author", TsType.String ) ])
+                        |> Expect.equal
+                            (TsType.TypeObject
+                                [ ( "version", Number )
+                                , ( "author", TsType.String )
+                                ]
+                            )
             , test "contradictory scalars" <|
                 \() ->
                     combinesToNever TsType.String TsType.Number
