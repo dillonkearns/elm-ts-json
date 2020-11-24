@@ -111,7 +111,7 @@ suite =
                             , TsType.Number
                             ]
                         )
-                        |> TsType.tsTypeToString_
+                        |> TsType.toString
                         |> Expect.equal "(string | number)[]"
             ]
         ]
@@ -119,7 +119,7 @@ suite =
 
 expectEqualTypes : String -> TsType -> Expect.Expectation
 expectEqualTypes expected type2 =
-    TsType.tsTypeToString_ type2
+    TsType.toString type2
         |> Expect.equal expected
 
 

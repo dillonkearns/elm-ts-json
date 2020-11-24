@@ -61,7 +61,7 @@ simplifyIntersection : List TsType -> TsType
 simplifyIntersection types =
     let
         thing =
-            case types |> deduplicateBy tsTypeToString_ of
+            case types |> deduplicateBy toString of
                 first :: rest ->
                     case first of
                         TypeObject fields ->
@@ -130,8 +130,8 @@ null =
     Literal Encode.null
 
 
-tsTypeToString_ : TsType -> String
-tsTypeToString_ tsType_ =
+toString : TsType -> String
+toString tsType_ =
     case tsType_ of
         String ->
             "string"
@@ -144,7 +144,7 @@ tsTypeToString_ tsType_ =
 
         Union ( firstType, tsTypes ) ->
             (firstType :: tsTypes)
-                |> List.map tsTypeToString_
+                |> List.map toString
                 |> String.join " | "
 
         TypeObject keyTypes ->
@@ -152,7 +152,7 @@ tsTypeToString_ tsType_ =
                 ++ (keyTypes
                         |> List.map
                             (\( key, tsType__ ) ->
-                                key ++ " : " ++ tsTypeToString_ tsType__
+                                key ++ " : " ++ toString tsType__
                             )
                         |> String.join "; "
                    )
@@ -165,7 +165,7 @@ tsTypeToString_ tsType_ =
             "boolean"
 
         ObjectWithUniformValues tsType ->
-            "{ [key: string]: " ++ tsTypeToString_ tsType ++ " }"
+            "{ [key: string]: " ++ toString tsType ++ " }"
 
         Unknown ->
             "unknown"
@@ -176,14 +176,14 @@ tsTypeToString_ tsType_ =
                     maybeRestType
                         |> Maybe.map
                             (\restType ->
-                                "...(" ++ tsTypeToString_ restType ++ ")[]"
+                                "...(" ++ toString restType ++ ")[]"
                             )
             in
             "[ "
                 ++ (((tsTypes
                         |> List.map
                             (\type_ ->
-                                tsTypeToString_ type_ |> Just
+                                toString type_ |> Just
                             )
                      )
                         ++ [ restTypePart ]
@@ -198,7 +198,7 @@ tsTypeToString_ tsType_ =
 
         Intersection types ->
             types
-                |> List.map tsTypeToString_
+                |> List.map toString
                 |> String.join " & "
                 |> parenthesize
 
@@ -223,7 +223,7 @@ tsTypeToString_ tsType_ =
                             (\cur ->
                                 Dict.get cur dict
                                     |> Maybe.withDefault Unknown
-                                    |> tsTypeToString_
+                                    |> toString
                             )
                      )
                         ++ [ --tsTypeToString_ tsType,
@@ -252,7 +252,7 @@ parenthesizeToString type_ =
                     False
     in
     if needsParens then
-        "(" ++ tsTypeToString_ type_ ++ ")"
+        "(" ++ toString type_ ++ ")"
 
     else
-        tsTypeToString_ type_
+        toString type_

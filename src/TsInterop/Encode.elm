@@ -69,7 +69,7 @@ encoder (Encoder encodeFn tsType_) encodesFrom =
 {-| -}
 typeDef : Encoder encodesFrom -> String
 typeDef (Encoder encodeFn tsType_) =
-    TsType.tsTypeToString_ tsType_
+    TsType.toString tsType_
 
 
 {-| -}
@@ -369,4 +369,4 @@ unionTypeDefToString variants =
                     )
             )
         |> TsType.union
-        |> TsType.tsTypeToString_
+        |> TsType.toString

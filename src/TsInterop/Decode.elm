@@ -710,7 +710,7 @@ decoder (InteropDecoder decoder_ tsType_) =
 {-| -}
 tsTypeToString : InteropDecoder value -> String
 tsTypeToString (InteropDecoder decoder_ tsType_) =
-    TsType.tsTypeToString_ tsType_
+    TsType.toString tsType_
 
 
 runExample : String -> InteropDecoder value -> { decoded : Result String value, tsType : String }
