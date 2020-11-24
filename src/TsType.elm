@@ -21,7 +21,7 @@ type TsType
 
 union : List TsType -> TsType
 union tsTypes =
-    case tsTypes of
+    case tsTypes |> List.filter ((/=) TsNever) of
         [ singleType ] ->
             singleType
 

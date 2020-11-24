@@ -40,6 +40,10 @@ suite =
             , test "contradictory scalars reversed" <|
                 \() ->
                     combinesToNever TsType.Number TsType.String
+            , test "never in a union is factored out" <|
+                \() ->
+                    TsType.union [ TsType.TsNever, TsType.String ]
+                        |> Expect.equal TsType.String
             ]
         , describe "parenthesized when needed"
             [ test "list of union" <|
