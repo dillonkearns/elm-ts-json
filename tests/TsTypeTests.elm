@@ -23,6 +23,12 @@ suite =
                         (TsType.ArrayIndex ( 1, TsType.Number ) [])
                         |> expectEqualTypes
                             "[string,number,...unknown[]]"
+            , test "a known value intersected with unknown is the known value" <|
+                \() ->
+                    TsType.intersect
+                        TsType.Boolean
+                        TsType.Unknown
+                        |> Expect.equal TsType.Boolean
             , test "merge object type into union of objects" <|
                 \() ->
                     TsType.intersect

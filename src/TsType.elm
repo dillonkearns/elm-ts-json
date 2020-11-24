@@ -121,6 +121,15 @@ intersect type1 type2 =
         ( Number, String ) ->
             TsNever
 
+        ( Unknown, Unknown ) ->
+            Unknown
+
+        ( Unknown, known ) ->
+            known
+
+        ( known, Unknown ) ->
+            known
+
         _ ->
             Intersection [ type1, type2 ]
 
