@@ -20,7 +20,7 @@ suite =
                 \() ->
                     TsType.combine
                         (TsType.TypeObject [ ( "version", Number ) ])
-                        (TsType.Union
+                        (TsType.union
                             [ TypeObject [ ( "data", TypeObject [ ( "payload", String ) ] ) ]
                             , TypeObject [ ( "payload", String ) ]
                             ]
@@ -28,7 +28,7 @@ suite =
                         |> Expect.equal
                             (TsType.Intersection
                                 [ TsType.TypeObject [ ( "version", Number ) ]
-                                , TsType.Union
+                                , TsType.union
                                     [ TypeObject [ ( "data", TypeObject [ ( "payload", String ) ] ) ]
                                     , TypeObject [ ( "payload", String ) ]
                                     ]
@@ -45,7 +45,7 @@ suite =
             [ test "list of union" <|
                 \() ->
                     TsType.List
-                        (TsType.Union
+                        (TsType.union
                             [ TsType.String
                             , TsType.Number
                             ]

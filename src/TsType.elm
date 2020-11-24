@@ -13,10 +13,23 @@ type TsType
     | Literal Encode.Value
     | TypeObject (List ( String, TsType ))
     | ObjectWithUniformValues TsType -- https://stackoverflow.com/a/13315210
-    | Union (List TsType)
+    | Union ( TsType, List TsType )
     | Unknown
     | TsNever
     | Intersection (List TsType)
+
+
+union : List TsType -> TsType
+union tsTypes =
+    case tsTypes of
+        [ singleType ] ->
+            singleType
+
+        [] ->
+            Unknown
+
+        first :: rest ->
+            Union ( first, rest )
 
 
 combine : TsType -> TsType -> TsType
@@ -61,8 +74,8 @@ tsTypeToString_ tsType_ =
         Literal literalValue ->
             Encode.encode 0 literalValue
 
-        Union tsTypes ->
-            tsTypes
+        Union ( firstType, tsTypes ) ->
+            (firstType :: tsTypes)
                 |> List.map tsTypeToString_
                 |> String.join " | "
 

@@ -210,7 +210,7 @@ map8 mapFn (InteropDecoder innerDecoder1 innerType1) (InteropDecoder innerDecode
 {-| -}
 nullable : InteropDecoder value -> InteropDecoder (Maybe value)
 nullable (InteropDecoder innerDecoder innerType) =
-    InteropDecoder (Decode.nullable innerDecoder) (Union [ innerType, TsType.null ])
+    InteropDecoder (Decode.nullable innerDecoder) (TsType.union [ innerType, TsType.null ])
 
 
 {-| You can express quite a bit with `oneOf`! The resulting TypeScript types will be a Union of all the TypeScript types
@@ -245,7 +245,7 @@ oneOf decoders =
                 (\(InteropDecoder innerDecoder innerType) ->
                     innerType
                 )
-            |> Union
+            |> TsType.union
         )
 
 
@@ -328,7 +328,7 @@ staticAndThen (StaticAndThen function tsTypes) (InteropDecoder innerDecoder inne
                     InteropDecoder innerDecoder_ innerType_ ->
                         innerDecoder_
     in
-    InteropDecoder (Decode.andThen andThenDecoder innerDecoder) (TsType.combine innerType (TsType.Union tsTypes))
+    InteropDecoder (Decode.andThen andThenDecoder innerDecoder) (TsType.combine innerType (TsType.union tsTypes))
 
 
 {-| -}

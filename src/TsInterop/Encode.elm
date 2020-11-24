@@ -348,7 +348,7 @@ encodeProVariant variantName entries arg1 =
 {-| -}
 buildUnion : UnionBuilder (match -> Encode.Value) -> Encoder match
 buildUnion (UnionBuilder toValue tsTypes_) =
-    Encoder toValue (TsType.Union tsTypes_)
+    Encoder toValue (TsType.union tsTypes_)
 
 
 {-| -}
@@ -368,5 +368,5 @@ unionTypeDefToString variants =
                         :: objectProperties
                     )
             )
-        |> TsType.Union
+        |> TsType.union
         |> TsType.tsTypeToString_
