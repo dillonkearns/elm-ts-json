@@ -203,18 +203,36 @@ tsTypeToString_ tsType_ =
                 |> parenthesize
 
         ArrayIndex ( index, tsType ) otherIndices ->
-            case otherIndices of
-                [] ->
-                    "["
-                        ++ ((List.repeat index "unknown"
-                                ++ [ tsTypeToString_ tsType, "...unknown[]" ]
-                            )
-                                |> String.join ","
-                           )
-                        ++ "]"
+            let
+                dict =
+                    Dict.fromList
+                        (( index, tsType )
+                            :: otherIndices
+                        )
 
-                _ ->
-                    "Unhandled"
+                highestIndex : Int
+                highestIndex =
+                    dict
+                        |> Dict.keys
+                        |> List.maximum
+                        |> Maybe.withDefault 0
+            in
+            "["
+                ++ (((List.range 0 highestIndex
+                        |> List.map
+                            (\cur ->
+                                Dict.get cur dict
+                                    |> Maybe.withDefault Unknown
+                                    |> tsTypeToString_
+                            )
+                     )
+                        ++ [ --tsTypeToString_ tsType,
+                             "...unknown[]"
+                           ]
+                    )
+                        |> String.join ","
+                   )
+                ++ "]"
 
 
 parenthesize : String -> String

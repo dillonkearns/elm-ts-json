@@ -21,8 +21,8 @@ suite =
                     TsType.combine
                         (TsType.ArrayIndex ( 0, TsType.String ) [])
                         (TsType.ArrayIndex ( 1, TsType.Number ) [])
-                        |> Expect.equal
-                            (TsType.ArrayIndex ( 0, TsType.String ) [ ( 1, TsType.Number ) ])
+                        |> expectEqualTypes
+                            "[string,number,...unknown[]]"
             , test "merge object type into union of objects" <|
                 \() ->
                     TsType.combine
