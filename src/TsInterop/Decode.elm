@@ -78,17 +78,17 @@ map mapFn (InteropDecoder innerDecoder innerType) =
 {-| -}
 map2 : (value1 -> value2 -> mapped) -> InteropDecoder value1 -> InteropDecoder value2 -> InteropDecoder mapped
 map2 mapFn (InteropDecoder innerDecoder1 innerType1) (InteropDecoder innerDecoder2 innerType2) =
-    InteropDecoder (Decode.map2 mapFn innerDecoder1 innerDecoder2) (TsType.combine innerType1 innerType2)
+    InteropDecoder (Decode.map2 mapFn innerDecoder1 innerDecoder2) (TsType.intersect innerType1 innerType2)
 
 
 {-| -}
 map3 : (value1 -> value2 -> value3 -> mapped) -> InteropDecoder value1 -> InteropDecoder value2 -> InteropDecoder value3 -> InteropDecoder mapped
 map3 mapFn (InteropDecoder innerDecoder1 innerType1) (InteropDecoder innerDecoder2 innerType2) (InteropDecoder innerDecoder3 innerType3) =
     InteropDecoder (Decode.map3 mapFn innerDecoder1 innerDecoder2 innerDecoder3)
-        (TsType.combine
+        (TsType.intersect
             innerType1
             innerType2
-            |> TsType.combine innerType3
+            |> TsType.intersect innerType3
         )
 
 
@@ -328,7 +328,7 @@ staticAndThen (StaticAndThen function tsTypes) (InteropDecoder innerDecoder inne
                     InteropDecoder innerDecoder_ innerType_ ->
                         innerDecoder_
     in
-    InteropDecoder (Decode.andThen andThenDecoder innerDecoder) (TsType.combine innerType (TsType.union tsTypes))
+    InteropDecoder (Decode.andThen andThenDecoder innerDecoder) (TsType.intersect innerType (TsType.union tsTypes))
 
 
 {-| -}

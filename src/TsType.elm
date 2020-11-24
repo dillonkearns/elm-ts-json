@@ -97,8 +97,8 @@ simplifyIntersection types =
     thing
 
 
-combine : TsType -> TsType -> TsType
-combine type1 type2 =
+intersect : TsType -> TsType -> TsType
+intersect type1 type2 =
     case ( type1, type2 ) of
         ( Intersection types1, Intersection types2 ) ->
             simplifyIntersection (types1 ++ types2)

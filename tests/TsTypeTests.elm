@@ -11,21 +11,21 @@ suite =
         [ describe "combine"
             [ test "two object types are merged" <|
                 \() ->
-                    TsType.combine
+                    TsType.intersect
                         (TsType.TypeObject [])
                         (TsType.TypeObject [])
                         |> Expect.equal
                             (TsType.TypeObject [])
             , test "arrays with complementary indices are merged" <|
                 \() ->
-                    TsType.combine
+                    TsType.intersect
                         (TsType.ArrayIndex ( 0, TsType.String ) [])
                         (TsType.ArrayIndex ( 1, TsType.Number ) [])
                         |> expectEqualTypes
                             "[string,number,...unknown[]]"
             , test "merge object type into union of objects" <|
                 \() ->
-                    TsType.combine
+                    TsType.intersect
                         (TsType.TypeObject [ ( "version", Number ) ])
                         (TsType.union
                             [ TypeObject [ ( "data", TypeObject [ ( "payload", String ) ] ) ]
@@ -43,7 +43,7 @@ suite =
                             )
             , test "object fields are merged together" <|
                 \() ->
-                    TsType.combine
+                    TsType.intersect
                         (TsType.TypeObject [ ( "version", Number ) ])
                         (TsType.TypeObject [ ( "author", TsType.String ) ])
                         |> Expect.equal
@@ -55,9 +55,9 @@ suite =
             , test "all objects in intersection are merged" <|
                 \() ->
                     TsType.TypeObject [ ( "author", String ) ]
-                        |> TsType.combine
+                        |> TsType.intersect
                             (TsType.TypeObject [ ( "version", Number ) ])
-                        |> TsType.combine
+                        |> TsType.intersect
                             (TsType.TypeObject [ ( "license", String ) ])
                         |> Expect.equal
                             (TsType.TypeObject
@@ -68,7 +68,7 @@ suite =
                             )
             , test "intersections are merged" <|
                 \() ->
-                    TsType.combine
+                    TsType.intersect
                         (TsType.Intersection
                             [ TsType.TypeObject [ ( "version", Number ) ]
                             , TsType.union
@@ -125,5 +125,5 @@ expectEqualTypes expected type2 =
 
 combinesToNever : TsType.TsType -> TsType.TsType -> Expect.Expectation
 combinesToNever type1 type2 =
-    TsType.combine type1 type2
+    TsType.intersect type1 type2
         |> Expect.equal TsType.TsNever
