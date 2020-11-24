@@ -107,7 +107,7 @@ combine type1 type2 =
             ArrayIndex ( index1, indexType1 ) [ ( index2, indexType2 ) ]
 
         ( TypeObject fields1, TypeObject fields2 ) ->
-            TypeObject (fields1 ++ fields2)
+            TypeObject (mergeFields fields1 fields2)
 
         ( TypeObject fields1, Union unionedTypes ) ->
             Intersection [ type1, type2 ]
