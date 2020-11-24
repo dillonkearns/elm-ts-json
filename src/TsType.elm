@@ -52,9 +52,6 @@ combine type1 type2 =
         ( TypeObject fields1, TypeObject fields2 ) ->
             TypeObject (fields1 ++ fields2)
 
-        ( TypeObject fields1, ObjectWithUniformValues valueType ) ->
-            Debug.todo ""
-
         ( TypeObject fields1, Union unionedTypes ) ->
             Intersection [ type1, type2 ]
 
