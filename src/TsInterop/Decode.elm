@@ -691,13 +691,13 @@ dict (InteropDecoder innerDecoder innerType) =
     keyValuePairs int
         |> runExample """{ "alice": 42, "bob": 99 }"""
     --> { decoded = Ok [ ( "alice", 42 ), ( "bob", 99 ) ]
-    --> , tsType = "number[]"
+    --> , tsType = "{ [key: string]: number }"
     --> }
 
 -}
 keyValuePairs : InteropDecoder value -> InteropDecoder (List ( String, value ))
 keyValuePairs (InteropDecoder innerDecoder innerType) =
-    InteropDecoder (Decode.keyValuePairs innerDecoder) (List innerType)
+    InteropDecoder (Decode.keyValuePairs innerDecoder) (TsType.ObjectWithUniformValues innerType)
 
 
 {-| Get a regular JSON Decoder that you can run using the `elm/json` API.
