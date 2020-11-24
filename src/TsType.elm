@@ -1,6 +1,16 @@
 module TsType exposing (..)
 
+import Dict
 import Json.Encode as Encode
+
+
+deduplicateBy : (a -> comparable) -> List a -> List a
+deduplicateBy toComparable list =
+    List.foldl
+        (\value accum -> Dict.insert (toComparable value) value accum)
+        Dict.empty
+        list
+        |> Dict.values
 
 
 type TsType
@@ -43,9 +53,56 @@ union tsTypes =
             Union ( first, rest )
 
 
+mergeFields fields1 fields2 =
+    fields1 ++ fields2
+
+
+simplifyIntersection : List TsType -> TsType
+simplifyIntersection types =
+    let
+        thing =
+            case types |> deduplicateBy tsTypeToString_ of
+                first :: rest ->
+                    case first of
+                        TypeObject fields ->
+                            let
+                                ( otherObjects, nonObjectTypes ) =
+                                    List.foldr
+                                        (\thisType ( objectsSoFar, otherSoFar ) ->
+                                            case thisType of
+                                                TypeObject theseFields ->
+                                                    ( mergeFields theseFields objectsSoFar
+                                                    , otherSoFar
+                                                    )
+
+                                                _ ->
+                                                    ( objectsSoFar, thisType :: otherSoFar )
+                                        )
+                                        ( fields, [] )
+                                        rest
+                            in
+                            Intersection
+                                (TypeObject otherObjects
+                                    :: nonObjectTypes
+                                )
+
+                        -- TODO intersect if there are others
+                        --types |> Intersection
+                        _ ->
+                            types |> Intersection
+
+                [] ->
+                    TsNever
+    in
+    thing
+
+
 combine : TsType -> TsType -> TsType
 combine type1 type2 =
     case ( type1, type2 ) of
+        ( Intersection types1, Intersection types2 ) ->
+            simplifyIntersection (types1 ++ types2)
+
         ( ArrayIndex ( index1, indexType1 ) [], ArrayIndex ( index2, indexType2 ) [] ) ->
             ArrayIndex ( index1, indexType1 ) [ ( index2, indexType2 ) ]
 

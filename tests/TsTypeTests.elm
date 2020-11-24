@@ -52,6 +52,41 @@ suite =
                                 , ( "author", TsType.String )
                                 ]
                             )
+            , test "all objects in intersection are merged" <|
+                \() ->
+                    TsType.TypeObject [ ( "author", String ) ]
+                        |> TsType.combine
+                            (TsType.TypeObject [ ( "version", Number ) ])
+                        |> TsType.combine
+                            (TsType.TypeObject [ ( "license", String ) ])
+                        |> Expect.equal
+                            (TsType.TypeObject
+                                [ ( "license", String )
+                                , ( "version", Number )
+                                , ( "author", String )
+                                ]
+                            )
+            , test "intersections are merged" <|
+                \() ->
+                    TsType.combine
+                        (TsType.Intersection
+                            [ TsType.TypeObject [ ( "version", Number ) ]
+                            , TsType.union
+                                [ TypeObject [ ( "data", TypeObject [ ( "payload", String ) ] ) ]
+                                , TypeObject [ ( "payload", String ) ]
+                                ]
+                            ]
+                        )
+                        (TsType.Intersection
+                            [ TsType.TypeObject [ ( "author", String ) ]
+                            , TsType.union
+                                [ TypeObject [ ( "data", TypeObject [ ( "payload", String ) ] ) ]
+                                , TypeObject [ ( "payload", String ) ]
+                                ]
+                            ]
+                        )
+                        |> expectEqualTypes
+                            "({ version : number; author : string } & { data : { payload : string } } | { payload : string })"
             , test "contradictory scalars" <|
                 \() ->
                     combinesToNever TsType.String TsType.Number
@@ -80,6 +115,12 @@ suite =
                         |> Expect.equal "(string | number)[]"
             ]
         ]
+
+
+expectEqualTypes : String -> TsType -> Expect.Expectation
+expectEqualTypes expected type2 =
+    TsType.tsTypeToString_ type2
+        |> Expect.equal expected
 
 
 combinesToNever : TsType.TsType -> TsType.TsType -> Expect.Expectation
