@@ -44,6 +44,10 @@ suite =
                 \() ->
                     TsType.union [ TsType.TsNever, TsType.String ]
                         |> Expect.equal TsType.String
+            , test "unioning with just a single never is never" <|
+                \() ->
+                    TsType.union [ TsType.TsNever ]
+                        |> Expect.equal TsType.TsNever
             ]
         , describe "parenthesized when needed"
             [ test "list of union" <|

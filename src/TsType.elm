@@ -21,12 +21,23 @@ type TsType
 
 union : List TsType -> TsType
 union tsTypes =
-    case tsTypes |> List.filter ((/=) TsNever) of
+    let
+        withoutNevers =
+            tsTypes |> List.filter ((/=) TsNever)
+
+        hadNevers =
+            List.length tsTypes /= List.length withoutNevers
+    in
+    case withoutNevers of
         [ singleType ] ->
             singleType
 
         [] ->
-            Unknown
+            if hadNevers then
+                TsNever
+
+            else
+                Unknown
 
         first :: rest ->
             Union ( first, rest )
