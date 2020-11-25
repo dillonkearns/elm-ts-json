@@ -21,6 +21,18 @@ suite =
                         , output = """{"first":"Dillon","last":"Kearns"}"""
                         , typeDef = "{ first : string; last : string }"
                         }
+        , test "optional object" <|
+            \() ->
+                Encoder.optionalObject
+                    [ Encoder.required "first" Encoder.string .first
+                    , Encoder.optional "middle" Encoder.string .middle
+                    , Encoder.required "last" Encoder.string .last
+                    ]
+                    |> expectEncodes
+                        { input = { first = "Nyota", middle = Nothing, last = "Uhura" }
+                        , output = """{"first":"Nyota","last":"Uhura"}"""
+                        , typeDef = "{ first : string; middle? : string; last : string }"
+                        }
         , test "standalone string" <|
             \() ->
                 Encoder.string

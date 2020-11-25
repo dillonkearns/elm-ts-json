@@ -3,7 +3,7 @@ module TsInterop.Encode exposing
     , string, int, float, literal, bool, null
     , typeDef, encoder
     , map
-    , object
+    , object, Property, optional, required, optionalObject
     , UnionBuilder, union, variant, variant0, variantObject, variantLiteral, buildUnion
     , list, dict, tuple, triple, maybe
     , unionTypeDefToString, encodeProVariant, proTypeAnnotation, rawType, value
@@ -94,7 +94,7 @@ module TsInterop.Encode exposing
 
 ## Objects
 
-@docs object
+@docs object, Property, optional, required, optionalObject
 
 
 ## Union Types
@@ -146,7 +146,7 @@ module TsInterop.Encode exposing
 
 import Dict exposing (Dict)
 import Json.Encode as Encode
-import TsType exposing (TsType)
+import TsType exposing (PropertyOptionality, TsType)
 
 
 {-| -}
@@ -217,6 +217,60 @@ object propertyEncoders =
                 |> List.map
                     (Tuple.mapSecond
                         (\(Encoder encodeFn tsType_) -> encodeFn encodesFrom)
+                    )
+                |> Encode.object
+    in
+    Encoder encodeObject propertyTypes
+
+
+{-| -}
+type Property encodesFrom
+    = Property PropertyOptionality String (encodesFrom -> Maybe Encode.Value) TsType
+
+
+{-| -}
+optional : String -> Encoder value -> (encodesFrom -> Maybe value) -> Property encodesFrom
+optional name (Encoder encodeFn tsType_) getter =
+    Property
+        TsType.Optional
+        name
+        (\encodesFrom -> encodesFrom |> getter |> Maybe.map encodeFn)
+        tsType_
+
+
+{-| -}
+required : String -> Encoder value -> (encodesFrom -> value) -> Property encodesFrom
+required name (Encoder encodeFn tsType_) getter =
+    Property
+        TsType.Required
+        name
+        (\encodesFrom -> encodesFrom |> getter |> encodeFn |> Just)
+        tsType_
+
+
+{-| -}
+optionalObject : List (Property value) -> Encoder value
+optionalObject propertyEncoders =
+    let
+        propertyTypes : TsType
+        propertyTypes =
+            propertyEncoders
+                |> List.map
+                    (\(Property optionality propertyName encodeFn tsType_) ->
+                        ( optionality, propertyName, tsType_ )
+                    )
+                |> TsType.TypeObject
+
+        encodeObject : value -> Encode.Value
+        encodeObject encodesFrom =
+            propertyEncoders
+                |> List.filterMap
+                    (\(Property optionality propertyName encodeFn tsType_) ->
+                        encodeFn encodesFrom
+                            |> Maybe.map
+                                (\encoded ->
+                                    ( propertyName, encoded )
+                                )
                     )
                 |> Encode.object
     in
