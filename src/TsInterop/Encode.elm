@@ -36,6 +36,37 @@ module TsInterop.Encode exposing
 
 ## Union Types
 
+    import Json.Encode as Encode
+
+    runExample : Encoder encodeFrom -> encodeFrom -> { output : String, tsType : String }
+    runExample encoder_ encodeFrom =
+        { tsType = typeDef encoder_, output = encodeFrom |> encoder encoder_ |> Encode.encode 0 }
+
+    type ToJs
+        = SendPresenceHeartbeat
+        | Alert String
+
+    unionEncoder : Encoder ToJs
+    unionEncoder =
+        union
+            (\vSendHeartbeat vAlert value ->
+                case value of
+                    SendPresenceHeartbeat ->
+                        vSendHeartbeat
+                    Alert string ->
+                        vAlert string
+            )
+            |> variant0 "SendPresenceHeartbeat"
+            |> variantObject "Alert" [ ( "message", string ) ]
+            |> buildUnion
+
+
+    Alert "Hello TypeScript!"
+            |> runExample unionEncoder
+    --> { output = """{"tag":"Alert","message":"Hello TypeScript!"}"""
+    --> , tsType = """{ tag : "Alert"; message : string } | { tag : "SendPresenceHeartbeat" }"""
+    --> }
+
 @docs UnionBuilder, union, variant, variant0, variantObject, variantLiteral, buildUnion
 
 
