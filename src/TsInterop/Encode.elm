@@ -82,7 +82,29 @@ rawType entries =
             )
 
 
-{-| -}
+{-| Encode a string.
+
+    import Json.Encode as Encode
+
+    runExample : Encoder encodeFrom -> encodeFrom -> { output : String, tsType : String }
+    runExample encoder_ encodeFrom =
+        { tsType = typeDef encoder_, output = encodeFrom |> encoder encoder_ |> Encode.encode 0 }
+
+    objectEncoder : Encoder { first : String, last : String }
+    objectEncoder =
+        object
+            [ ( "first", string |> map .first )
+            , ( "last", string |> map .last )
+            ]
+
+
+    { first = "James", last = "Kirk" }
+            |> runExample objectEncoder
+    --> { output = """{"first":"James","last":"Kirk"}"""
+    --> , tsType = "{ first : string; last : string }"
+    --> }
+
+-}
 object : List ( String, Encoder value ) -> Encoder value
 object propertyEncoders =
     let
@@ -105,6 +127,10 @@ object propertyEncoders =
                 |> Encode.object
     in
     Encoder encodeObject propertyTypes
+
+
+thingy =
+    """{"first":"James","last":"Kirk"}"""
 
 
 {-| -}
