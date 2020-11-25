@@ -3,7 +3,7 @@ module TsInterop.Decode exposing
     , succeed, fail
     , bool, float, int, string
     , field, at
-    , list, array, nullable, oneOf, dict, keyValuePairs, oneOrMore, maybe, optionalField
+    , list, array, nullable, oneOf, dict, keyValuePairs, oneOrMore, maybe, optionalField, optionalNullableField
     , index
     , map, map2
     , map3, map4, map5, map6, map7, map8
@@ -34,7 +34,7 @@ module TsInterop.Decode exposing
 
 ## Composite Types
 
-@docs list, array, nullable, oneOf, dict, keyValuePairs, oneOrMore, maybe, optionalField
+@docs list, array, nullable, oneOf, dict, keyValuePairs, oneOrMore, maybe, optionalField, optionalNullableField
 
 @docs index
 
@@ -486,6 +486,34 @@ optionalField fieldName (InteropDecoder innerDecoder innerType) =
             |> Decode.andThen finishDecoding
         )
         (TsType.TypeObject [ ( TsType.Optional, fieldName, innerType ) ])
+
+
+{-|
+
+    import Json.Decode
+
+
+    runExample : String -> InteropDecoder value -> { decoded : Result String value, tsType : String }
+    runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
+
+    json : String
+    json = """{ "name": "tom", "age": null }"""
+
+    optionalNullableField "height" float |> runExample json
+    --> { decoded = Ok Nothing
+    --> , tsType = "{ height? : number | null }"
+    --> }
+
+    optionalNullableField "age" int |> runExample json
+    --> { decoded = Ok Nothing
+    --> , tsType = "{ age? : number | null }"
+    --> }
+
+-}
+optionalNullableField : String -> InteropDecoder value -> InteropDecoder (Maybe value)
+optionalNullableField fieldName interopDecoder =
+    optionalField fieldName (nullable interopDecoder)
+        |> map (Maybe.andThen identity)
 
 
 {-| TypeScript has support for literals.
