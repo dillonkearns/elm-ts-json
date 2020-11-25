@@ -11,6 +11,69 @@ module TsInterop.Encode exposing
 
 {-|
 
+    import Json.Encode
+    import TsInterop.Encode as Encode
+
+    type Behavior
+        = Auto
+        | Smooth
+
+    type Alignment
+        = Start
+        | Center
+        | End
+        | Nearest
+
+    scrollIntoViewEncoder : Encoder { behavior : Behavior, block : Alignment, inline : Alignment }
+    scrollIntoViewEncoder =
+        object
+            [ ( "behavior", behaviorEncoder |> map .behavior )
+            , ( "block", alignmentEncoder |> map .block )
+            , ( "inline", alignmentEncoder |> map .inline )
+            ]
+
+
+    behaviorEncoder : Encoder Behavior
+    behaviorEncoder =
+        Encode.union
+            (\vAuto vSmooth value ->
+                case value of
+                    Auto ->
+                        vAuto
+                    Smooth ->
+                        vSmooth
+            )
+            |> variantLiteral (Json.Encode.string "auto")
+            |> variantLiteral (Json.Encode.string "smooth")
+            |> buildUnion
+
+    alignmentEncoder : Encoder Alignment
+    alignmentEncoder =
+        union
+            (\vStart vCenter vEnd vNearest value ->
+                case value of
+                    Start ->
+                        vStart
+                    Center ->
+                        vCenter
+                    End ->
+                        vEnd
+                    Nearest ->
+                        vNearest
+            )
+            |> variantLiteral (Json.Encode.string "start")
+            |> variantLiteral (Json.Encode.string "center")
+            |> variantLiteral (Json.Encode.string "end")
+            |> variantLiteral (Json.Encode.string "nearest")
+            |> buildUnion
+
+
+    { behavior = Auto, block = Nearest, inline = Nearest }
+            |> runExample scrollIntoViewEncoder
+    --> { output = """{"behavior":"auto","block":"nearest","inline":"nearest"}"""
+    --> , tsType = """{ behavior : "smooth" | "auto"; block : "nearest" | "end" | "center" | "start"; inline : "nearest" | "end" | "center" | "start" }"""
+    --> }
+
 @docs Encoder
 
 
