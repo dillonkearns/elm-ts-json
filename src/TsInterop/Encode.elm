@@ -179,7 +179,7 @@ rawType entries =
             )
 
 
-{-| Encode a string.
+{-|
 
     import Json.Encode as Encode
 
@@ -251,7 +251,43 @@ required name getter (Encoder encodeFn tsType_) =
         tsType_
 
 
-{-| -}
+{-|
+
+    import Json.Encode as Encode
+
+    runExample : Encoder encodeFrom -> encodeFrom -> { output : String, tsType : String }
+    runExample encoder_ encodeFrom =
+        { tsType = typeDef encoder_, output = encodeFrom |> encoder encoder_ |> Encode.encode 0 }
+
+    nameEncoder : Encoder { first : String, last : String }
+    nameEncoder =
+        optionalObject
+            [ required "first" .first string
+            , required "last" .last string
+            ]
+
+
+    { first = "James", last = "Kirk" }
+            |> runExample nameEncoder
+    --> { output = """{"first":"James","last":"Kirk"}"""
+    --> , tsType = "{ first : string; last : string }"
+    --> }
+
+    fullNameEncoder : Encoder { first : String, middle : Maybe String, last : String }
+    fullNameEncoder =
+        optionalObject
+            [ required "first" .first string
+            , optional "middle" .middle string
+            , required "last" .last string
+            ]
+
+    { first = "James", middle = Just "Tiberius", last = "Kirk" }
+            |> runExample fullNameEncoder
+    --> { output = """{"first":"James","middle":"Tiberius","last":"Kirk"}"""
+    --> , tsType = "{ first : string; middle? : string; last : string }"
+    --> }
+
+-}
 optionalObject : List (Property value) -> Encoder value
 optionalObject propertyEncoders =
     let
