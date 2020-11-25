@@ -2,7 +2,7 @@ module TsInterop.DecodeTests exposing (..)
 
 import Array
 import Expect exposing (Expectation)
-import Json.Decode as Decode exposing (Decoder)
+import Json.Decode as Decode
 import Json.Encode as Encode
 import Test exposing (..)
 import TsInterop.Decode exposing (..)
@@ -144,7 +144,7 @@ type Severity
 
 expectDecodes :
     { output : decodesTo, input : String, typeDef : String }
-    -> InteropDecoder decodesTo
+    -> Decoder decodesTo
     -> Expect.Expectation
 expectDecodes expect interop =
     expect.input
@@ -157,7 +157,7 @@ expectDecodes expect interop =
 
 expectDecodeError :
     { input : String, typeDef : String }
-    -> InteropDecoder decodesTo
+    -> Decoder decodesTo
     -> Expect.Expectation
 expectDecodeError expect interop =
     expect.input

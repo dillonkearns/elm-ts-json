@@ -1,5 +1,5 @@
 module TsInterop.Decode exposing
-    ( InteropDecoder
+    ( Decoder
     , succeed, fail
     , bool, float, int, string
     , field, at
@@ -17,7 +17,7 @@ module TsInterop.Decode exposing
 
 ## Decoders
 
-@docs InteropDecoder
+@docs Decoder
 
 @docs succeed, fail
 
@@ -70,21 +70,21 @@ import TsType exposing (TsType(..))
 
 
 {-| -}
-map : (value -> mapped) -> InteropDecoder value -> InteropDecoder mapped
-map mapFn (InteropDecoder innerDecoder innerType) =
-    InteropDecoder (Decode.map mapFn innerDecoder) innerType
+map : (value -> mapped) -> Decoder value -> Decoder mapped
+map mapFn (Decoder innerDecoder innerType) =
+    Decoder (Decode.map mapFn innerDecoder) innerType
 
 
 {-| -}
-map2 : (value1 -> value2 -> mapped) -> InteropDecoder value1 -> InteropDecoder value2 -> InteropDecoder mapped
-map2 mapFn (InteropDecoder innerDecoder1 innerType1) (InteropDecoder innerDecoder2 innerType2) =
-    InteropDecoder (Decode.map2 mapFn innerDecoder1 innerDecoder2) (TsType.intersect innerType1 innerType2)
+map2 : (value1 -> value2 -> mapped) -> Decoder value1 -> Decoder value2 -> Decoder mapped
+map2 mapFn (Decoder innerDecoder1 innerType1) (Decoder innerDecoder2 innerType2) =
+    Decoder (Decode.map2 mapFn innerDecoder1 innerDecoder2) (TsType.intersect innerType1 innerType2)
 
 
 {-| -}
-map3 : (value1 -> value2 -> value3 -> mapped) -> InteropDecoder value1 -> InteropDecoder value2 -> InteropDecoder value3 -> InteropDecoder mapped
-map3 mapFn (InteropDecoder innerDecoder1 innerType1) (InteropDecoder innerDecoder2 innerType2) (InteropDecoder innerDecoder3 innerType3) =
-    InteropDecoder (Decode.map3 mapFn innerDecoder1 innerDecoder2 innerDecoder3)
+map3 : (value1 -> value2 -> value3 -> mapped) -> Decoder value1 -> Decoder value2 -> Decoder value3 -> Decoder mapped
+map3 mapFn (Decoder innerDecoder1 innerType1) (Decoder innerDecoder2 innerType2) (Decoder innerDecoder3 innerType3) =
+    Decoder (Decode.map3 mapFn innerDecoder1 innerDecoder2 innerDecoder3)
         (TsType.intersect
             innerType1
             innerType2
@@ -95,13 +95,13 @@ map3 mapFn (InteropDecoder innerDecoder1 innerType1) (InteropDecoder innerDecode
 {-| -}
 map4 :
     (value1 -> value2 -> value3 -> value4 -> mapped)
-    -> InteropDecoder value1
-    -> InteropDecoder value2
-    -> InteropDecoder value3
-    -> InteropDecoder value4
-    -> InteropDecoder mapped
-map4 mapFn (InteropDecoder innerDecoder1 innerType1) (InteropDecoder innerDecoder2 innerType2) (InteropDecoder innerDecoder3 innerType3) (InteropDecoder innerDecoder4 innerType4) =
-    InteropDecoder (Decode.map4 mapFn innerDecoder1 innerDecoder2 innerDecoder3 innerDecoder4)
+    -> Decoder value1
+    -> Decoder value2
+    -> Decoder value3
+    -> Decoder value4
+    -> Decoder mapped
+map4 mapFn (Decoder innerDecoder1 innerType1) (Decoder innerDecoder2 innerType2) (Decoder innerDecoder3 innerType3) (Decoder innerDecoder4 innerType4) =
+    Decoder (Decode.map4 mapFn innerDecoder1 innerDecoder2 innerDecoder3 innerDecoder4)
         (TsType.Intersection
             [ innerType1
             , innerType2
@@ -114,14 +114,14 @@ map4 mapFn (InteropDecoder innerDecoder1 innerType1) (InteropDecoder innerDecode
 {-| -}
 map5 :
     (value1 -> value2 -> value3 -> value4 -> value5 -> mapped)
-    -> InteropDecoder value1
-    -> InteropDecoder value2
-    -> InteropDecoder value3
-    -> InteropDecoder value4
-    -> InteropDecoder value5
-    -> InteropDecoder mapped
-map5 mapFn (InteropDecoder innerDecoder1 innerType1) (InteropDecoder innerDecoder2 innerType2) (InteropDecoder innerDecoder3 innerType3) (InteropDecoder innerDecoder4 innerType4) (InteropDecoder innerDecoder5 innerType5) =
-    InteropDecoder (Decode.map5 mapFn innerDecoder1 innerDecoder2 innerDecoder3 innerDecoder4 innerDecoder5)
+    -> Decoder value1
+    -> Decoder value2
+    -> Decoder value3
+    -> Decoder value4
+    -> Decoder value5
+    -> Decoder mapped
+map5 mapFn (Decoder innerDecoder1 innerType1) (Decoder innerDecoder2 innerType2) (Decoder innerDecoder3 innerType3) (Decoder innerDecoder4 innerType4) (Decoder innerDecoder5 innerType5) =
+    Decoder (Decode.map5 mapFn innerDecoder1 innerDecoder2 innerDecoder3 innerDecoder4 innerDecoder5)
         (TsType.Intersection
             [ innerType1
             , innerType2
@@ -135,15 +135,15 @@ map5 mapFn (InteropDecoder innerDecoder1 innerType1) (InteropDecoder innerDecode
 {-| -}
 map6 :
     (value1 -> value2 -> value3 -> value4 -> value5 -> value6 -> mapped)
-    -> InteropDecoder value1
-    -> InteropDecoder value2
-    -> InteropDecoder value3
-    -> InteropDecoder value4
-    -> InteropDecoder value5
-    -> InteropDecoder value6
-    -> InteropDecoder mapped
-map6 mapFn (InteropDecoder innerDecoder1 innerType1) (InteropDecoder innerDecoder2 innerType2) (InteropDecoder innerDecoder3 innerType3) (InteropDecoder innerDecoder4 innerType4) (InteropDecoder innerDecoder5 innerType5) (InteropDecoder innerDecoder6 innerType6) =
-    InteropDecoder (Decode.map6 mapFn innerDecoder1 innerDecoder2 innerDecoder3 innerDecoder4 innerDecoder5 innerDecoder6)
+    -> Decoder value1
+    -> Decoder value2
+    -> Decoder value3
+    -> Decoder value4
+    -> Decoder value5
+    -> Decoder value6
+    -> Decoder mapped
+map6 mapFn (Decoder innerDecoder1 innerType1) (Decoder innerDecoder2 innerType2) (Decoder innerDecoder3 innerType3) (Decoder innerDecoder4 innerType4) (Decoder innerDecoder5 innerType5) (Decoder innerDecoder6 innerType6) =
+    Decoder (Decode.map6 mapFn innerDecoder1 innerDecoder2 innerDecoder3 innerDecoder4 innerDecoder5 innerDecoder6)
         (TsType.Intersection
             [ innerType1
             , innerType2
@@ -158,16 +158,16 @@ map6 mapFn (InteropDecoder innerDecoder1 innerType1) (InteropDecoder innerDecode
 {-| -}
 map7 :
     (value1 -> value2 -> value3 -> value4 -> value5 -> value6 -> value7 -> mapped)
-    -> InteropDecoder value1
-    -> InteropDecoder value2
-    -> InteropDecoder value3
-    -> InteropDecoder value4
-    -> InteropDecoder value5
-    -> InteropDecoder value6
-    -> InteropDecoder value7
-    -> InteropDecoder mapped
-map7 mapFn (InteropDecoder innerDecoder1 innerType1) (InteropDecoder innerDecoder2 innerType2) (InteropDecoder innerDecoder3 innerType3) (InteropDecoder innerDecoder4 innerType4) (InteropDecoder innerDecoder5 innerType5) (InteropDecoder innerDecoder6 innerType6) (InteropDecoder innerDecoder7 innerType7) =
-    InteropDecoder (Decode.map7 mapFn innerDecoder1 innerDecoder2 innerDecoder3 innerDecoder4 innerDecoder5 innerDecoder6 innerDecoder7)
+    -> Decoder value1
+    -> Decoder value2
+    -> Decoder value3
+    -> Decoder value4
+    -> Decoder value5
+    -> Decoder value6
+    -> Decoder value7
+    -> Decoder mapped
+map7 mapFn (Decoder innerDecoder1 innerType1) (Decoder innerDecoder2 innerType2) (Decoder innerDecoder3 innerType3) (Decoder innerDecoder4 innerType4) (Decoder innerDecoder5 innerType5) (Decoder innerDecoder6 innerType6) (Decoder innerDecoder7 innerType7) =
+    Decoder (Decode.map7 mapFn innerDecoder1 innerDecoder2 innerDecoder3 innerDecoder4 innerDecoder5 innerDecoder6 innerDecoder7)
         (TsType.Intersection
             [ innerType1
             , innerType2
@@ -183,17 +183,17 @@ map7 mapFn (InteropDecoder innerDecoder1 innerType1) (InteropDecoder innerDecode
 {-| -}
 map8 :
     (value1 -> value2 -> value3 -> value4 -> value5 -> value6 -> value7 -> value8 -> mapped)
-    -> InteropDecoder value1
-    -> InteropDecoder value2
-    -> InteropDecoder value3
-    -> InteropDecoder value4
-    -> InteropDecoder value5
-    -> InteropDecoder value6
-    -> InteropDecoder value7
-    -> InteropDecoder value8
-    -> InteropDecoder mapped
-map8 mapFn (InteropDecoder innerDecoder1 innerType1) (InteropDecoder innerDecoder2 innerType2) (InteropDecoder innerDecoder3 innerType3) (InteropDecoder innerDecoder4 innerType4) (InteropDecoder innerDecoder5 innerType5) (InteropDecoder innerDecoder6 innerType6) (InteropDecoder innerDecoder7 innerType7) (InteropDecoder innerDecoder8 innerType8) =
-    InteropDecoder (Decode.map8 mapFn innerDecoder1 innerDecoder2 innerDecoder3 innerDecoder4 innerDecoder5 innerDecoder6 innerDecoder7 innerDecoder8)
+    -> Decoder value1
+    -> Decoder value2
+    -> Decoder value3
+    -> Decoder value4
+    -> Decoder value5
+    -> Decoder value6
+    -> Decoder value7
+    -> Decoder value8
+    -> Decoder mapped
+map8 mapFn (Decoder innerDecoder1 innerType1) (Decoder innerDecoder2 innerType2) (Decoder innerDecoder3 innerType3) (Decoder innerDecoder4 innerType4) (Decoder innerDecoder5 innerType5) (Decoder innerDecoder6 innerType6) (Decoder innerDecoder7 innerType7) (Decoder innerDecoder8 innerType8) =
+    Decoder (Decode.map8 mapFn innerDecoder1 innerDecoder2 innerDecoder3 innerDecoder4 innerDecoder5 innerDecoder6 innerDecoder7 innerDecoder8)
         (TsType.Intersection
             [ innerType1
             , innerType2
@@ -208,9 +208,9 @@ map8 mapFn (InteropDecoder innerDecoder1 innerType1) (InteropDecoder innerDecode
 
 
 {-| -}
-nullable : InteropDecoder value -> InteropDecoder (Maybe value)
-nullable (InteropDecoder innerDecoder innerType) =
-    InteropDecoder (Decode.nullable innerDecoder) (TsType.union [ innerType, TsType.null ])
+nullable : Decoder value -> Decoder (Maybe value)
+nullable (Decoder innerDecoder innerType) =
+    Decoder (Decode.nullable innerDecoder) (TsType.union [ innerType, TsType.null ])
 
 
 {-| You can express quite a bit with `oneOf`! The resulting TypeScript types will be a Union of all the TypeScript types
@@ -219,7 +219,7 @@ for each Decoder in the List.
     import Json.Decode
     import Json.Encode
 
-    runExample : InteropDecoder value -> String -> { decoded : Result String value, tsType : String }
+    runExample : Decoder value -> String -> { decoded : Result String value, tsType : String }
     runExample interopDecoder inputJson = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
 
 
@@ -230,19 +230,19 @@ for each Decoder in the List.
     --> }
 
 -}
-oneOf : List (InteropDecoder value) -> InteropDecoder value
+oneOf : List (Decoder value) -> Decoder value
 oneOf decoders =
-    InteropDecoder
+    Decoder
         (decoders
             |> List.map
-                (\(InteropDecoder innerDecoder innerType) ->
+                (\(Decoder innerDecoder innerType) ->
                     innerDecoder
                 )
             |> Decode.oneOf
         )
         (decoders
             |> List.map
-                (\(InteropDecoder innerDecoder innerType) ->
+                (\(Decoder innerDecoder innerType) ->
                     innerType
                 )
             |> TsType.union
@@ -250,14 +250,14 @@ oneOf decoders =
 
 
 {-| -}
-type InteropDecoder value
-    = InteropDecoder (Decode.Decoder value) TsType
+type Decoder value
+    = Decoder (Decode.Decoder value) TsType
 
 
 {-| -}
-succeed : value -> InteropDecoder value
+succeed : value -> Decoder value
 succeed value_ =
-    InteropDecoder (Decode.succeed value_) TsType.Unknown
+    Decoder (Decode.succeed value_) TsType.Unknown
 
 
 {-|
@@ -265,7 +265,7 @@ succeed value_ =
     import Json.Decode
 
 
-    runExample : String -> InteropDecoder value -> { decoded : Result String value, tsType : String }
+    runExample : String -> Decoder value -> { decoded : Result String value, tsType : String }
     runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
 
     field "version" int |> andThen (\versionNumber ->
@@ -280,16 +280,16 @@ succeed value_ =
     --> }
 
 -}
-andThen : (a -> InteropDecoder b) -> InteropDecoder a -> InteropDecoder b
-andThen function (InteropDecoder innerDecoder innerType) =
+andThen : (a -> Decoder b) -> Decoder a -> Decoder b
+andThen function (Decoder innerDecoder innerType) =
     let
         andThenDecoder =
             \value_ ->
                 case function value_ of
-                    InteropDecoder innerDecoder_ innerType_ ->
+                    Decoder innerDecoder_ innerType_ ->
                         innerDecoder_
     in
-    InteropDecoder (Decode.andThen andThenDecoder innerDecoder) innerType
+    Decoder (Decode.andThen andThenDecoder innerDecoder) innerType
 
 
 {-|
@@ -297,10 +297,10 @@ andThen function (InteropDecoder innerDecoder innerType) =
     import Json.Decode
 
 
-    runExample : String -> InteropDecoder value -> { decoded : Result String value, tsType : String }
+    runExample : String -> Decoder value -> { decoded : Result String value, tsType : String }
     runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
 
-    example : StaticAndThen (Int -> InteropDecoder String)
+    example : StaticAndThen (Int -> Decoder String)
     example =
         init
             (\v1Decoder v2PlusDecoder version ->
@@ -319,16 +319,16 @@ andThen function (InteropDecoder innerDecoder innerType) =
     --> }
 
 -}
-staticAndThen : StaticAndThen (value -> InteropDecoder decodesTo) -> InteropDecoder value -> InteropDecoder decodesTo
-staticAndThen (StaticAndThen function tsTypes) (InteropDecoder innerDecoder innerType) =
+staticAndThen : StaticAndThen (value -> Decoder decodesTo) -> Decoder value -> Decoder decodesTo
+staticAndThen (StaticAndThen function tsTypes) (Decoder innerDecoder innerType) =
     let
         andThenDecoder =
             \value_ ->
                 case function value_ of
-                    InteropDecoder innerDecoder_ innerType_ ->
+                    Decoder innerDecoder_ innerType_ ->
                         innerDecoder_
     in
-    InteropDecoder (Decode.andThen andThenDecoder innerDecoder) (TsType.intersect innerType (TsType.union tsTypes))
+    Decoder (Decode.andThen andThenDecoder innerDecoder) (TsType.intersect innerType (TsType.union tsTypes))
 
 
 {-| -}
@@ -344,10 +344,10 @@ init constructor =
 
 {-| -}
 option :
-    InteropDecoder value
-    -> StaticAndThen (InteropDecoder value -> final)
+    Decoder value
+    -> StaticAndThen (Decoder value -> final)
     -> StaticAndThen final
-option ((InteropDecoder innerDecoder innerType) as interopDecoder) (StaticAndThen function tsTypes) =
+option ((Decoder innerDecoder innerType) as interopDecoder) (StaticAndThen function tsTypes) =
     StaticAndThen (function interopDecoder) (innerType :: tsTypes)
 
 
@@ -356,7 +356,7 @@ type IntOrString
     | TypeString String
 
 
-example : StaticAndThen (Int -> InteropDecoder IntOrString)
+example : StaticAndThen (Int -> Decoder IntOrString)
 example =
     init
         (\v1Decoder v2PlusDecoder version ->
@@ -372,9 +372,9 @@ example =
 
 
 {-| -}
-value : InteropDecoder Decode.Value
+value : Decoder Decode.Value
 value =
-    InteropDecoder Decode.value TsType.Unknown
+    Decoder Decode.value TsType.Unknown
 
 
 {-|
@@ -382,7 +382,7 @@ value =
     import Json.Decode
 
 
-    runExample : String -> InteropDecoder value -> { decoded : Result String value, tsType : String }
+    runExample : String -> Decoder value -> { decoded : Result String value, tsType : String }
     runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
 
     fail "Failure message"
@@ -392,9 +392,9 @@ value =
     --> }
 
 -}
-fail : String -> InteropDecoder value
+fail : String -> Decoder value
 fail message =
-    InteropDecoder (Decode.fail message) TsType.Unknown
+    Decoder (Decode.fail message) TsType.Unknown
 
 
 {-|
@@ -402,7 +402,7 @@ fail message =
     import Json.Decode
 
 
-    runExample : String -> InteropDecoder value -> { decoded : Result String value, tsType : String }
+    runExample : String -> Decoder value -> { decoded : Result String value, tsType : String }
     runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
 
     null False |> runExample "null"
@@ -411,7 +411,7 @@ fail message =
     --> }
 
 -}
-null : value -> InteropDecoder value
+null : value -> Decoder value
 null value_ =
     literal value_ Encode.null
 
@@ -421,7 +421,7 @@ null value_ =
     import Json.Decode
 
 
-    runExample : String -> InteropDecoder value -> { decoded : Result String value, tsType : String }
+    runExample : String -> Decoder value -> { decoded : Result String value, tsType : String }
     runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
 
     json : String
@@ -438,7 +438,7 @@ null value_ =
     --> }
 
 -}
-maybe : InteropDecoder value -> InteropDecoder (Maybe value)
+maybe : Decoder value -> Decoder (Maybe value)
 maybe interopDecoder =
     oneOf
         [ map Just interopDecoder
@@ -451,7 +451,7 @@ maybe interopDecoder =
     import Json.Decode
 
 
-    runExample : String -> InteropDecoder value -> { decoded : Result String value, tsType : String }
+    runExample : String -> Decoder value -> { decoded : Result String value, tsType : String }
     runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
 
     json : String
@@ -468,8 +468,8 @@ maybe interopDecoder =
     --> }
 
 -}
-optionalField : String -> InteropDecoder value -> InteropDecoder (Maybe value)
-optionalField fieldName (InteropDecoder innerDecoder innerType) =
+optionalField : String -> Decoder value -> Decoder (Maybe value)
+optionalField fieldName (Decoder innerDecoder innerType) =
     let
         finishDecoding json =
             case Decode.decodeValue (Decode.field fieldName Decode.value) json of
@@ -481,7 +481,7 @@ optionalField fieldName (InteropDecoder innerDecoder innerType) =
                     -- The field was missing, which is fine!
                     Decode.succeed Nothing
     in
-    InteropDecoder
+    Decoder
         (Decode.value
             |> Decode.andThen finishDecoding
         )
@@ -493,7 +493,7 @@ optionalField fieldName (InteropDecoder innerDecoder innerType) =
     import Json.Decode
 
 
-    runExample : String -> InteropDecoder value -> { decoded : Result String value, tsType : String }
+    runExample : String -> Decoder value -> { decoded : Result String value, tsType : String }
     runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
 
     json : String
@@ -510,7 +510,7 @@ optionalField fieldName (InteropDecoder innerDecoder innerType) =
     --> }
 
 -}
-optionalNullableField : String -> InteropDecoder value -> InteropDecoder (Maybe value)
+optionalNullableField : String -> Decoder value -> Decoder (Maybe value)
 optionalNullableField fieldName interopDecoder =
     optionalField fieldName (nullable interopDecoder)
         |> map (Maybe.andThen identity)
@@ -518,9 +518,9 @@ optionalNullableField fieldName interopDecoder =
 
 {-| TypeScript has support for literals.
 -}
-literal : value -> Encode.Value -> InteropDecoder value
+literal : value -> Encode.Value -> Decoder value
 literal value_ literalValue =
-    InteropDecoder
+    Decoder
         (Decode.value
             |> Decode.andThen
                 (\decodeValue ->
@@ -538,10 +538,10 @@ literal value_ literalValue =
 
     import Json.Decode
 
-    runExample : InteropDecoder value -> String -> { decoded : Result String value, tsType : String }
+    runExample : Decoder value -> String -> { decoded : Result String value, tsType : String }
     runExample interopDecoder inputJson = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
 
-    exampleDecoder : InteropDecoder String
+    exampleDecoder : Decoder String
     exampleDecoder =
         field "first" string
 
@@ -552,9 +552,9 @@ literal value_ literalValue =
     --> }
 
 -}
-field : String -> InteropDecoder value -> InteropDecoder value
-field fieldName (InteropDecoder innerDecoder innerType) =
-    InteropDecoder
+field : String -> Decoder value -> Decoder value
+field fieldName (Decoder innerDecoder innerType) =
+    Decoder
         (Decode.field fieldName innerDecoder)
         (TsType.TypeObject [ ( TsType.Required, fieldName, innerType ) ])
 
@@ -564,12 +564,12 @@ field fieldName (InteropDecoder innerDecoder innerType) =
     import Json.Decode
     import Json.Encode
 
-    runExample : InteropDecoder value -> String -> { decoded : Result String value, tsType : String }
+    runExample : Decoder value -> String -> { decoded : Result String value, tsType : String }
     runExample interopDecoder inputJson = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
 
     type Mode = DarkMode | LightMode
 
-    modeDecoder : InteropDecoder Mode
+    modeDecoder : Decoder Mode
     modeDecoder =
         oneOf [ literal DarkMode <| Json.Encode.string "dark", literal LightMode <| Json.Encode.string "light" ]
 
@@ -582,9 +582,9 @@ field fieldName (InteropDecoder innerDecoder innerType) =
     --> }
 
 -}
-at : List String -> InteropDecoder value -> InteropDecoder value
-at location (InteropDecoder innerDecoder innerType) =
-    InteropDecoder
+at : List String -> Decoder value -> Decoder value
+at location (Decoder innerDecoder innerType) =
+    Decoder
         (Decode.at location innerDecoder)
         (location
             |> List.foldr
@@ -596,21 +596,21 @@ at location (InteropDecoder innerDecoder innerType) =
 
 
 {-| -}
-string : InteropDecoder String
+string : Decoder String
 string =
-    InteropDecoder Decode.string String
+    Decoder Decode.string String
 
 
 {-| -}
-int : InteropDecoder Int
+int : Decoder Int
 int =
-    InteropDecoder Decode.int TsType.Number
+    Decoder Decode.int TsType.Number
 
 
 {-| -}
-float : InteropDecoder Float
+float : Decoder Float
 float =
-    InteropDecoder Decode.float TsType.Number
+    Decoder Decode.float TsType.Number
 
 
 {-|
@@ -618,7 +618,7 @@ float =
     import Json.Decode
 
 
-    runExample : String -> InteropDecoder value -> { decoded : Result String value, tsType : String }
+    runExample : String -> Decoder value -> { decoded : Result String value, tsType : String }
     runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
 
     bool
@@ -628,9 +628,9 @@ float =
     --> }
 
 -}
-bool : InteropDecoder Bool
+bool : Decoder Bool
 bool =
-    InteropDecoder Decode.bool TsType.Boolean
+    Decoder Decode.bool TsType.Boolean
 
 
 {-|
@@ -638,7 +638,7 @@ bool =
     import Json.Decode
 
 
-    runExample : String -> InteropDecoder value -> { decoded : Result String value, tsType : String }
+    runExample : String -> Decoder value -> { decoded : Result String value, tsType : String }
     runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
 
     list int
@@ -648,9 +648,9 @@ bool =
     --> }
 
 -}
-list : InteropDecoder value -> InteropDecoder (List value)
-list (InteropDecoder innerDecoder innerType) =
-    InteropDecoder (Decode.list innerDecoder) (List innerType)
+list : Decoder value -> Decoder (List value)
+list (Decoder innerDecoder innerType) =
+    Decoder (Decode.list innerDecoder) (List innerType)
 
 
 {-|
@@ -658,7 +658,7 @@ list (InteropDecoder innerDecoder innerType) =
     import Json.Decode
 
 
-    runExample : String -> InteropDecoder value -> { decoded : Result String value, tsType : String }
+    runExample : String -> Decoder value -> { decoded : Result String value, tsType : String }
     runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
 
     index 1 int
@@ -676,9 +676,9 @@ list (InteropDecoder innerDecoder innerType) =
     --> }
 
 -}
-index : Int -> InteropDecoder value -> InteropDecoder value
-index n (InteropDecoder innerDecoder innerType) =
-    InteropDecoder (Decode.index n innerDecoder) (TsType.ArrayIndex ( n, innerType ) [])
+index : Int -> Decoder value -> Decoder value
+index n (Decoder innerDecoder innerType) =
+    Decoder (Decode.index n innerDecoder) (TsType.ArrayIndex ( n, innerType ) [])
 
 
 {-|
@@ -687,7 +687,7 @@ index n (InteropDecoder innerDecoder innerType) =
     import Json.Encode
 
 
-    runExample : String -> InteropDecoder value -> { decoded : Result String value, tsType : String }
+    runExample : String -> Decoder value -> { decoded : Result String value, tsType : String }
     runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
 
     oneOrMore (::) int
@@ -700,7 +700,7 @@ index n (InteropDecoder innerDecoder innerType) =
         = Pass
         | Fail String
 
-    testCaseDecoder : InteropDecoder TestResult
+    testCaseDecoder : Decoder TestResult
     testCaseDecoder =
         oneOf [
             field "tag" (literal Pass (Json.Encode.string "pass"))
@@ -716,16 +716,16 @@ index n (InteropDecoder innerDecoder innerType) =
     --> }
 
 -}
-oneOrMore : (a -> List a -> value) -> InteropDecoder a -> InteropDecoder value
-oneOrMore constructor (InteropDecoder innerDecoder innerType) =
-    InteropDecoder (Decode.oneOrMore constructor innerDecoder) (Tuple [ innerType ] (Just innerType))
+oneOrMore : (a -> List a -> value) -> Decoder a -> Decoder value
+oneOrMore constructor (Decoder innerDecoder innerType) =
+    Decoder (Decode.oneOrMore constructor innerDecoder) (Tuple [ innerType ] (Just innerType))
 
 
 {-| Exactly the same as the `list` Decoder except that it wraps the decoded `List` into an Elm `Array`.
 -}
-array : InteropDecoder value -> InteropDecoder (Array value)
-array (InteropDecoder innerDecoder innerType) =
-    InteropDecoder (Decode.array innerDecoder) (List innerType)
+array : Decoder value -> Decoder (Array value)
+array (Decoder innerDecoder innerType) =
+    Decoder (Decode.array innerDecoder) (List innerType)
 
 
 {-|
@@ -735,7 +735,7 @@ array (InteropDecoder innerDecoder innerType) =
     import Dict exposing (Dict)
 
 
-    runExample : String -> InteropDecoder value -> { decoded : Result String value, tsType : String }
+    runExample : String -> Decoder value -> { decoded : Result String value, tsType : String }
     runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
 
     dict int
@@ -745,9 +745,9 @@ array (InteropDecoder innerDecoder innerType) =
     --> }
 
 -}
-dict : InteropDecoder value -> InteropDecoder (Dict String value)
-dict (InteropDecoder innerDecoder innerType) =
-    InteropDecoder (Decode.dict innerDecoder) (TsType.ObjectWithUniformValues innerType)
+dict : Decoder value -> Decoder (Dict String value)
+dict (Decoder innerDecoder innerType) =
+    Decoder (Decode.dict innerDecoder) (TsType.ObjectWithUniformValues innerType)
 
 
 {-|
@@ -755,7 +755,7 @@ dict (InteropDecoder innerDecoder innerType) =
     import Json.Decode
 
 
-    runExample : String -> InteropDecoder value -> { decoded : Result String value, tsType : String }
+    runExample : String -> Decoder value -> { decoded : Result String value, tsType : String }
     runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
 
     keyValuePairs int
@@ -765,25 +765,25 @@ dict (InteropDecoder innerDecoder innerType) =
     --> }
 
 -}
-keyValuePairs : InteropDecoder value -> InteropDecoder (List ( String, value ))
-keyValuePairs (InteropDecoder innerDecoder innerType) =
-    InteropDecoder (Decode.keyValuePairs innerDecoder) (TsType.ObjectWithUniformValues innerType)
+keyValuePairs : Decoder value -> Decoder (List ( String, value ))
+keyValuePairs (Decoder innerDecoder innerType) =
+    Decoder (Decode.keyValuePairs innerDecoder) (TsType.ObjectWithUniformValues innerType)
 
 
 {-| Get a regular JSON Decoder that you can run using the `elm/json` API.
 -}
-decoder : InteropDecoder value -> Decode.Decoder value
-decoder (InteropDecoder decoder_ tsType_) =
+decoder : Decoder value -> Decode.Decoder value
+decoder (Decoder decoder_ tsType_) =
     decoder_
 
 
 {-| -}
-tsTypeToString : InteropDecoder value -> String
-tsTypeToString (InteropDecoder decoder_ tsType_) =
+tsTypeToString : Decoder value -> String
+tsTypeToString (Decoder decoder_ tsType_) =
     TsType.toString tsType_
 
 
-runExample : String -> InteropDecoder value -> { decoded : Result String value, tsType : String }
+runExample : String -> Decoder value -> { decoded : Result String value, tsType : String }
 runExample inputJson interopDecoder =
     { tsType = tsTypeToString interopDecoder
     , decoded = Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Decode.errorToString

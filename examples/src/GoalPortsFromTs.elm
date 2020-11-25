@@ -1,7 +1,7 @@
 module GoalPortsFromTs exposing (..)
 
 import Json.Encode as Encode
-import TsInterop.Decode as Decode exposing (InteropDecoder, literal, oneOf)
+import TsInterop.Decode as Decode exposing (Decoder, literal, oneOf)
 
 
 type Severity
@@ -17,7 +17,7 @@ type alias Person =
     }
 
 
-flags : InteropDecoder Person
+flags : Decoder Person
 flags =
     Decode.map3 Person
         (Decode.field "first" Decode.string)
