@@ -5,7 +5,7 @@ module TsInterop.Encode exposing
     , map
     , object
     , UnionBuilder, union, variant, variant0, variantObject, variantLiteral, buildUnion
-    , list, dict, tuple, triple
+    , list, dict, tuple, triple, maybe
     , unionTypeDefToString, encodeProVariant, proTypeAnnotation, rawType, value
     )
 
@@ -135,7 +135,7 @@ module TsInterop.Encode exposing
 
 ## Collections
 
-@docs list, dict, tuple, triple
+@docs list, dict, tuple, triple, maybe
 
 
 ## Internal
@@ -310,6 +310,37 @@ value =
 map : (encodesFrom -> value) -> Encoder value -> Encoder encodesFrom
 map getter (Encoder encodeFn tsType_) =
     Encoder (\value_ -> value_ |> getter |> encodeFn) tsType_
+
+
+{-|
+
+    import Json.Encode as Encode
+
+    runExample : Encoder encodeFrom -> encodeFrom -> { output : String, tsType : String }
+    runExample encoder_ encodeFrom = { tsType = typeDef encoder_ , output = encodeFrom |> encoder encoder_ |> Encode.encode 0 }
+
+
+    Just 42
+        |> runExample ( maybe int )
+    --> { output = "42"
+    --> , tsType = "number | null"
+    --> }
+
+-}
+maybe : Encoder a -> Encoder (Maybe a)
+maybe encoder_ =
+    union
+        (\vNull vJust maybeValue ->
+            case maybeValue of
+                Just justValue ->
+                    vJust justValue
+
+                Nothing ->
+                    vNull
+        )
+        |> variantLiteral Encode.null
+        |> variant encoder_
+        |> buildUnion
 
 
 {-| -}
