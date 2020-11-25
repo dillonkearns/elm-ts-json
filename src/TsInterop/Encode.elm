@@ -129,10 +129,6 @@ object propertyEncoders =
     Encoder encodeObject propertyTypes
 
 
-thingy =
-    """{"first":"James","last":"Kirk"}"""
-
-
 {-| -}
 bool : Encoder Bool
 bool =
