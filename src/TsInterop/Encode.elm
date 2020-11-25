@@ -89,7 +89,10 @@ object propertyEncoders =
         propertyTypes : TsType
         propertyTypes =
             propertyEncoders
-                |> List.map (Tuple.mapSecond (\(Encoder encodeFn tsType_) -> tsType_))
+                |> List.map
+                    (\( propertyName, Encoder encodeFn tsType_ ) ->
+                        ( TsType.Required, propertyName, tsType_ )
+                    )
                 |> TsType.TypeObject
 
         encodeObject : value -> Encode.Value
@@ -364,8 +367,13 @@ unionTypeDefToString variants =
         |> List.map
             (\( variantName, objectProperties ) ->
                 TsType.TypeObject
-                    (( "tag", TsType.Literal (Encode.string variantName) )
-                        :: objectProperties
+                    (( TsType.Required, "tag", TsType.Literal (Encode.string variantName) )
+                        :: (objectProperties
+                                |> List.map
+                                    (\( propertyName, propertyType ) ->
+                                        ( TsType.Required, propertyName, propertyType )
+                                    )
+                           )
                     )
             )
         |> TsType.union

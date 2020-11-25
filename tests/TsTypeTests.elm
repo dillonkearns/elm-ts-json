@@ -2,7 +2,7 @@ module TsTypeTests exposing (..)
 
 import Expect
 import Test exposing (..)
-import TsType exposing (TsType(..))
+import TsType exposing (PropertyOptionality(..), TsType(..))
 
 
 suite : Test
@@ -32,62 +32,62 @@ suite =
             , test "merge object type into union of objects" <|
                 \() ->
                     TsType.intersect
-                        (TsType.TypeObject [ ( "version", Number ) ])
+                        (TsType.TypeObject [ ( Required, "version", Number ) ])
                         (TsType.union
-                            [ TypeObject [ ( "data", TypeObject [ ( "payload", String ) ] ) ]
-                            , TypeObject [ ( "payload", String ) ]
+                            [ TypeObject [ ( Required, "data", TypeObject [ ( Required, "payload", String ) ] ) ]
+                            , TypeObject [ ( Required, "payload", String ) ]
                             ]
                         )
                         |> Expect.equal
                             (TsType.Intersection
-                                [ TsType.TypeObject [ ( "version", Number ) ]
+                                [ TsType.TypeObject [ ( Required, "version", Number ) ]
                                 , TsType.union
-                                    [ TypeObject [ ( "data", TypeObject [ ( "payload", String ) ] ) ]
-                                    , TypeObject [ ( "payload", String ) ]
+                                    [ TypeObject [ ( Required, "data", TypeObject [ ( Required, "payload", String ) ] ) ]
+                                    , TypeObject [ ( Required, "payload", String ) ]
                                     ]
                                 ]
                             )
             , test "object fields are merged together" <|
                 \() ->
                     TsType.intersect
-                        (TsType.TypeObject [ ( "version", Number ) ])
-                        (TsType.TypeObject [ ( "author", TsType.String ) ])
+                        (TsType.TypeObject [ ( Required, "version", Number ) ])
+                        (TsType.TypeObject [ ( Required, "author", TsType.String ) ])
                         |> Expect.equal
                             (TsType.TypeObject
-                                [ ( "version", Number )
-                                , ( "author", TsType.String )
+                                [ ( Required, "version", Number )
+                                , ( Required, "author", TsType.String )
                                 ]
                             )
             , test "all objects in intersection are merged" <|
                 \() ->
-                    TsType.TypeObject [ ( "author", String ) ]
+                    TsType.TypeObject [ ( Required, "author", String ) ]
                         |> TsType.intersect
-                            (TsType.TypeObject [ ( "version", Number ) ])
+                            (TsType.TypeObject [ ( Required, "version", Number ) ])
                         |> TsType.intersect
-                            (TsType.TypeObject [ ( "license", String ) ])
+                            (TsType.TypeObject [ ( Required, "license", String ) ])
                         |> Expect.equal
                             (TsType.TypeObject
-                                [ ( "license", String )
-                                , ( "version", Number )
-                                , ( "author", String )
+                                [ ( Required, "license", String )
+                                , ( Required, "version", Number )
+                                , ( Required, "author", String )
                                 ]
                             )
             , test "intersections are merged" <|
                 \() ->
                     TsType.intersect
                         (TsType.Intersection
-                            [ TsType.TypeObject [ ( "version", Number ) ]
+                            [ TsType.TypeObject [ ( Required, "version", Number ) ]
                             , TsType.union
-                                [ TypeObject [ ( "data", TypeObject [ ( "payload", String ) ] ) ]
-                                , TypeObject [ ( "payload", String ) ]
+                                [ TypeObject [ ( Required, "data", TypeObject [ ( Required, "payload", String ) ] ) ]
+                                , TypeObject [ ( Required, "payload", String ) ]
                                 ]
                             ]
                         )
                         (TsType.Intersection
-                            [ TsType.TypeObject [ ( "author", String ) ]
+                            [ TsType.TypeObject [ ( Required, "author", String ) ]
                             , TsType.union
-                                [ TypeObject [ ( "data", TypeObject [ ( "payload", String ) ] ) ]
-                                , TypeObject [ ( "payload", String ) ]
+                                [ TypeObject [ ( Required, "data", TypeObject [ ( Required, "payload", String ) ] ) ]
+                                , TypeObject [ ( Required, "payload", String ) ]
                                 ]
                             ]
                         )

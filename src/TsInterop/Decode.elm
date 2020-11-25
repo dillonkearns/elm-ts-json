@@ -3,7 +3,7 @@ module TsInterop.Decode exposing
     , succeed, fail
     , bool, float, int, string
     , field, at
-    , list, array, nullable, oneOf, dict, keyValuePairs, oneOrMore, maybe
+    , list, array, nullable, oneOf, dict, keyValuePairs, oneOrMore, maybe, optionalField
     , index
     , map, map2
     , map3, map4, map5, map6, map7, map8
@@ -34,7 +34,7 @@ module TsInterop.Decode exposing
 
 ## Composite Types
 
-@docs list, array, nullable, oneOf, dict, keyValuePairs, oneOrMore, maybe
+@docs list, array, nullable, oneOf, dict, keyValuePairs, oneOrMore, maybe, optionalField
 
 @docs index
 
@@ -446,6 +446,48 @@ maybe interopDecoder =
         ]
 
 
+{-|
+
+    import Json.Decode
+
+
+    runExample : String -> InteropDecoder value -> { decoded : Result String value, tsType : String }
+    runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
+
+    json : String
+    json = """{ "name": "tom", "age": null }"""
+
+    optionalField "height" float |> runExample json
+    --> { decoded = Ok Nothing
+    --> , tsType = "{ height? : number }"
+    --> }
+
+    optionalField "age" int |> runExample json
+    --> { decoded = Err "Problem with the value at json.age:\n\n    null\n\nExpecting an INT"
+    --> , tsType = "{ age? : number }"
+    --> }
+
+-}
+optionalField : String -> InteropDecoder value -> InteropDecoder (Maybe value)
+optionalField fieldName (InteropDecoder innerDecoder innerType) =
+    let
+        finishDecoding json =
+            case Decode.decodeValue (Decode.field fieldName Decode.value) json of
+                Ok val ->
+                    -- The field is present, so run the decoder on it.
+                    Decode.map Just (Decode.field fieldName innerDecoder)
+
+                Err _ ->
+                    -- The field was missing, which is fine!
+                    Decode.succeed Nothing
+    in
+    InteropDecoder
+        (Decode.value
+            |> Decode.andThen finishDecoding
+        )
+        (TsType.TypeObject [ ( TsType.Optional, fieldName, innerType ) ])
+
+
 {-| TypeScript has support for literals.
 -}
 literal : value -> Encode.Value -> InteropDecoder value
@@ -486,7 +528,7 @@ field : String -> InteropDecoder value -> InteropDecoder value
 field fieldName (InteropDecoder innerDecoder innerType) =
     InteropDecoder
         (Decode.field fieldName innerDecoder)
-        (TsType.TypeObject [ ( fieldName, innerType ) ])
+        (TsType.TypeObject [ ( TsType.Required, fieldName, innerType ) ])
 
 
 {-|
@@ -519,7 +561,7 @@ at location (InteropDecoder innerDecoder innerType) =
         (location
             |> List.foldr
                 (\fieldName typeSoFar ->
-                    TsType.TypeObject [ ( fieldName, typeSoFar ) ]
+                    TsType.TypeObject [ ( TsType.Required, fieldName, typeSoFar ) ]
                 )
                 innerType
         )
