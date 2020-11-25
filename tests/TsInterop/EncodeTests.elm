@@ -24,9 +24,9 @@ suite =
         , test "optional object" <|
             \() ->
                 Encoder.optionalObject
-                    [ Encoder.required "first" Encoder.string .first
-                    , Encoder.optional "middle" Encoder.string .middle
-                    , Encoder.required "last" Encoder.string .last
+                    [ Encoder.required "first" .first Encoder.string
+                    , Encoder.optional "middle" .middle Encoder.string
+                    , Encoder.required "last" .last Encoder.string
                     ]
                     |> expectEncodes
                         { input = { first = "Nyota", middle = Nothing, last = "Uhura" }

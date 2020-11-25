@@ -12,7 +12,6 @@ module TsInterop.Encode exposing
 {-|
 
     import Json.Encode
-    import TsInterop.Encode as Encode
 
     type Behavior
         = Auto
@@ -24,18 +23,21 @@ module TsInterop.Encode exposing
         | End
         | Nearest
 
-    scrollIntoViewEncoder : Encoder { behavior : Behavior, block : Alignment, inline : Alignment }
+    scrollIntoViewEncoder : Encoder
+            { behavior : Maybe Behavior
+            , block : Maybe Alignment
+            , inline : Maybe Alignment
+            }
     scrollIntoViewEncoder =
-        object
-            [ ( "behavior", behaviorEncoder |> map .behavior )
-            , ( "block", alignmentEncoder |> map .block )
-            , ( "inline", alignmentEncoder |> map .inline )
+        optionalObject
+            [ optional "behavior" .behavior behaviorEncoder
+            , optional "block" .block alignmentEncoder
+            , optional "inline" .inline alignmentEncoder
             ]
-
 
     behaviorEncoder : Encoder Behavior
     behaviorEncoder =
-        Encode.union
+        union
             (\vAuto vSmooth value ->
                 case value of
                     Auto ->
@@ -46,6 +48,7 @@ module TsInterop.Encode exposing
             |> variantLiteral (Json.Encode.string "auto")
             |> variantLiteral (Json.Encode.string "smooth")
             |> buildUnion
+
 
     alignmentEncoder : Encoder Alignment
     alignmentEncoder =
@@ -68,10 +71,10 @@ module TsInterop.Encode exposing
             |> buildUnion
 
 
-    { behavior = Auto, block = Nearest, inline = Nearest }
+    { behavior = Just Auto, block = Just Nearest, inline = Nothing }
             |> runExample scrollIntoViewEncoder
-    --> { output = """{"behavior":"auto","block":"nearest","inline":"nearest"}"""
-    --> , tsType = """{ behavior : "smooth" | "auto"; block : "nearest" | "end" | "center" | "start"; inline : "nearest" | "end" | "center" | "start" }"""
+    --> { output = """{"behavior":"auto","block":"nearest"}"""
+    --> , tsType = """{ behavior? : "smooth" | "auto"; block? : "nearest" | "end" | "center" | "start"; inline? : "nearest" | "end" | "center" | "start" }"""
     --> }
 
 @docs Encoder
@@ -229,8 +232,8 @@ type Property encodesFrom
 
 
 {-| -}
-optional : String -> Encoder value -> (encodesFrom -> Maybe value) -> Property encodesFrom
-optional name (Encoder encodeFn tsType_) getter =
+optional : String -> (encodesFrom -> Maybe value) -> Encoder value -> Property encodesFrom
+optional name getter (Encoder encodeFn tsType_) =
     Property
         TsType.Optional
         name
@@ -239,8 +242,8 @@ optional name (Encoder encodeFn tsType_) getter =
 
 
 {-| -}
-required : String -> Encoder value -> (encodesFrom -> value) -> Property encodesFrom
-required name (Encoder encodeFn tsType_) getter =
+required : String -> (encodesFrom -> value) -> Encoder value -> Property encodesFrom
+required name getter (Encoder encodeFn tsType_) =
     Property
         TsType.Required
         name
