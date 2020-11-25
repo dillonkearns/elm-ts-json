@@ -64,7 +64,7 @@ module TsInterop.Decode exposing
 
 import Array exposing (Array)
 import Dict exposing (Dict)
-import Json.Decode as Decode exposing (Decoder)
+import Json.Decode as Decode
 import Json.Encode as Encode
 import TsType exposing (TsType(..))
 
@@ -251,7 +251,7 @@ oneOf decoders =
 
 {-| -}
 type InteropDecoder value
-    = InteropDecoder (Decoder value) TsType
+    = InteropDecoder (Decode.Decoder value) TsType
 
 
 {-| -}
@@ -772,7 +772,7 @@ keyValuePairs (InteropDecoder innerDecoder innerType) =
 
 {-| Get a regular JSON Decoder that you can run using the `elm/json` API.
 -}
-decoder : InteropDecoder value -> Decoder value
+decoder : InteropDecoder value -> Decode.Decoder value
 decoder (InteropDecoder decoder_ tsType_) =
     decoder_
 
