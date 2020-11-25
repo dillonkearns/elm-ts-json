@@ -3,7 +3,7 @@ module TsInterop.Encode exposing
     , string, int, float, literal, bool, null
     , typeDef, encoder
     , map
-    , object, Property, optional, required, optionalObject
+    , object, Property, optional, required
     , UnionBuilder, union, variant, variant0, variantObject, variantLiteral, buildUnion
     , list, dict, tuple, triple, maybe
     , unionTypeDefToString, encodeProVariant, proTypeAnnotation, rawType, value
@@ -97,7 +97,7 @@ module TsInterop.Encode exposing
 
 ## Objects
 
-@docs object, Property, optional, required, optionalObject
+@docs object, Property, optional, required
 
 
 ## Union Types
@@ -179,53 +179,6 @@ rawType entries =
             )
 
 
-{-|
-
-    import Json.Encode as Encode
-
-    runExample : Encoder encodeFrom -> encodeFrom -> { output : String, tsType : String }
-    runExample encoder_ encodeFrom =
-        { tsType = typeDef encoder_, output = encodeFrom |> encoder encoder_ |> Encode.encode 0 }
-
-    objectEncoder : Encoder { first : String, last : String }
-    objectEncoder =
-        object
-            [ ( "first", string |> map .first )
-            , ( "last", string |> map .last )
-            ]
-
-
-    { first = "James", last = "Kirk" }
-            |> runExample objectEncoder
-    --> { output = """{"first":"James","last":"Kirk"}"""
-    --> , tsType = "{ first : string; last : string }"
-    --> }
-
--}
-object : List ( String, Encoder value ) -> Encoder value
-object propertyEncoders =
-    let
-        propertyTypes : TsType
-        propertyTypes =
-            propertyEncoders
-                |> List.map
-                    (\( propertyName, Encoder encodeFn tsType_ ) ->
-                        ( TsType.Required, propertyName, tsType_ )
-                    )
-                |> TsType.TypeObject
-
-        encodeObject : value -> Encode.Value
-        encodeObject encodesFrom =
-            propertyEncoders
-                |> List.map
-                    (Tuple.mapSecond
-                        (\(Encoder encodeFn tsType_) -> encodeFn encodesFrom)
-                    )
-                |> Encode.object
-    in
-    Encoder encodeObject propertyTypes
-
-
 {-| -}
 type Property encodesFrom
     = Property PropertyOptionality String (encodesFrom -> Maybe Encode.Value) TsType
@@ -288,8 +241,8 @@ required name getter (Encoder encodeFn tsType_) =
     --> }
 
 -}
-optionalObject : List (Property value) -> Encoder value
-optionalObject propertyEncoders =
+object : List (Property value) -> Encoder value
+object propertyEncoders =
     let
         propertyTypes : TsType
         propertyTypes =
@@ -509,7 +462,9 @@ variant0 variantName (UnionBuilder builder tsTypes_) =
             matchBuilder (encoderFn ())
     in
     variant
-        (object [ ( "tag", literal (Encode.string variantName) ) ])
+        (object
+            [ required "tag" identity (literal (Encode.string variantName)) ]
+        )
         thing
 
 
@@ -563,25 +518,29 @@ variantLiteral literalValue (UnionBuilder builder tsTypes) =
 {-| -}
 variantObject :
     String
-    -> List ( String, Encoder arg1 )
+    -> List (Property arg1)
     -> UnionBuilder ((arg1 -> Encode.Value) -> match)
     -> UnionBuilder match
 variantObject variantName objectFields unionBuilder =
     variant
-        (object (( "tag", literal (Encode.string variantName) ) :: objectFields))
+        (object
+            (required "tag" identity (literal (Encode.string variantName))
+                :: objectFields
+            )
+        )
         unionBuilder
 
 
 {-| -}
 encodeProVariant :
     String
-    -> List ( String, Encoder arg1 )
+    -> List (Property arg1)
     -> arg1
     -> Encode.Value
 encodeProVariant variantName entries arg1 =
     arg1
         |> (object
-                (( "tag", literal (Encode.string variantName) )
+                (required "tag" identity (literal (Encode.string variantName))
                     :: entries
                 )
                 |> encoder

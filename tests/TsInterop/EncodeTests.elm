@@ -4,7 +4,7 @@ import Dict
 import Expect exposing (Expectation)
 import Json.Encode as Encode
 import Test exposing (..)
-import TsInterop.Encode as Encoder exposing (Encoder)
+import TsInterop.Encode as Encoder exposing (Encoder, required)
 
 
 suite : Test
@@ -13,8 +13,8 @@ suite =
         [ test "object" <|
             \() ->
                 Encoder.object
-                    [ ( "first", Encoder.string |> Encoder.map .first )
-                    , ( "last", Encoder.string |> Encoder.map .last )
+                    [ required "first" .first Encoder.string
+                    , required "last" .last Encoder.string
                     ]
                     |> expectEncodes
                         { input = { first = "Dillon", last = "Kearns" }
@@ -23,7 +23,7 @@ suite =
                         }
         , test "optional object" <|
             \() ->
-                Encoder.optionalObject
+                Encoder.object
                     [ Encoder.required "first" .first Encoder.string
                     , Encoder.optional "middle" .middle Encoder.string
                     , Encoder.required "last" .last Encoder.string
@@ -159,7 +159,7 @@ suite =
                                 vAlert string
                     )
                     |> Encoder.variant0 "SendPresenceHeartbeat"
-                    |> Encoder.variantObject "Alert" [ ( "message", Encoder.string ) ]
+                    |> Encoder.variantObject "Alert" [ required "message" identity Encoder.string ]
                     |> Encoder.buildUnion
                     |> expectEncodes
                         { input = Alert "Hello!"
@@ -182,13 +182,13 @@ suite =
                     )
                     |> Encoder.variant
                         (Encoder.object
-                            [ ( "name", Encoder.map .name Encoder.string )
-                            , ( "id", Encoder.map .id Encoder.int )
+                            [ required "name" .name Encoder.string
+                            , required "id" .id Encoder.int
                             ]
                         )
                     |> Encoder.variant
                         (Encoder.object
-                            [ ( "name", Encoder.map .name Encoder.string ) ]
+                            [ required "name" .name Encoder.string ]
                         )
                     |> Encoder.variant
                         (Encoder.object [])
@@ -210,7 +210,7 @@ suite =
                                 vAlert string
                     )
                     |> Encoder.variant0 "SendPresenceHeartbeat"
-                    |> Encoder.variantObject "Alert" [ ( "message", Encoder.string ) ]
+                    |> Encoder.variantObject "Alert" [ required "message" identity Encoder.string ]
                     |> Encoder.buildUnion
                     |> expectEncodes
                         { input = Alert "Hello!"
