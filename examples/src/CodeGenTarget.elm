@@ -3,6 +3,7 @@ port module CodeGenTarget exposing (..)
 import GoalPorts
 import GoalPortsFromTs
 import Json.Encode as Encode
+import ScrollIntoView
 import TsInterop.Decode as Decode
 import TsInterop.Encode as Encoder
 
@@ -15,6 +16,7 @@ typeDefs =
         [ ( "alert", GoalPorts.alert |> Encoder.rawType )
         , ( "bugsnag", GoalPorts.bugsnag |> Encoder.rawType )
         , ( "sendPresenceHeartbeat", GoalPorts.sendPresenceHeartbeat |> Encoder.rawType )
+        , ( "scrollIntoView", GoalPorts.scrollIntoView |> Encoder.rawType )
         ]
 
 

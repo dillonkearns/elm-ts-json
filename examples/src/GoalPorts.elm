@@ -1,6 +1,7 @@
 module GoalPorts exposing (..)
 
-import TsInterop.Encode as Encode exposing (Encoder, Property, required)
+import ScrollIntoView
+import TsInterop.Encode as Encode exposing (Encoder, Property, optional, required)
 
 
 type alias Properties encodesFrom =
@@ -25,4 +26,14 @@ bugsnag : Properties { context : List String, message : String }
 bugsnag =
     [ required "message" .message Encode.string
     , required "context" .context (Encode.list Encode.string)
+    ]
+
+
+scrollIntoView :
+    Properties
+        { behavior : Maybe ScrollIntoView.Behavior, block : Maybe ScrollIntoView.Alignment, inline : Maybe ScrollIntoView.Alignment }
+scrollIntoView =
+    [ optional "behavior" .behavior ScrollIntoView.behaviorEncoder
+    , optional "block" .block ScrollIntoView.alignmentEncoder
+    , optional "inline" .inline ScrollIntoView.alignmentEncoder
     ]

@@ -173,12 +173,12 @@ typeDef (Encoder encodeFn tsType_) =
 
 
 {-| -}
-rawType : List ( String, Encoder value ) -> List ( String, TsType )
+rawType : List (Property value) -> List ( PropertyOptionality, String, TsType )
 rawType entries =
     entries
         |> List.map
-            (\( key, Encoder encodeFn tsType_ ) ->
-                ( key, tsType_ )
+            (\(Property optionality propertyName encodeFn tsType_) ->
+                ( optionality, propertyName, tsType_ )
             )
 
 
@@ -576,13 +576,13 @@ buildUnion (UnionBuilder toValue tsTypes_) =
 
 
 {-| -}
-proTypeAnnotation : List ( String, List ( String, TsType ) ) -> String
+proTypeAnnotation : List ( String, List ( PropertyOptionality, String, TsType ) ) -> String
 proTypeAnnotation entries =
     unionTypeDefToString entries
 
 
 {-| -}
-unionTypeDefToString : List ( String, List ( String, TsType ) ) -> String
+unionTypeDefToString : List ( String, List ( PropertyOptionality, String, TsType ) ) -> String
 unionTypeDefToString variants =
     variants
         |> List.map
@@ -591,8 +591,8 @@ unionTypeDefToString variants =
                     (( TsType.Required, "tag", TsType.Literal (Encode.string variantName) )
                         :: (objectProperties
                                 |> List.map
-                                    (\( propertyName, propertyType ) ->
-                                        ( TsType.Required, propertyName, propertyType )
+                                    (\( propertyOptionality, propertyName, propertyType ) ->
+                                        ( propertyOptionality, propertyName, propertyType )
                                     )
                            )
                     )

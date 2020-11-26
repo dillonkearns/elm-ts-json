@@ -1,8 +1,8 @@
 port module GeneratedPort exposing (..)
 
-import Encoder
 import Json.Encode
 import Ports
+import TsInterop.Encode as Encoder
 
 
 sendPort : Ports.ToJs -> Cmd msg

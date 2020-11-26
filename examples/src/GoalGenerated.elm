@@ -6,6 +6,7 @@ port module GoalGenerated exposing
 
 import GoalPorts
 import Json.Encode
+import ScrollIntoView
 import TsInterop.Encode as Encode
 
 
@@ -27,6 +28,15 @@ bugsnag : { a | context : List String, message : String } -> Cmd msg
 bugsnag argument =
     argument
         |> Encode.encodeProVariant "bugsnag" GoalPorts.bugsnag
+        |> fromElm
+
+
+scrollIntoView :
+    { behavior : Maybe ScrollIntoView.Behavior, block : Maybe ScrollIntoView.Alignment, inline : Maybe ScrollIntoView.Alignment }
+    -> Cmd msg
+scrollIntoView argument =
+    argument
+        |> Encode.encodeProVariant "scrollIntoView" GoalPorts.scrollIntoView
         |> fromElm
 
 
