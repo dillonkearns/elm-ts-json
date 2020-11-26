@@ -5,6 +5,7 @@ module TsInterop.Encode exposing
     , map
     , object, Property, optional, required
     , UnionBuilder, union, variant, variant0, variantObject, variantLiteral, buildUnion
+    , UnionEncodeValue
     , list, dict, tuple, triple, maybe
     , unionTypeDefToString, encodeProVariant, proTypeAnnotation, rawType, value
     )
@@ -29,7 +30,7 @@ module TsInterop.Encode exposing
             , inline : Maybe Alignment
             }
     scrollIntoViewEncoder =
-        optionalObject
+        object
             [ optional "behavior" .behavior behaviorEncoder
             , optional "block" .block alignmentEncoder
             , optional "inline" .inline alignmentEncoder
@@ -123,7 +124,7 @@ module TsInterop.Encode exposing
                         vAlert string
             )
             |> variant0 "SendPresenceHeartbeat"
-            |> variantObject "Alert" [ ( "message", string ) ]
+            |> variantObject "Alert" [ required "message" identity string ]
             |> buildUnion
 
 
@@ -134,6 +135,8 @@ module TsInterop.Encode exposing
     --> }
 
 @docs UnionBuilder, union, variant, variant0, variantObject, variantLiteral, buildUnion
+
+@docs UnionEncodeValue
 
 
 ## Collections
@@ -214,7 +217,7 @@ required name getter (Encoder encodeFn tsType_) =
 
     nameEncoder : Encoder { first : String, last : String }
     nameEncoder =
-        optionalObject
+        object
             [ required "first" .first string
             , required "last" .last string
             ]
@@ -228,7 +231,7 @@ required name getter (Encoder encodeFn tsType_) =
 
     fullNameEncoder : Encoder { first : String, middle : Maybe String, last : String }
     fullNameEncoder =
-        optionalObject
+        object
             [ required "first" .first string
             , optional "middle" .middle string
             , required "last" .last string
@@ -445,11 +448,11 @@ type UnionBuilder match
 {-| -}
 variant0 :
     String
-    -> UnionBuilder (Encode.Value -> match)
+    -> UnionBuilder (UnionEncodeValue -> match)
     -> UnionBuilder match
 variant0 variantName (UnionBuilder builder tsTypes_) =
     let
-        thing : UnionBuilder ((() -> Encode.Value) -> match)
+        thing : UnionBuilder ((() -> UnionEncodeValue) -> match)
         thing =
             UnionBuilder
                 (builder
@@ -457,7 +460,7 @@ variant0 variantName (UnionBuilder builder tsTypes_) =
                 )
                 tsTypes_
 
-        transformBuilder : (Encode.Value -> match) -> (() -> Encode.Value) -> match
+        transformBuilder : (UnionEncodeValue -> match) -> (() -> UnionEncodeValue) -> match
         transformBuilder matchBuilder encoderFn =
             matchBuilder (encoderFn ())
     in
@@ -471,11 +474,11 @@ variant0 variantName (UnionBuilder builder tsTypes_) =
 {-| -}
 variant :
     Encoder encodesFrom
-    -> UnionBuilder ((encodesFrom -> Encode.Value) -> match)
+    -> UnionBuilder ((encodesFrom -> UnionEncodeValue) -> match)
     -> UnionBuilder match
 variant (Encoder encoder_ tsType_) (UnionBuilder builder tsTypes_) =
     UnionBuilder
-        (builder encoder_)
+        (builder (encoder_ >> UnionEncodeValue))
         (tsType_ :: tsTypes_)
 
 
@@ -507,11 +510,11 @@ variant (Encoder encoder_ tsType_) (UnionBuilder builder tsTypes_) =
 {-| -}
 variantLiteral :
     Encode.Value
-    -> UnionBuilder (Encode.Value -> match)
+    -> UnionBuilder (UnionEncodeValue -> match)
     -> UnionBuilder match
 variantLiteral literalValue (UnionBuilder builder tsTypes) =
     UnionBuilder
-        (builder literalValue)
+        (builder (literalValue |> UnionEncodeValue))
         (TsType.Literal literalValue :: tsTypes)
 
 
@@ -519,7 +522,7 @@ variantLiteral literalValue (UnionBuilder builder tsTypes) =
 variantObject :
     String
     -> List (Property arg1)
-    -> UnionBuilder ((arg1 -> Encode.Value) -> match)
+    -> UnionBuilder ((arg1 -> UnionEncodeValue) -> match)
     -> UnionBuilder match
 variantObject variantName objectFields unionBuilder =
     variant
@@ -547,10 +550,29 @@ encodeProVariant variantName entries arg1 =
            )
 
 
+{-| We can guarantee that you're only encoding to a given
+set of possible shapes in a union type by ensuring that
+all the encoded values come from the union pipeline,
+using functions like `variantLiteral`, `variantObject`, etc.
+
+Applying another variant function in your union pipeline will
+give you more functions/values to give UnionEncodeValue's with
+different shapes, if you need them.
+
+-}
+type UnionEncodeValue
+    = UnionEncodeValue Encode.Value
+
+
+unwrapUnion : UnionEncodeValue -> Encode.Value
+unwrapUnion (UnionEncodeValue rawValue) =
+    rawValue
+
+
 {-| -}
-buildUnion : UnionBuilder (match -> Encode.Value) -> Encoder match
+buildUnion : UnionBuilder (match -> UnionEncodeValue) -> Encoder match
 buildUnion (UnionBuilder toValue tsTypes_) =
-    Encoder toValue (TsType.union tsTypes_)
+    Encoder (toValue >> unwrapUnion) (TsType.union tsTypes_)
 
 
 {-| -}
