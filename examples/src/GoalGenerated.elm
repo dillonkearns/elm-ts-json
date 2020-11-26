@@ -32,7 +32,10 @@ bugsnag argument =
 
 
 scrollIntoView :
-    { behavior : Maybe ScrollIntoView.Behavior, block : Maybe ScrollIntoView.Alignment, inline : Maybe ScrollIntoView.Alignment }
+    { options :
+        { behavior : Maybe ScrollIntoView.Behavior, block : Maybe ScrollIntoView.Alignment, inline : Maybe ScrollIntoView.Alignment }
+    , id : String
+    }
     -> Cmd msg
 scrollIntoView argument =
     argument

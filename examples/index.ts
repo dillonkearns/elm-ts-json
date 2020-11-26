@@ -33,8 +33,7 @@ app.ports.fromElm.subscribe((fromElm) => {
       console.log("message", fromElm.message);
       break;
     case "scrollIntoView":
-      document.getElementById("")?.scrollIntoView(fromElm);
-
+      document.getElementById(fromElm.id)?.scrollIntoView(fromElm.options);
       break;
   }
 });

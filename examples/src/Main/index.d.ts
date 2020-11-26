@@ -1,4 +1,4 @@
-type FromElm = { tag : "alert"; message : string } | { tag : "bugsnag"; message : string; context : string[] } | { tag : "sendPresenceHeartbeat" } | { tag : "scrollIntoView"; behavior? : "smooth" | "auto"; block? : "nearest" | "end" | "center" | "start"; inline? : "nearest" | "end" | "center" | "start" }
+type FromElm = { tag : "alert"; message : string } | { tag : "bugsnag"; message : string; context : string[] } | { tag : "sendPresenceHeartbeat" } | { tag : "scrollIntoView"; options : { behavior? : "smooth" | "auto"; block? : "nearest" | "end" | "center" | "start"; inline? : "nearest" | "end" | "center" | "start" }; id : string }
 
 type Flags = { severity : "info" | "warning" | "error"; first : string; last : string }
 

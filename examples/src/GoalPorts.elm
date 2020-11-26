@@ -31,9 +31,11 @@ bugsnag =
 
 scrollIntoView :
     Properties
-        { behavior : Maybe ScrollIntoView.Behavior, block : Maybe ScrollIntoView.Alignment, inline : Maybe ScrollIntoView.Alignment }
+        { options :
+            { behavior : Maybe ScrollIntoView.Behavior, block : Maybe ScrollIntoView.Alignment, inline : Maybe ScrollIntoView.Alignment }
+        , id : String
+        }
 scrollIntoView =
-    [ optional "behavior" .behavior ScrollIntoView.behaviorEncoder
-    , optional "block" .block ScrollIntoView.alignmentEncoder
-    , optional "inline" .inline ScrollIntoView.alignmentEncoder
+    [ required "options" .options ScrollIntoView.encoder
+    , required "id" .id Encode.string
     ]
