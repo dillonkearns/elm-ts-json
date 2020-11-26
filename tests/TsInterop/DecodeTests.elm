@@ -102,7 +102,7 @@ suite =
                     |> expectDecodes
                         { input = "null"
                         , output = "Hello"
-                        , typeDef = "unknown"
+                        , typeDef = "JsonValue"
                         }
         , describe "objects"
             [ test "single field" <|

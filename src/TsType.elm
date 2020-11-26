@@ -161,7 +161,7 @@ toString tsType_ =
             "boolean"
 
         Unknown ->
-            "unknown"
+            "JsonValue"
 
         -- compound types
         List listType ->
@@ -251,7 +251,7 @@ toString tsType_ =
                             )
                      )
                         ++ [ --tsTypeToString_ tsType,
-                             "...unknown[]"
+                             "...JsonValue[]"
                            ]
                     )
                         |> String.join ","

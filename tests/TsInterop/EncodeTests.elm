@@ -64,7 +64,7 @@ suite =
                     |> expectEncodes
                         { input = Encode.list Encode.string [ "Hello", "World" ]
                         , output = """["Hello","World"]"""
-                        , typeDef = "unknown"
+                        , typeDef = "JsonValue"
                         }
         , test "list" <|
             \() ->

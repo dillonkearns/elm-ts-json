@@ -22,8 +22,8 @@ suite =
                         (TsType.ArrayIndex ( 0, TsType.String ) [])
                         (TsType.ArrayIndex ( 1, TsType.Number ) [])
                         |> expectEqualTypes
-                            "[string,number,...unknown[]]"
-            , test "a known value intersected with unknown is the known value" <|
+                            "[string,number,...JsonValue[]]"
+            , test "a known value intersected with JsonValue is the known value" <|
                 \() ->
                     TsType.intersect
                         TsType.Boolean

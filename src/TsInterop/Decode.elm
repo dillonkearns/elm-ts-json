@@ -388,7 +388,7 @@ value =
     fail "Failure message"
         |> runExample "123.45"
     --> { decoded = Err "Problem with the given value:\n\n123.45\n\nFailure message"
-    --> , tsType = "unknown"
+    --> , tsType = "JsonValue"
     --> }
 
 -}
@@ -429,12 +429,12 @@ null value_ =
 
     maybe (field "height" float) |> runExample json
     --> { decoded = Ok Nothing
-    --> , tsType = "{ height : number } | unknown"
+    --> , tsType = "{ height : number } | JsonValue"
     --> }
 
     field "height" (maybe float) |> runExample json
     --> { decoded = Err "Problem with the given value:\n\n{\n        \"name\": \"tom\",\n        \"age\": 42\n    }\n\nExpecting an OBJECT with a field named `height`"
-    --> , tsType = "{ height : number | unknown }"
+    --> , tsType = "{ height : number | JsonValue }"
     --> }
 
 -}
@@ -664,7 +664,7 @@ list (Decoder innerDecoder innerType) =
     index 1 int
         |> runExample "[0,100,200]"
     --> { decoded = Ok 100
-    --> , tsType = "[unknown,number,...unknown[]]"
+    --> , tsType = "[JsonValue,number,...JsonValue[]]"
     --> }
 
     map2 Tuple.pair
@@ -672,7 +672,7 @@ list (Decoder innerDecoder innerType) =
         ( index 3 string )
         |> runExample """[0,100,"a","b"]"""
     --> { decoded = Ok ( 100, "b" )
-    --> , tsType = "[unknown,number,unknown,string,...unknown[]]"
+    --> , tsType = "[JsonValue,number,JsonValue,string,...JsonValue[]]"
     --> }
 
 -}

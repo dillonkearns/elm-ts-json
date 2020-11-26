@@ -26,6 +26,14 @@ function declarationFileContent({ fromElm, flags }) {
 
 type Flags = ${flags}
 
+export type JsonObject = {[Key in string]?: JsonValue};
+export interface JsonArray extends Array<JsonValue> {}
+/**
+Matches any valid JSON value.
+Source: https://github.com/sindresorhus/type-fest/blob/master/source/basic.d.ts
+*/
+export type JsonValue = string | number | boolean | null | JsonObject | JsonArray;
+
 export interface ElmApp {
   ports: {
     fromElm: {
