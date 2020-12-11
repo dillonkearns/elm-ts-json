@@ -105,6 +105,12 @@ simplifyIntersection types =
 intersect : TsType -> TsType -> TsType
 intersect type1 type2 =
     case ( type1, type2 ) of
+        ( Unknown, known ) ->
+            known
+
+        ( known, Unknown ) ->
+            known
+
         ( Intersection types1, Intersection types2 ) ->
             simplifyIntersection (types1 ++ types2)
 
@@ -117,23 +123,11 @@ intersect type1 type2 =
         ( TypeObject fields1, Union unionedTypes ) ->
             Intersection [ type1, type2 ]
 
-        ( TypeObject fields1, _ ) ->
-            TsNever
-
         ( String, Number ) ->
             TsNever
 
         ( Number, String ) ->
             TsNever
-
-        ( Unknown, Unknown ) ->
-            Unknown
-
-        ( Unknown, known ) ->
-            known
-
-        ( known, Unknown ) ->
-            known
 
         _ ->
             Intersection [ type1, type2 ]

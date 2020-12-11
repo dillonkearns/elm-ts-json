@@ -62,5 +62,5 @@ userEncoder |> Encode.typeDef
 --> """{"kind":"guest"} | { kind : "regular"; name : string }"""
 
 userDecoder |> Decode.tsTypeToString
---> """{"kind":"guest"} | { kind : "regular"; name : string }"""
+--> """{ name : string; kind : "regular" } | {"kind":"guest"}"""
 ```

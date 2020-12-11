@@ -132,6 +132,16 @@ suite =
                             { input = """{"field1": true, "field2": false}"""
                             , typeDef = "never"
                             }
+            , test "object with literal values" <|
+                \() ->
+                    succeed (\() name -> { name = name })
+                        |> andMap (field "kind" (literal () (Encode.string "regular")))
+                        |> andMap (field "name" string)
+                        |> expectDecodes
+                            { input = """{"kind": "regular", "name": "Leonard"}"""
+                            , typeDef = """{ name : string; kind : "regular" }"""
+                            , output = { name = "Leonard" }
+                            }
             ]
         ]
 
