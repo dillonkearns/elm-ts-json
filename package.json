@@ -1,0 +1,28 @@
+{
+  "name": "elm-ts-interop",
+  "version": "0.0.1",
+  "description": "Build up JSON Encoders/Decoders that have TypeScript type declarations.",
+  "dependencies": {},
+  "devDependencies": {
+    "elm-review": "^2.3.3",
+    "elm-tooling": "^0.6.2",
+    "elm-verify-examples": "^5.0.0"
+  },
+  "scripts": {
+    "test": "elm-test && elm-verify-examples --run-tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dillonkearns/elm-ts-interop.git"
+  },
+  "keywords": [
+    "Elm",
+    "TypeScript"
+  ],
+  "author": "Dillon Kearns",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dillonkearns/elm-ts-interop/issues"
+  },
+  "homepage": "https://github.com/dillonkearns/elm-ts-interop#readme"
+}
