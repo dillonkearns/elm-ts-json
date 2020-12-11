@@ -344,11 +344,6 @@ null =
     literal Encode.null
 
 
-runExample : Encoder encodeFrom -> encodeFrom -> { output : String, tsType : String }
-runExample encoder_ encodeFrom =
-    { tsType = typeDef encoder_, output = encodeFrom |> encoder encoder_ |> Encode.encode 0 }
-
-
 {-| -}
 value : Encoder Encode.Value
 value =

@@ -9,6 +9,7 @@ module TsInterop.Decode exposing
     , map3, map4, map5, map6, map7, map8
     , literal, null
     , andThen, staticAndThen, StaticAndThen, init, option
+    , value
     , decoder, tsTypeToString
     )
 
@@ -54,6 +55,15 @@ module TsInterop.Decode exposing
 ## Continuation
 
 @docs andThen, staticAndThen, StaticAndThen, init, option
+
+
+## Using elm/json Decoders
+
+If you have an exising decoder, you can use it with an `unknown` type in TypeScript.
+
+You can also decode an arbitrary JSON value as with `elm/json`, and then use `elm/json` to process it further.
+
+@docs value
 
 
 ## Using Decoders
@@ -349,26 +359,6 @@ option :
     -> StaticAndThen final
 option ((Decoder innerDecoder innerType) as interopDecoder) (StaticAndThen function tsTypes) =
     StaticAndThen (function interopDecoder) (innerType :: tsTypes)
-
-
-type IntOrString
-    = TypeInt Int
-    | TypeString String
-
-
-example : StaticAndThen (Int -> Decoder IntOrString)
-example =
-    init
-        (\v1Decoder v2PlusDecoder version ->
-            case version of
-                1 ->
-                    v1Decoder |> map TypeString
-
-                _ ->
-                    v2PlusDecoder |> map TypeInt
-        )
-        |> option string
-        |> option int
 
 
 {-| -}
@@ -781,10 +771,3 @@ decoder (Decoder decoder_ tsType_) =
 tsTypeToString : Decoder value -> String
 tsTypeToString (Decoder decoder_ tsType_) =
     TsType.toString tsType_
-
-
-runExample : String -> Decoder value -> { decoded : Result String value, tsType : String }
-runExample inputJson interopDecoder =
-    { tsType = tsTypeToString interopDecoder
-    , decoded = Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Decode.errorToString
-    }
