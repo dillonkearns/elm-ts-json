@@ -5,7 +5,8 @@ module TsInterop.Decode exposing
     , field, at
     , list, array, nullable, oneOf, dict, keyValuePairs, oneOrMore, maybe, optionalField, optionalNullableField
     , index
-    , map, map2
+    , map
+    , map2, andMap
     , map3, map4, map5, map6, map7, map8
     , literal, null
     , andThen, staticAndThen, StaticAndThen, init, option
@@ -42,7 +43,12 @@ module TsInterop.Decode exposing
 
 ## Transformations
 
-@docs map, map2
+@docs map
+
+
+## Combining
+
+@docs map2, andMap
 
 @docs map3, map4, map5, map6, map7, map8
 
@@ -83,6 +89,12 @@ import TsType exposing (TsType(..))
 map : (value -> mapped) -> Decoder value -> Decoder mapped
 map mapFn (Decoder innerDecoder innerType) =
     Decoder (Decode.map mapFn innerDecoder) innerType
+
+
+{-| -}
+andMap : Decoder a -> Decoder (a -> b) -> Decoder b
+andMap =
+    map2 (|>)
 
 
 {-| -}

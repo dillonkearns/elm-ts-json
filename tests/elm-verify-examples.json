@@ -1,4 +1,8 @@
 {
   "root": "../src",
-  "tests": ["TsInterop.Decode", "TsInterop.Encode"]
+  "tests": [
+    "TsInterop.Decode",
+    "TsInterop.Encode",
+    "./README.md"
+  ]
 }
