@@ -104,33 +104,66 @@ simplifyIntersection types =
 
 intersect : TsType -> TsType -> TsType
 intersect type1 type2 =
-    case ( type1, type2 ) of
-        ( Unknown, known ) ->
-            known
+    if isContradictory ( type1, type2 ) then
+        TsNever
 
-        ( known, Unknown ) ->
-            known
+    else
+        case ( type1, type2 ) of
+            ( Unknown, known ) ->
+                known
 
-        ( Intersection types1, Intersection types2 ) ->
-            simplifyIntersection (types1 ++ types2)
+            ( known, Unknown ) ->
+                known
 
-        ( ArrayIndex ( index1, indexType1 ) [], ArrayIndex ( index2, indexType2 ) [] ) ->
-            ArrayIndex ( index1, indexType1 ) [ ( index2, indexType2 ) ]
+            ( Intersection types1, Intersection types2 ) ->
+                simplifyIntersection (types1 ++ types2)
 
-        ( TypeObject fields1, TypeObject fields2 ) ->
-            TypeObject (mergeFields fields1 fields2)
+            ( ArrayIndex ( index1, indexType1 ) [], ArrayIndex ( index2, indexType2 ) [] ) ->
+                ArrayIndex ( index1, indexType1 ) [ ( index2, indexType2 ) ]
 
-        ( TypeObject fields1, Union unionedTypes ) ->
-            Intersection [ type1, type2 ]
+            ( TypeObject fields1, TypeObject fields2 ) ->
+                TypeObject (mergeFields fields1 fields2)
 
-        ( String, Number ) ->
-            TsNever
+            ( TypeObject fields1, Union unionedTypes ) ->
+                Intersection [ type1, type2 ]
 
-        ( Number, String ) ->
-            TsNever
+            ( String, Number ) ->
+                TsNever
+
+            ( Number, String ) ->
+                TsNever
+
+            _ ->
+                Intersection [ type1, type2 ]
+
+
+either : (TsType -> Bool) -> ( TsType, TsType ) -> Bool
+either predicateFn ( type1, type2 ) =
+    predicateFn type1 || predicateFn type2
+
+
+isContradictory : ( TsType, TsType ) -> Bool
+isContradictory types =
+    either isNonEmptyObject types && either isPrimitive types
+
+
+isPrimitive tsType =
+    case tsType of
+        Number ->
+            True
 
         _ ->
-            Intersection [ type1, type2 ]
+            False
+
+
+isNonEmptyObject : TsType -> Bool
+isNonEmptyObject tsType =
+    case tsType of
+        TypeObject (atLeastOne :: possiblyMore) ->
+            True
+
+        _ ->
+            False
 
 
 null : TsType
