@@ -1,6 +1,4 @@
-# `elm-ts-interop` [![Build Status](https://github.com/dillonkearns/elm-ts-interop/workflows/Elm%20CI/badge.svg)](https://github.com/dillonkearns/elm-ts-interop/actions?query=branch%3Amain)
-
-![example workflow file path](https://github.com/actions/hello-world/workflows/.github/workflows/main.yml/badge.svg)
+# `elm-ts-interop` [![Build Status](https://github.com/dillonkearns/elm-ts-interop/workflows/CI/badge.svg)](https://github.com/dillonkearns/elm-ts-interop/actions?query=branch%3Amain)
 
 ## Example
 

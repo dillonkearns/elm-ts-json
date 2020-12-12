@@ -1,4 +1,4 @@
-name: Elm CI
+name: CI
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  test:
+  main:
     runs-on: ubuntu-latest
 
     steps:
