@@ -1,4 +1,4 @@
-module TsInterop.DecodeTests exposing (..)
+module TsInterop.DecodeTests exposing (suite)
 
 import Array
 import Expect exposing (Expectation)

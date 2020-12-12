@@ -1,4 +1,11 @@
-module TsType exposing (..)
+module TsType exposing
+    ( PropertyOptionality(..)
+    , TsType(..)
+    , intersect
+    , null
+    , toString
+    , union
+    )
 
 import Dict
 import Json.Encode as Encode

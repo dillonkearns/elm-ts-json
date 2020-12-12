@@ -1,4 +1,4 @@
-module TsTypeTests exposing (..)
+module TsTypeTests exposing (suite)
 
 import Expect
 import Test exposing (..)

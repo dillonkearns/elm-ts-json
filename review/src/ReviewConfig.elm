@@ -11,6 +11,9 @@ when inside the directory containing this file.
 
 -}
 
+import NoExposingEverything
+import NoImportingEverything
+import NoMissingTypeAnnotation
 import NoUnused.CustomTypeConstructorArgs
 import NoUnused.CustomTypeConstructors
 import NoUnused.Dependencies
@@ -28,9 +31,16 @@ config =
     , NoUnused.Exports.rule
     , NoUnused.Dependencies.rule
     , NoUnused.CustomTypeConstructorArgs.rule
-    , NoUnused.Variables.rule
 
+    --, NoUnused.Variables.rule
     -- , NoUnused.CustomTypeConstructors.rule []
     , NoUnused.Parameters.rule
+
     --, NoUnused.Patterns.rule
+    --, NoDebug.Log.rule
+    --, NoDebug.TodoOrToString.rule
+    , NoExposingEverything.rule
+
+    --, NoImportingEverything.rule []
+    --, NoMissingTypeAnnotation.rule
     ]
