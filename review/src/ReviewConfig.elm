@@ -15,7 +15,9 @@ import NoDebug.Log
 import NoDebug.TodoOrToString
 import NoExposingEverything
 import NoImportingEverything
+import NoInconsistentAliases
 import NoMissingTypeAnnotation
+import NoModuleOnExposedNames
 import NoUnused.CustomTypeConstructorArgs
 import NoUnused.CustomTypeConstructors
 import NoUnused.Dependencies
@@ -46,4 +48,13 @@ config =
 
     --, NoImportingEverything.rule []
     , NoMissingTypeAnnotation.rule
+
+    --, NoInconsistentAliases.config
+    --    [ ( "Html.Attributes", "Attr" )
+    --    , ( "Json.Decode", "Decode" )
+    --    , ( "Json.Encode", "Encode" )
+    --    ]
+    --    |> NoInconsistentAliases.noMissingAliases
+    --    |> NoInconsistentAliases.rule
+    , NoModuleOnExposedNames.rule
     ]

@@ -155,7 +155,7 @@ type Severity
 expectDecodes :
     { output : decodesTo, input : String, typeDef : String }
     -> Decoder decodesTo
-    -> Expect.Expectation
+    -> Expectation
 expectDecodes expect interop =
     expect.input
         |> Decode.decodeString (decoder interop)
@@ -168,7 +168,7 @@ expectDecodes expect interop =
 expectDecodeError :
     { input : String, typeDef : String }
     -> Decoder decodesTo
-    -> Expect.Expectation
+    -> Expectation
 expectDecodeError expect interop =
     expect.input
         |> Decode.decodeString (decoder interop)

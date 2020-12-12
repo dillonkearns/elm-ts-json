@@ -129,7 +129,7 @@ expectEqualTypes expected type2 =
         |> Expect.equal expected
 
 
-combinesToNever : TsType.TsType -> TsType.TsType -> Expect.Expectation
+combinesToNever : TsType -> TsType -> Expect.Expectation
 combinesToNever type1 type2 =
     TsType.intersect type1 type2
         |> Expect.equal TsType.TsNever

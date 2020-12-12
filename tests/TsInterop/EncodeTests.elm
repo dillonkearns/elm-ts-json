@@ -3,7 +3,7 @@ module TsInterop.EncodeTests exposing (suite)
 import Dict
 import Expect exposing (Expectation)
 import Json.Encode as Encode
-import Test exposing (..)
+import Test exposing (Test, describe, only, skip, test, todo)
 import TsInterop.Encode as Encoder exposing (Encoder, required)
 
 
@@ -24,9 +24,9 @@ suite =
         , test "optional object" <|
             \() ->
                 Encoder.object
-                    [ Encoder.required "first" .first Encoder.string
+                    [ required "first" .first Encoder.string
                     , Encoder.optional "middle" .middle Encoder.string
-                    , Encoder.required "last" .last Encoder.string
+                    , required "last" .last Encoder.string
                     ]
                     |> expectEncodes
                         { input = { first = "Nyota", middle = Nothing, last = "Uhura" }
@@ -269,7 +269,7 @@ type ToJs
 expectEncodes :
     { output : String, input : encodesFrom, typeDef : String }
     -> Encoder encodesFrom
-    -> Expect.Expectation
+    -> Expectation
 expectEncodes expect interop =
     expect.input
         |> Encoder.encoder interop
@@ -284,7 +284,7 @@ expectEncodesNew :
     List ( encodesFrom, String )
     -> String
     -> Encoder encodesFrom
-    -> Expect.Expectation
+    -> Expectation
 expectEncodesNew cases expectedTypeDef interop =
     ()
         |> Expect.all
