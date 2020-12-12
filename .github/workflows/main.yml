@@ -57,7 +57,7 @@ jobs:
       # - name: prettier
       #   run: npx --no-install prettier --check .
       - name: Build elm docs
-        run: elm make --docs docs.json
+        run: npx --no-install elm make --docs docs.json
       # - name: Elm Publish
       #   uses: dillonkearns/elm-publish-action@1.0.1
       #   with:
