@@ -147,9 +147,16 @@ isContradictory types =
     either isNonEmptyObject types && either isPrimitive types
 
 
+isPrimitive : TsType -> Bool
 isPrimitive tsType =
     case tsType of
         Number ->
+            True
+
+        String ->
+            True
+
+        Boolean ->
             True
 
         _ ->
