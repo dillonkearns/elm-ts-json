@@ -11,6 +11,8 @@ when inside the directory containing this file.
 
 -}
 
+import NoDebug.Log
+import NoDebug.TodoOrToString
 import NoExposingEverything
 import NoImportingEverything
 import NoMissingTypeAnnotation
@@ -37,8 +39,9 @@ config =
     , NoUnused.Parameters.rule
 
     --, NoUnused.Patterns.rule
-    --, NoDebug.Log.rule
-    --, NoDebug.TodoOrToString.rule
+    , NoDebug.Log.rule
+    , NoDebug.TodoOrToString.rule
+        |> Review.Rule.ignoreErrorsForDirectories [ "tests" ]
     , NoExposingEverything.rule
 
     --, NoImportingEverything.rule []
