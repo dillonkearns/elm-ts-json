@@ -65,6 +65,10 @@ union tsTypes =
             Union ( first, rest )
 
 
+mergeFields :
+    List ( PropertyOptionality, String, TsType )
+    -> List ( PropertyOptionality, String, TsType )
+    -> List ( PropertyOptionality, String, TsType )
 mergeFields fields1 fields2 =
     fields1 ++ fields2
 
