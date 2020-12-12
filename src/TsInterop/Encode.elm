@@ -162,13 +162,13 @@ type Encoder encodesFrom
 
 {-| -}
 encoder : Encoder encodesFrom -> (encodesFrom -> Encode.Value)
-encoder (Encoder encodeFn tsType_) encodesFrom =
+encoder (Encoder encodeFn _) encodesFrom =
     encodeFn encodesFrom
 
 
 {-| -}
 typeDef : Encoder encodesFrom -> String
-typeDef (Encoder encodeFn tsType_) =
+typeDef (Encoder _ tsType_) =
     TsType.toString tsType_
 
 
@@ -177,7 +177,7 @@ rawType : List (Property value) -> List ( PropertyOptionality, String, TsType )
 rawType entries =
     entries
         |> List.map
-            (\(Property optionality propertyName encodeFn tsType_) ->
+            (\(Property optionality propertyName _ tsType_) ->
                 ( optionality, propertyName, tsType_ )
             )
 
@@ -251,7 +251,7 @@ object propertyEncoders =
         propertyTypes =
             propertyEncoders
                 |> List.map
-                    (\(Property optionality propertyName encodeFn tsType_) ->
+                    (\(Property optionality propertyName _ tsType_) ->
                         ( optionality, propertyName, tsType_ )
                     )
                 |> TsType.TypeObject
@@ -260,7 +260,7 @@ object propertyEncoders =
         encodeObject encodesFrom =
             propertyEncoders
                 |> List.filterMap
-                    (\(Property optionality propertyName encodeFn tsType_) ->
+                    (\(Property _ propertyName encodeFn _) ->
                         encodeFn encodesFrom
                             |> Maybe.map
                                 (\encoded ->

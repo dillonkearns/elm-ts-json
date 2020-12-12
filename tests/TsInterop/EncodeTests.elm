@@ -276,7 +276,7 @@ expectEncodes expect interop =
         |> Encode.encode 0
         |> Expect.all
             [ \encodedString -> encodedString |> Expect.equal expect.output
-            , \decoded -> Encoder.typeDef interop |> Expect.equal expect.typeDef
+            , \_ -> Encoder.typeDef interop |> Expect.equal expect.typeDef
             ]
 
 

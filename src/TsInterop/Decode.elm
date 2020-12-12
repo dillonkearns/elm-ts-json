@@ -257,14 +257,14 @@ oneOf decoders =
     Decoder
         (decoders
             |> List.map
-                (\(Decoder innerDecoder innerType) ->
+                (\(Decoder innerDecoder _) ->
                     innerDecoder
                 )
             |> Decode.oneOf
         )
         (decoders
             |> List.map
-                (\(Decoder innerDecoder innerType) ->
+                (\(Decoder _ innerType) ->
                     innerType
                 )
             |> TsType.union
@@ -369,7 +369,7 @@ option :
     Decoder value
     -> StaticAndThen (Decoder value -> final)
     -> StaticAndThen final
-option ((Decoder innerDecoder innerType) as interopDecoder) (StaticAndThen function tsTypes) =
+option ((Decoder _ innerType) as interopDecoder) (StaticAndThen function tsTypes) =
     StaticAndThen (function interopDecoder) (innerType :: tsTypes)
 
 
@@ -775,11 +775,11 @@ keyValuePairs (Decoder innerDecoder innerType) =
 {-| Get a regular JSON Decoder that you can run using the `elm/json` API.
 -}
 decoder : Decoder value -> Decode.Decoder value
-decoder (Decoder decoder_ tsType_) =
+decoder (Decoder decoder_ _) =
     decoder_
 
 
 {-| -}
 tsTypeToString : Decoder value -> String
-tsTypeToString (Decoder decoder_ tsType_) =
+tsTypeToString (Decoder _ tsType_) =
     TsType.toString tsType_

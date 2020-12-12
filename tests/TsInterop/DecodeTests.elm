@@ -161,7 +161,7 @@ expectDecodes expect interop =
         |> Decode.decodeString (decoder interop)
         |> Expect.all
             [ \decoded -> decoded |> Expect.equal (Ok expect.output)
-            , \decoded -> tsTypeToString interop |> Expect.equal expect.typeDef
+            , \_ -> tsTypeToString interop |> Expect.equal expect.typeDef
             ]
 
 
@@ -180,5 +180,5 @@ expectDecodeError expect interop =
 
                     Ok value ->
                         Expect.fail <| "Expected decode failure, but got " ++ Debug.toString value
-            , \decoded -> tsTypeToString interop |> Expect.equal expect.typeDef
+            , \_ -> tsTypeToString interop |> Expect.equal expect.typeDef
             ]

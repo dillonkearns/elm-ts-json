@@ -30,7 +30,7 @@ config =
     , NoUnused.CustomTypeConstructorArgs.rule
     , NoUnused.Variables.rule
 
-    --, NoUnused.CustomTypeConstructors.rule []
-    --, NoUnused.Parameters.rule
+    -- , NoUnused.CustomTypeConstructors.rule []
+    , NoUnused.Parameters.rule
     --, NoUnused.Patterns.rule
     ]
