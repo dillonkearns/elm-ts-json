@@ -6,7 +6,8 @@
   "devDependencies": {
     "elm-review": "^2.3.3",
     "elm-tooling": "^0.6.2",
-    "elm-verify-examples": "^5.0.0"
+    "elm-verify-examples": "^5.0.0",
+    "prettier": "^2.2.1"
   },
   "scripts": {
     "test": "elm-test && elm-verify-examples --run-tests"
