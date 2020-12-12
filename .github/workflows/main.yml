@@ -69,3 +69,13 @@ jobs:
       #   uses: JS-DevTools/npm-publish@v1
       #   with:
       #     token: ${{ secrets.NPM_TOKEN }}
+      - name: Generate elm-doc-preview
+        uses: EndBug/add-and-commit@v5
+        with:
+          add: "docs.json"
+          author_name: GitHub Actions
+          author_email: dillon@incrementalelm.com
+          message: "Update docs.json from CI for elm-doc-preview."
+          push: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
