@@ -13,21 +13,21 @@ import TsInterop.Encode as Encode
 sendPresenceHeartbeat : Cmd msg
 sendPresenceHeartbeat =
     ()
-        |> Encode.encodeProVariant "sendPresenceHeartbeat" GoalPorts.sendPresenceHeartbeat
+        |> encodePro "sendPresenceHeartbeat" GoalPorts.sendPresenceHeartbeat
         |> fromElm
 
 
 alert : String -> Cmd msg
 alert argument =
     argument
-        |> Encode.encodeProVariant "alert" GoalPorts.alert
+        |> encodePro "alert" GoalPorts.alert
         |> fromElm
 
 
 bugsnag : { a | context : List String, message : String } -> Cmd msg
 bugsnag argument =
     argument
-        |> Encode.encodeProVariant "bugsnag" GoalPorts.bugsnag
+        |> encodePro "bugsnag" GoalPorts.bugsnag
         |> fromElm
 
 
@@ -39,7 +39,7 @@ scrollIntoView :
     -> Cmd msg
 scrollIntoView argument =
     argument
-        |> Encode.encodeProVariant "scrollIntoView" GoalPorts.scrollIntoView
+        |> encodePro "scrollIntoView" GoalPorts.scrollIntoView
         |> fromElm
 
 
@@ -47,11 +47,31 @@ scrollIntoView argument =
 -}
 typeDefs : String
 typeDefs =
-    Encode.unionTypeDefToString
-        [ ( "alert", GoalPorts.alert |> Encode.rawType )
-        , ( "bugsnag", GoalPorts.bugsnag |> Encode.rawType )
-        , ( "sendPresenceHeartbeat", GoalPorts.sendPresenceHeartbeat |> Encode.rawType )
+    toTypeDefs
+        [ ( "alert", GoalPorts.alert |> Encode.typeDef )
+        , ( "bugsnag", GoalPorts.bugsnag |> Encode.typeDef )
+        , ( "sendPresenceHeartbeat", GoalPorts.sendPresenceHeartbeat |> Encode.typeDef )
         ]
 
 
+toTypeDefs : List ( String, String ) -> String
+toTypeDefs variants =
+    List.map individualThing variants
+        |> String.join " | "
+
+
+individualThing : ( String, String ) -> String
+individualThing ( tagName, encoderType ) =
+    "{ tag : '" ++ tagName ++ "'; data : " ++ encoderType
+
+
 port fromElm : Json.Encode.Value -> Cmd msg
+
+
+encodePro : String -> Encode.Encoder encodesFrom -> encodesFrom -> Json.Encode.Value
+encodePro tagName encoder =
+    Encode.object
+        [ Encode.required tagName identity encoder
+        , Encode.required "tag" identity (Encode.literal (Json.Encode.string tagName))
+        ]
+        |> Encode.encoder
