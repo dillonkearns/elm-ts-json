@@ -1,5 +1,6 @@
 port module CodeGenTarget exposing (..)
 
+import GoalGenerated
 import GoalPorts
 import GoalPortsFromTs
 import Json.Encode as Encode
@@ -12,12 +13,7 @@ import TsInterop.Encode as Encoder
 -}
 typeDefs : String
 typeDefs =
-    Encoder.unionTypeDefToString
-        [ ( "alert", GoalPorts.alert |> Encoder.rawType )
-        , ( "bugsnag", GoalPorts.bugsnag |> Encoder.rawType )
-        , ( "sendPresenceHeartbeat", GoalPorts.sendPresenceHeartbeat |> Encoder.rawType )
-        , ( "scrollIntoView", GoalPorts.scrollIntoView |> Encoder.rawType )
-        ]
+    GoalGenerated.typeDefs
 
 
 allTypeDefs : { fromElm : String, toElm : String, flags : String }

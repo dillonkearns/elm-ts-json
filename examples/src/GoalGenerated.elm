@@ -2,6 +2,7 @@ port module GoalGenerated exposing
     ( alert
     , bugsnag
     , sendPresenceHeartbeat
+    , typeDefs
     )
 
 import GoalPorts

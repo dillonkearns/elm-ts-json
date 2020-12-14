@@ -7,7 +7,7 @@ module TsInterop.Encode exposing
     , UnionBuilder, union, variant, variant0, variantObject, variantLiteral, buildUnion
     , UnionEncodeValue
     , list, dict, tuple, triple, maybe
-    , unionTypeDefToString, encodeProVariant, proTypeAnnotation, rawType, value
+    , value
     )
 
 {-|
@@ -144,9 +144,9 @@ module TsInterop.Encode exposing
 @docs list, dict, tuple, triple, maybe
 
 
-## Internal
+## Escape Hatch
 
-@docs unionTypeDefToString, encodeProVariant, proTypeAnnotation, rawType, value
+@docs value
 
 -}
 
@@ -170,16 +170,6 @@ encoder (Encoder encodeFn _) encodesFrom =
 typeDef : Encoder encodesFrom -> String
 typeDef (Encoder _ tsType_) =
     TsType.toString tsType_
-
-
-{-| -}
-rawType : List (Property value) -> List ( PropertyOptionality, String, TsType )
-rawType entries =
-    entries
-        |> List.map
-            (\(Property optionality propertyName _ tsType_) ->
-                ( optionality, propertyName, tsType_ )
-            )
 
 
 {-| -}
@@ -344,7 +334,11 @@ null =
     literal Encode.null
 
 
-{-| -}
+{-| This is an escape hatch that allows you to send arbitrary JSON data. The type will
+be JSON in TypeScript, so you won't have any specific type information. In some cases,
+this is fine, but in general you'll usually want to use other functions in this module
+to build up a well-typed `Encoder`.
+-}
 value : Encoder Encode.Value
 value =
     Encoder identity TsType.Unknown
@@ -529,22 +523,6 @@ variantObject variantName objectFields unionBuilder =
         unionBuilder
 
 
-{-| -}
-encodeProVariant :
-    String
-    -> List (Property arg1)
-    -> arg1
-    -> Encode.Value
-encodeProVariant variantName entries arg1 =
-    arg1
-        |> (object
-                (required "tag" identity (literal (Encode.string variantName))
-                    :: entries
-                )
-                |> encoder
-           )
-
-
 {-| We can guarantee that you're only encoding to a given
 set of possible shapes in a union type by ensuring that
 all the encoded values come from the union pipeline,
@@ -568,29 +546,3 @@ unwrapUnion (UnionEncodeValue rawValue) =
 buildUnion : UnionBuilder (match -> UnionEncodeValue) -> Encoder match
 buildUnion (UnionBuilder toValue tsTypes_) =
     Encoder (toValue >> unwrapUnion) (TsType.union tsTypes_)
-
-
-{-| -}
-proTypeAnnotation : List ( String, List ( PropertyOptionality, String, TsType ) ) -> String
-proTypeAnnotation entries =
-    unionTypeDefToString entries
-
-
-{-| -}
-unionTypeDefToString : List ( String, List ( PropertyOptionality, String, TsType ) ) -> String
-unionTypeDefToString variants =
-    variants
-        |> List.map
-            (\( variantName, objectProperties ) ->
-                TsType.TypeObject
-                    (( TsType.Required, "tag", TsType.Literal (Encode.string variantName) )
-                        :: (objectProperties
-                                |> List.map
-                                    (\( propertyOptionality, propertyName, propertyType ) ->
-                                        ( propertyOptionality, propertyName, propertyType )
-                                    )
-                           )
-                    )
-            )
-        |> TsType.union
-        |> TsType.toString
