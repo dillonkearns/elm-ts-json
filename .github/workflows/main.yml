@@ -63,7 +63,7 @@ jobs:
       - uses: ouzi-dev/commit-status-updater@v1.1.0
         with:
           status: ${{ steps.docs.outcome }}
-          url: https://elm-doc-preview.netlify.app/?repo=dillonkearns%2Felm-ts-interop&version=${GITHUB_REF##*/}
+          url: "https://elm-doc-preview.netlify.app/?repo=dillonkearns%2Felm-ts-interop&version=${{ GITHUB_REF##*/ }}"
           description: "View Elm doc preview."
           name: "Elm Docs"
       # - name: Elm Publish
