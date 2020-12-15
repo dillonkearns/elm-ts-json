@@ -60,7 +60,7 @@ jobs:
         id: docs
         continue-on-error: true
         run: npx --no-install elm make --docs docs.json
-      - uses: nelonoel/branch-name@v1
+      - uses: nelonoel/branch-name@v1.0.1
       - uses: ouzi-dev/commit-status-updater@v1.1.0
         with:
           status: ${{ steps.docs.outcome }}
