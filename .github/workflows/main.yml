@@ -60,10 +60,11 @@ jobs:
         id: docs
         continue-on-error: true
         run: npx --no-install elm make --docs docs.json
+      - uses: nelonoel/branch-name@v1
       - uses: ouzi-dev/commit-status-updater@v1.1.0
         with:
           status: ${{ steps.docs.outcome }}
-          url: https://elm-doc-preview.netlify.app/?repo=dillonkearns%2Felm-ts-interop&version=${GITHUB_REF##*/}
+          url: "https://elm-doc-preview.netlify.app/?repo=dillonkearns%2Felm-ts-interop&version=${BRANCH_NAME}"
           description: "View Elm doc preview."
           name: "Elm Docs"
       # - name: Elm Publish
