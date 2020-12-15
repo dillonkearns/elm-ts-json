@@ -60,15 +60,20 @@ jobs:
         id: docs
         continue-on-error: true
         run: npx --no-install elm make --docs docs.json
-      - name: Extract branch name
-        shell: bash
-        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
-        id: extract_branch
-      - uses: nelonoel/branch-name@v1.0.1
+      - name: Commit generated docs for elm-doc-preview
+        uses: EndBug/add-and-commit@v5
+        with:
+          add: "docs.json"
+          author_name: GitHub Actions
+          author_email: dillon@incrementalelm.com
+          message: "Update docs.json from CI for elm-doc-preview."
+          push: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: ouzi-dev/commit-status-updater@v1.1.0
         with:
           status: ${{ steps.docs.outcome }}
-          url: "https://elm-doc-preview.netlify.app/?repo=dillonkearns%2Felm-ts-interop&version=${{ steps.extract_branch.outputs.branch }}"
+          url: "https://elm-doc-preview.netlify.app/?repo=dillonkearns%2Felm-ts-interop&version=${{ env.GITHUB_SHA }}"
           description: "View Elm doc preview."
           name: "Elm Docs"
       # - name: Elm Publish
@@ -82,13 +87,3 @@ jobs:
       #   uses: JS-DevTools/npm-publish@v1
       #   with:
       #     token: ${{ secrets.NPM_TOKEN }}
-      - name: Generate elm-doc-preview
-        uses: EndBug/add-and-commit@v5
-        with:
-          add: "docs.json"
-          author_name: GitHub Actions
-          author_email: dillon@incrementalelm.com
-          message: "Update docs.json from CI for elm-doc-preview."
-          push: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
