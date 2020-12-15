@@ -91,7 +91,8 @@ map mapFn (Decoder innerDecoder innerType) =
     Decoder (Decode.map mapFn innerDecoder) innerType
 
 
-{-| -}
+{-| See <https://github.com/elm-community/json-extra/blob/2.0.0/docs/andMap.md>.
+-}
 andMap : Decoder a -> Decoder (a -> b) -> Decoder b
 andMap =
     map2 (|>)
