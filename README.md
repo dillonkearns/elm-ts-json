@@ -1,5 +1,7 @@
 # `elm-ts-interop` [![Build Status](https://github.com/dillonkearns/elm-ts-interop/workflows/CI/badge.svg)](https://github.com/dillonkearns/elm-ts-interop/actions?query=branch%3Amain)
 
+Build up Encoders/Decoders with well-defined TypeScript types! This is different than the approach of [`elm-typescript-interop`](https://github.com/dillonkearns/elm-typescript-interop).
+
 ## Example
 
 ```elm
