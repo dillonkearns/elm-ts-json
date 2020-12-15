@@ -2,6 +2,8 @@
 
 Build up Encoders/Decoders with well-defined TypeScript types! This is different than the approach of [`elm-typescript-interop`](https://github.com/dillonkearns/elm-typescript-interop).
 
+You can read more about the redesign in this article: [Types Without Borders Isn't Enough](https://functional.christmas/2020/11).
+
 ## Example
 
 ```elm
