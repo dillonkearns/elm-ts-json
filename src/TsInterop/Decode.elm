@@ -9,9 +9,9 @@ module TsInterop.Decode exposing
     , map2, andMap
     , map3, map4, map5, map6, map7, map8
     , literal, null
+    , andThen, AndThenContinuation, andThenInit, andThenDecoder
     , value, unknownAndThen
     , decoder, tsTypeToString
-    , AndThenContinuation, andThen, andThenDecoder, andThenInit
     )
 
 {-|
@@ -60,7 +60,7 @@ module TsInterop.Decode exposing
 
 ## Continuation
 
-@docs staticAndThen, StaticAndThen, init, option
+@docs andThen, AndThenContinuation, andThenInit, andThenDecoder
 
 
 ## elm/json Decoder Escape Hatches
