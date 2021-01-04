@@ -134,7 +134,27 @@ andMap =
     map2 (|>)
 
 
-{-| -}
+{-| You can use `map2`, `map3`, etc. to build up decoders that have somewhat clearer error messages if something goes wrong.
+Some people prefer the pipeline style using `andMap` as it has fewer parentheses and you don't have to change the number when
+you add a new field. It's a matter of personal preference.
+
+    import Json.Decode
+
+
+    runExample : String -> Decoder value -> { decoded : Result String value, tsType : String }
+    runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
+
+    type alias Country = { name : String, populationInMillions : Int }
+
+    map2 Country
+        (field "name" string)
+        (field "population" (int |> map (\totalPopulation -> floor (toFloat totalPopulation / 1000000.0))))
+        |> runExample """ {"name": "Norway", "population":5328000} """
+    --> { decoded = Ok { name = "Norway", populationInMillions = 5 }
+    --> , tsType = "{ name : string; population : number }"
+    --> }
+
+-}
 map2 : (value1 -> value2 -> mapped) -> Decoder value1 -> Decoder value2 -> Decoder mapped
 map2 mapFn (Decoder innerDecoder1 innerType1) (Decoder innerDecoder2 innerType2) =
     Decoder (Decode.map2 mapFn innerDecoder1 innerDecoder2) (TsType.intersect innerType1 innerType2)
