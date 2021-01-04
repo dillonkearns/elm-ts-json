@@ -88,13 +88,46 @@ import Json.Encode as Encode
 import TsType exposing (TsType(..))
 
 
-{-| -}
+{-|
+
+    import Json.Decode
+
+
+    runExample : String -> Decoder value -> { decoded : Result String value, tsType : String }
+    runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
+
+    int
+        |> map String.fromInt
+        |> runExample "1000"
+    --> { decoded = Ok "1000"
+    --> , tsType = "number"
+    --> }
+
+-}
 map : (value -> mapped) -> Decoder value -> Decoder mapped
 map mapFn (Decoder innerDecoder innerType) =
     Decoder (Decode.map mapFn innerDecoder) innerType
 
 
-{-| See <https://github.com/elm-community/json-extra/blob/2.0.0/docs/andMap.md>.
+{-| This is useful for building up a decoder with multiple fields in a pipeline style.
+See <https://github.com/elm-community/json-extra/blob/2.0.0/docs/andMap.md>.
+
+    import Json.Decode
+
+
+    runExample : String -> Decoder value -> { decoded : Result String value, tsType : String }
+    runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
+
+    type alias Country = { name : String, populationInMillions : Int }
+
+    succeed Country
+        |> andMap (field "name" string)
+        |> andMap (field "population" (int |> map (\totalPopulation -> floor (toFloat totalPopulation / 1000000.0))))
+        |> runExample """ {"name": "Norway", "population":5328000} """
+    --> { decoded = Ok { name = "Norway", populationInMillions = 5 }
+    --> , tsType = "{ population : number; name : string }"
+    --> }
+
 -}
 andMap : Decoder a -> Decoder (a -> b) -> Decoder b
 andMap =
