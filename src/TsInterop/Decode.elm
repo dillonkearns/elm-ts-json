@@ -9,9 +9,9 @@ module TsInterop.Decode exposing
     , map2, andMap
     , map3, map4, map5, map6, map7, map8
     , literal, null
-    , staticAndThen, StaticAndThen, init, option
     , value, unknownAndThen
     , decoder, tsTypeToString
+    , AndThenContinuation, andThen, andThenDecoder, andThenInit
     )
 
 {-|
@@ -387,54 +387,54 @@ unknownAndThen function (Decoder innerDecoder innerType) =
     runExample : String -> Decoder value -> { decoded : Result String value, tsType : String }
     runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
 
-    example : StaticAndThen (Int -> Decoder String)
+    example : AndThenContinuation (Int -> Decoder String)
     example =
-        init
+        andThenInit
             (\v1Decoder v2PlusDecoder version ->
                 case version of
                     1 -> v1Decoder
                     _ -> v2PlusDecoder
             )
-            |> option (field "payload" string)
-            |> option (at [ "data", "payload" ] string)
+            |> andThenDecoder (field "payload" string)
+            |> andThenDecoder (at [ "data", "payload" ] string)
 
 
-    field "version" int |> staticAndThen example
+    field "version" int |> andThen example
         |> runExample """{"version": 1, "payload": "Hello"}"""
     --> { decoded = Ok "Hello"
     --> , tsType = "({ version : number } & { data : { payload : string } } | { payload : string })"
     --> }
 
 -}
-staticAndThen : StaticAndThen (value -> Decoder decodesTo) -> Decoder value -> Decoder decodesTo
-staticAndThen (StaticAndThen function tsTypes) (Decoder innerDecoder innerType) =
+andThen : AndThenContinuation (value -> Decoder decodesTo) -> Decoder value -> Decoder decodesTo
+andThen (StaticAndThen function tsTypes) (Decoder innerDecoder innerType) =
     let
-        andThenDecoder =
+        andThenDecoder_ =
             \value_ ->
                 case function value_ of
                     Decoder innerDecoder_ innerType_ ->
                         innerDecoder_
     in
-    Decoder (Decode.andThen andThenDecoder innerDecoder) (TsType.intersect innerType (TsType.union tsTypes))
+    Decoder (Decode.andThen andThenDecoder_ innerDecoder) (TsType.intersect innerType (TsType.union tsTypes))
 
 
 {-| -}
-type StaticAndThen a
+type AndThenContinuation a
     = StaticAndThen a (List TsType)
 
 
 {-| -}
-init : a -> StaticAndThen a
-init constructor =
+andThenInit : a -> AndThenContinuation a
+andThenInit constructor =
     StaticAndThen constructor []
 
 
 {-| -}
-option :
+andThenDecoder :
     Decoder value
-    -> StaticAndThen (Decoder value -> final)
-    -> StaticAndThen final
-option ((Decoder _ innerType) as interopDecoder) (StaticAndThen function tsTypes) =
+    -> AndThenContinuation (Decoder value -> final)
+    -> AndThenContinuation final
+andThenDecoder ((Decoder _ innerType) as interopDecoder) (StaticAndThen function tsTypes) =
     StaticAndThen (function interopDecoder) (innerType :: tsTypes)
 
 

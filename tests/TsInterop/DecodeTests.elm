@@ -96,6 +96,29 @@ suite =
                         , output = Just 123
                         , typeDef = "string"
                         }
+        , test "andThen" <|
+            \() ->
+                let
+                    example =
+                        andThenInit
+                            (\v1Decoder v2PlusDecoder version ->
+                                case version of
+                                    1 ->
+                                        v1Decoder
+
+                                    _ ->
+                                        v2PlusDecoder
+                            )
+                            |> andThenDecoder (field "payload" string)
+                            |> andThenDecoder (at [ "data", "payload" ] string)
+                in
+                field "version" int
+                    |> andThen example
+                    |> expectDecodes
+                        { input = """{"version": 1, "payload": "Hello"}"""
+                        , output = "Hello"
+                        , typeDef = "({ version : number } & { data : { payload : string } } | { payload : string })"
+                        }
         , test "succeed" <|
             \() ->
                 succeed "Hello"
