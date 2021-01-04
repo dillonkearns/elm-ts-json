@@ -57,19 +57,10 @@ jobs:
       # - name: prettier
       #   run: npx --no-install prettier --check .
       - name: Build elm docs
+        id: docs
+        continue-on-error: true
         run: npx --no-install elm make --docs docs.json
-      # - name: Elm Publish
-      #   uses: dillonkearns/elm-publish-action@1.0.1
-      #   with:
-      #     github-token: ${{ secrets.GITHUB_TOKEN }}
-      #     path-to-elm: ./node_modules/.bin/elm
-      # - run: npm run build
-      # - id: npm-publish
-      #   if: github.ref == 'refs/heads/main'
-      #   uses: JS-DevTools/npm-publish@v1
-      #   with:
-      #     token: ${{ secrets.NPM_TOKEN }}
-      - name: Generate elm-doc-preview
+      - name: Commit generated docs for elm-doc-preview
         uses: EndBug/add-and-commit@v5
         with:
           add: "docs.json"
@@ -79,3 +70,20 @@ jobs:
           push: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: ouzi-dev/commit-status-updater@v1.1.0
+        with:
+          status: ${{ steps.docs.outcome }}
+          url: "https://elm-doc-preview.netlify.app/?repo=dillonkearns%2Felm-ts-interop&version=${{ github.SHA }}"
+          description: "View Elm doc preview."
+          name: "Elm Docs"
+      - name: Elm Publish
+        uses: dillonkearns/elm-publish-action@use-main-or-master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-elm: ./node_modules/.bin/elm
+      # - run: npm run build
+      # - id: npm-publish
+      #   if: github.ref == 'refs/heads/main'
+      #   uses: JS-DevTools/npm-publish@v1
+      #   with:
+      #     token: ${{ secrets.NPM_TOKEN }}
