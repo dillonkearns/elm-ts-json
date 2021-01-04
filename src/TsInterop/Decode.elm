@@ -277,7 +277,21 @@ type Decoder value
     = Decoder (Decode.Decoder value) TsType
 
 
-{-| -}
+{-|
+
+    import Json.Decode
+
+
+    runExample : String -> Decoder value -> { decoded : Result String value, tsType : String }
+    runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
+
+    succeed "abcdefg"
+        |> runExample "12345"
+    --> { decoded = Ok "abcdefg"
+    --> , tsType = "JsonValue"
+    --> }
+
+-}
 succeed : value -> Decoder value
 succeed value_ =
     Decoder (Decode.succeed value_) TsType.Unknown
@@ -598,19 +612,61 @@ at location (Decoder innerDecoder innerType) =
         )
 
 
-{-| -}
+{-|
+
+    import Json.Decode
+
+
+    runExample : String -> Decoder value -> { decoded : Result String value, tsType : String }
+    runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
+
+    string
+        |> runExample """ "Hello!" """
+    --> { decoded = Ok "Hello!"
+    --> , tsType = "string"
+    --> }
+
+-}
 string : Decoder String
 string =
     Decoder Decode.string String
 
 
-{-| -}
+{-|
+
+    import Json.Decode
+
+
+    runExample : String -> Decoder value -> { decoded : Result String value, tsType : String }
+    runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
+
+    int
+        |> runExample "1000"
+    --> { decoded = Ok 1000
+    --> , tsType = "number"
+    --> }
+
+-}
 int : Decoder Int
 int =
     Decoder Decode.int TsType.Number
 
 
-{-| -}
+{-|
+
+    import Json.Decode
+
+
+    runExample : String -> Decoder value -> { decoded : Result String value, tsType : String }
+    runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
+
+    float
+        |> runExample "1.23"
+    --> { decoded = Ok 1.23
+    --> , tsType = "number"
+    --> }
+
+-}
 float : Decoder Float
 float =
     Decoder Decode.float TsType.Number
