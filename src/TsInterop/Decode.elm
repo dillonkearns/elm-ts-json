@@ -369,7 +369,7 @@ succeed value_ =
     )
         |> runExample """{"version": 1, "payload": "Hello"}"""
     --> { decoded = Ok "Hello"
-    --> , tsType = "{ version : number }"
+    --> , tsType = "JsonValue"
     --> }
 
 -}
@@ -382,7 +382,7 @@ andThen function (Decoder innerDecoder innerType) =
                     Decoder innerDecoder_ innerType_ ->
                         innerDecoder_
     in
-    Decoder (Decode.andThen andThenDecoder innerDecoder) innerType
+    Decoder (Decode.andThen andThenDecoder innerDecoder) TsType.Unknown
 
 
 {-|
