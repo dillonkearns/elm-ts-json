@@ -9,8 +9,8 @@ module TsInterop.Decode exposing
     , map2, andMap
     , map3, map4, map5, map6, map7, map8
     , literal, null
-    , andThen, staticAndThen, StaticAndThen, init, option
-    , value
+    , staticAndThen, StaticAndThen, init, option
+    , value, unknownAndThen
     , decoder, tsTypeToString
     )
 
@@ -60,16 +60,16 @@ module TsInterop.Decode exposing
 
 ## Continuation
 
-@docs andThen, staticAndThen, StaticAndThen, init, option
+@docs staticAndThen, StaticAndThen, init, option
 
 
-## Using elm/json Decoders
+## elm/json Decoder Escape Hatches
 
 If you have an existing decoder, you can use it with an `unknown` type in TypeScript.
 
 You can also decode an arbitrary JSON value as with `elm/json`, and then use `elm/json` to process it further.
 
-@docs value
+@docs value, unknownAndThen
 
 
 ## Using Decoders
@@ -353,19 +353,20 @@ succeed value_ =
     Decoder (Decode.succeed value_) TsType.Unknown
 
 
-{-|
+{-| If you need to run a regular JSON Decoder in an `andThen`, you can use this function, but it will yield a Decoder
+with an unknown TypeScript type.
 
-    import Json.Decode
+    import Json.Decode as JD
 
 
     runExample : String -> Decoder value -> { decoded : Result String value, tsType : String }
-    runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
+    runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = JD.decodeString (decoder interopDecoder) inputJson |> Result.mapError JD.errorToString }
 
-    field "version" int |> andThen (\versionNumber ->
+    field "version" int |> unknownAndThen (\versionNumber ->
         if versionNumber == 1 then
-          field "payload" string
+          JD.field "payload" JD.string
         else
-          at [ "data", "payload" ] string
+          JD.at [ "data", "payload" ] JD.string
     )
         |> runExample """{"version": 1, "payload": "Hello"}"""
     --> { decoded = Ok "Hello"
@@ -373,16 +374,9 @@ succeed value_ =
     --> }
 
 -}
-andThen : (a -> Decoder b) -> Decoder a -> Decoder b
-andThen function (Decoder innerDecoder innerType) =
-    let
-        andThenDecoder =
-            \value_ ->
-                case function value_ of
-                    Decoder innerDecoder_ innerType_ ->
-                        innerDecoder_
-    in
-    Decoder (Decode.andThen andThenDecoder innerDecoder) TsType.Unknown
+unknownAndThen : (a -> Decode.Decoder b) -> Decoder a -> Decoder b
+unknownAndThen function (Decoder innerDecoder innerType) =
+    Decoder (Decode.andThen function innerDecoder) TsType.Unknown
 
 
 {-|
