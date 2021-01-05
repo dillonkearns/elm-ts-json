@@ -616,31 +616,6 @@ variant (Encoder encoder_ tsType_) (UnionBuilder builder tsTypes_) =
         (tsType_ :: tsTypes_)
 
 
-
---variant1 :
---    String
---    -> Encoder arg1
---    -> CustomBuilder ((arg1 -> Encode.Value) -> match)
---    -> CustomBuilder match
---variant1 variantName (Encoder encoder_ tsType_) (CustomBuilder builder tsTypes) =
---    let
---        mappedEncoder : arg1 -> Encode.Value
---        mappedEncoder arg1 =
---            Encode.object
---                [ ( "tag", Encode.string variantName )
---                , ( "args"
---                  , Encode.list identity
---                        [ arg1 |> encoder_ ]
---                  )
---                ]
---    in
---    CustomBuilder
---        (builder mappedEncoder)
---        (
---        TypeObject [ ( "tag", Literal (Encode.string variantName) ) ]
---        ( variantName, Positional [ tsType_ ] ) :: tsTypes)
-
-
 {-| -}
 variantLiteral :
     Encode.Value
