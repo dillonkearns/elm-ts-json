@@ -506,10 +506,16 @@ into a TypeScript Tuple.
     --> , tsType = "[ string, boolean ]"
     --> }
 
-If your target Elm value isn't a tuple, you can just map it into one
+If your target Elm value isn't a tuple, you can map it into one
 
     { name = "John Smith", isAdmin = False }
-        |> runExample ( tuple string bool |> map (\{name, isAdmin} -> ( name, isAdmin )) )
+        |> runExample
+            (tuple string bool
+                |> map
+                    (\{ name, isAdmin } ->
+                        ( name, isAdmin )
+                    )
+            )
     --> { output = """["John Smith",false]"""
     --> , tsType = "[ string, boolean ]"
     --> }
