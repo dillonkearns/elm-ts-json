@@ -419,7 +419,12 @@ andThen (StaticAndThen function tsTypes) (Decoder innerDecoder innerType) =
     Decoder (Decode.andThen andThenDecoder_ innerDecoder) (TsType.intersect innerType (TsType.union tsTypes))
 
 
-{-| -}
+{-| This type allows you to combine all the possible Decoders you could run in an `andThen` continuation.
+
+This API allows you to define all possible Decoders you might use up front, so that all possible TypeScript types
+the continuation could decode are known _after building up the decoder instead of after running the decoder._
+
+-}
 type AndThenContinuation a
     = StaticAndThen a (List TsType)
 
