@@ -3,14 +3,14 @@ module TsInterop.Decode exposing
     , succeed, fail
     , bool, float, int, string
     , field, at
-    , list, array, nullable, oneOf, dict, keyValuePairs, oneOrMore, maybe, optionalField, optionalNullableField
+    , list, array, nullable, oneOf, dict, keyValuePairs, oneOrMore, optionalField, optionalNullableField
     , index
     , map
     , map2, andMap
     , map3, map4, map5, map6, map7, map8
     , literal, null
     , andThen, AndThenContinuation, andThenInit, andThenDecoder
-    , value, unknownAndThen
+    , value, unknownAndThen, maybe
     , decoder, tsTypeToString
     )
 
@@ -36,7 +36,7 @@ module TsInterop.Decode exposing
 
 ## Composite Types
 
-@docs list, array, nullable, oneOf, dict, keyValuePairs, oneOrMore, maybe, optionalField, optionalNullableField
+@docs list, array, nullable, oneOf, dict, keyValuePairs, oneOrMore, optionalField, optionalNullableField
 
 @docs index
 
@@ -69,7 +69,7 @@ If you have an existing decoder, you can use it with an `unknown` type in TypeSc
 
 You can also decode an arbitrary JSON value as with `elm/json`, and then use `elm/json` to process it further.
 
-@docs value, unknownAndThen
+@docs value, unknownAndThen, maybe
 
 
 ## Using Decoders
@@ -512,7 +512,13 @@ null value_ =
     literal value_ Encode.null
 
 
-{-|
+{-| This function is somewhat risky in that it could cover up a failing Decoder by turning it into a `Nothing`. In
+some cases, this may be what you're looking for, but if you're trying to deal with optional fields, it's safer to use
+`optionalField` and it will give you better type information. See the `thisShouldBeABoolean` example below. In that example,
+we're decoding a JSON value which should have been a `boolean` but instead is a `string`. We'd like the `Decoder` to fail
+to let us know it wasn't able to process the value correctly, but instead it covers up the failure and decodes to `Nothing`.
+
+So use this `Decoder` with care!
 
     import Json.Decode
 
@@ -521,7 +527,14 @@ null value_ =
     runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
 
     json : String
-    json = """{ "name": "tom", "age": 42 }"""
+    json = """{ "name": "tom", "age": 42, "thisShouldBeABoolean": "true" }"""
+
+
+    -- WARNING: uh oh, this may not be the desired behavior!
+    maybe (field "thisShouldBeABoolean" bool) |> runExample json
+    --> { decoded = Ok Nothing
+    --> , tsType = "{ thisShouldBeABoolean : boolean } | JsonValue"
+    --> }
 
     maybe (field "height" float) |> runExample json
     --> { decoded = Ok Nothing
@@ -529,7 +542,7 @@ null value_ =
     --> }
 
     field "height" (maybe float) |> runExample json
-    --> { decoded = Err "Problem with the given value:\n\n{\n        \"name\": \"tom\",\n        \"age\": 42\n    }\n\nExpecting an OBJECT with a field named `height`"
+    --> { decoded = Err "Problem with the given value:\n\n{\n        \"name\": \"tom\",\n        \"age\": 42,\n        \"thisShouldBeABoolean\": \"true\"\n    }\n\nExpecting an OBJECT with a field named `height`"
     --> , tsType = "{ height : number | JsonValue }"
     --> }
 
@@ -542,7 +555,10 @@ maybe interopDecoder =
         ]
 
 
-{-|
+{-| This is a safer (and more explicit) way to deal with optional fields compared to `maybe`. It may seem that wrapping
+a `field` `Decoder` in a `maybe` `Decoder` achieves the same behavior, but the key difference is that the `maybe` version
+will convert a failing decoder on a value that is present into `Nothing`, as if it wasn't present. Often what you want
+is for the malformed version to fail, which is exactly what this function will do.
 
     import Json.Decode
 
