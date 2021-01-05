@@ -468,7 +468,21 @@ maybe encoder_ =
         |> buildUnion
 
 
-{-| -}
+{-|
+
+    import Json.Encode as Encode
+
+    runExample : Encoder encodeFrom -> encodeFrom -> { output : String, tsType : String }
+    runExample encoder_ encodeFrom = { tsType = typeDef encoder_ , output = encodeFrom |> encoder encoder_ |> Encode.encode 0 }
+
+
+    [ "Hello", "World!" ]
+        |> runExample ( list string )
+    --> { output = """["Hello","World!"]"""
+    --> , tsType = "string[]"
+    --> }
+
+-}
 list : Encoder a -> Encoder (List a)
 list (Encoder encodeFn tsType_) =
     Encoder
@@ -476,7 +490,31 @@ list (Encoder encodeFn tsType_) =
         (TsType.List tsType_)
 
 
-{-| -}
+{-| TypeScript [has a Tuple type](https://www.typescriptlang.org/docs/handbook/basic-types.html#tuple). It's just an
+Array with 2 items, and the TypeScript compiler will enforce that there are two elements. You can turn an Elm Tuple
+into a TypeScript Tuple.
+
+    import Json.Encode as Encode
+
+    runExample : Encoder encodeFrom -> encodeFrom -> { output : String, tsType : String }
+    runExample encoder_ encodeFrom = { tsType = typeDef encoder_ , output = encodeFrom |> encoder encoder_ |> Encode.encode 0 }
+
+
+    ( "John Doe", True )
+        |> runExample ( tuple string bool )
+    --> { output = """["John Doe",true]"""
+    --> , tsType = "[ string, boolean ]"
+    --> }
+
+If your target Elm value isn't a tuple, you can just map it into one
+
+    { name = "John Smith", isAdmin = False }
+        |> runExample ( tuple string bool |> map (\{name, isAdmin} -> ( name, isAdmin )) )
+    --> { output = """["John Smith",false]"""
+    --> , tsType = "[ string, boolean ]"
+    --> }
+
+-}
 tuple : Encoder value1 -> Encoder value2 -> Encoder ( value1, value2 )
 tuple (Encoder encodeFn1 tsType1) (Encoder encodeFn2 tsType2) =
     Encoder
@@ -486,7 +524,21 @@ tuple (Encoder encodeFn1 tsType1) (Encoder encodeFn2 tsType2) =
         (TsType.Tuple [ tsType1, tsType2 ] Nothing)
 
 
-{-| -}
+{-| Same as `tuple`, but with Triples
+
+    import Json.Encode as Encode
+
+    runExample : Encoder encodeFrom -> encodeFrom -> { output : String, tsType : String }
+    runExample encoder_ encodeFrom = { tsType = typeDef encoder_ , output = encodeFrom |> encoder encoder_ |> Encode.encode 0 }
+
+
+    ( "Jane Doe", True, 123 )
+        |> runExample ( triple string bool int )
+    --> { output = """["Jane Doe",true,123]"""
+    --> , tsType = "[ string, boolean, number ]"
+    --> }
+
+-}
 triple : Encoder value1 -> Encoder value2 -> Encoder value3 -> Encoder ( value1, value2, value3 )
 triple (Encoder encodeFn1 tsType1) (Encoder encodeFn2 tsType2) (Encoder encodeFn3 tsType3) =
     Encoder
