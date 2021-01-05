@@ -328,7 +328,8 @@ oneOf decoders =
         )
 
 
-{-| -}
+{-| Just like a `Decoder` in `elm/json`, except these `Decoder`s track the TypeScript types that they can successfully handle.
+-}
 type Decoder value
     = Decoder (Decode.Decoder value) TsType
 
