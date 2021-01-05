@@ -12,6 +12,73 @@ module TsInterop.Encode exposing
 
 {-|
 
+@docs Encoder
+
+
+## Built-Ins
+
+@docs string, int, float, literal, bool, null
+
+
+## Transforming
+
+@docs map
+
+
+## Objects
+
+@docs object, Property, optional, required
+
+
+## Union Types
+
+    import Json.Encode as Encode
+
+    runExample : Encoder encodeFrom -> encodeFrom -> { output : String, tsType : String }
+    runExample encoder_ encodeFrom =
+        { tsType = typeDef encoder_, output = encodeFrom |> encoder encoder_ |> Encode.encode 0 }
+
+    type ToJs
+        = SendPresenceHeartbeat
+        | Alert String
+
+    unionEncoder : Encoder ToJs
+    unionEncoder =
+        union
+            (\vSendHeartbeat vAlert value ->
+                case value of
+                    SendPresenceHeartbeat ->
+                        vSendHeartbeat
+                    Alert string ->
+                        vAlert string
+            )
+            |> variant0 "SendPresenceHeartbeat"
+            |> variantObject "Alert" [ required "message" identity string ]
+            |> buildUnion
+
+
+    Alert "Hello TypeScript!"
+            |> runExample unionEncoder
+    --> { output = """{"tag":"Alert","message":"Hello TypeScript!"}"""
+    --> , tsType = """{ tag : "Alert"; message : string } | { tag : "SendPresenceHeartbeat" }"""
+    --> }
+
+@docs UnionBuilder, union, variant, variant0, variantObject, variantLiteral, buildUnion
+
+@docs UnionEncodeValue
+
+
+## Collections
+
+@docs list, dict, tuple, triple, maybe
+
+
+## In-Depth Example
+
+You can use `elm-ts-interop` to build up `Encoder`s that have the same TypeScript type as a web platform API expects.
+Here's an example that we could use to call the [`scrollIntoView`](https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView)
+method on a DOM Element.
+
     import Json.Encode
 
     type Behavior
@@ -77,66 +144,6 @@ module TsInterop.Encode exposing
     --> { output = """{"behavior":"auto","block":"nearest"}"""
     --> , tsType = """{ behavior? : "smooth" | "auto"; block? : "nearest" | "end" | "center" | "start"; inline? : "nearest" | "end" | "center" | "start" }"""
     --> }
-
-@docs Encoder
-
-
-## Built-Ins
-
-@docs string, int, float, literal, bool, null
-
-
-## Transforming
-
-@docs map
-
-
-## Objects
-
-@docs object, Property, optional, required
-
-
-## Union Types
-
-    import Json.Encode as Encode
-
-    runExample : Encoder encodeFrom -> encodeFrom -> { output : String, tsType : String }
-    runExample encoder_ encodeFrom =
-        { tsType = typeDef encoder_, output = encodeFrom |> encoder encoder_ |> Encode.encode 0 }
-
-    type ToJs
-        = SendPresenceHeartbeat
-        | Alert String
-
-    unionEncoder : Encoder ToJs
-    unionEncoder =
-        union
-            (\vSendHeartbeat vAlert value ->
-                case value of
-                    SendPresenceHeartbeat ->
-                        vSendHeartbeat
-                    Alert string ->
-                        vAlert string
-            )
-            |> variant0 "SendPresenceHeartbeat"
-            |> variantObject "Alert" [ required "message" identity string ]
-            |> buildUnion
-
-
-    Alert "Hello TypeScript!"
-            |> runExample unionEncoder
-    --> { output = """{"tag":"Alert","message":"Hello TypeScript!"}"""
-    --> , tsType = """{ tag : "Alert"; message : string } | { tag : "SendPresenceHeartbeat" }"""
-    --> }
-
-@docs UnionBuilder, union, variant, variant0, variantObject, variantLiteral, buildUnion
-
-@docs UnionEncodeValue
-
-
-## Collections
-
-@docs list, dict, tuple, triple, maybe
 
 
 ## Escape Hatch
