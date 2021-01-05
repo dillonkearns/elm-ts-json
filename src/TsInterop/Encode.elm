@@ -558,7 +558,22 @@ triple (Encoder encodeFn1 tsType1) (Encoder encodeFn2 tsType2) (Encoder encodeFn
         (TsType.Tuple [ tsType1, tsType2, tsType3 ] Nothing)
 
 
-{-| -}
+{-|
+
+    import Json.Encode as Encode
+    import Dict
+
+    runExample : Encoder encodeFrom -> encodeFrom -> { output : String, tsType : String }
+    runExample encoder_ encodeFrom = { tsType = typeDef encoder_ , output = encodeFrom |> encoder encoder_ |> Encode.encode 0 }
+
+
+    Dict.fromList [ ( "a", "123" ), ( "b", "456" ) ]
+        |> runExample ( dict identity string )
+    --> { output = """{"a":"123","b":"456"}"""
+    --> , tsType = "{ [key: string]: string }"
+    --> }
+
+-}
 dict : (comparableKey -> String) -> Encoder value -> Encoder (Dict comparableKey value)
 dict keyToString (Encoder encodeFn tsType_) =
     Encoder
