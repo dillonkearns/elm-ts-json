@@ -395,12 +395,6 @@ However you name them, you can map those Elm types into equivalent TypeScript va
     --> , tsType = "404 | 200"
     --> }
 
-    ()
-        |> runExample (literal (Encode.string "admin"))
-    --> { output = "\"admin\""
-    --> , tsType = "\"admin\""
-    --> }
-
 -}
 literal : Encode.Value -> Encoder a
 literal literalValue =
