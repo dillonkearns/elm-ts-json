@@ -158,7 +158,48 @@ import Json.Encode as Encode
 import TsType exposing (PropertyOptionality, TsType)
 
 
-{-| -}
+{-| Similar to a `Json.Encode.Value` in `elm/json`. However, a `TsInterop.Encode.Encoder` in `elm-ts-interop` has this key difference from an `elm/json` `Encode.Value`:
+
+  - `elm/json` `Json.Encode.Value` - a value representing an encoded JSON value
+  - `elm-ts-interop` `TsInterop.Encode.Encoder` - a _function_ for turning an Elm value into an encoded JSON value. The `Encoder` itself has a definite TypeScript type, before you even pass in an Elm value to turn into JSON.
+
+So the `elm-ts-interop` `Encoder` expects a specific type of Elm value, and knows how to turn that Elm value into JSON.
+
+Let's compare the two with an example for encoding a first and last name.
+
+    import Json.Encode
+
+    runExample : Encoder encodeFrom -> encodeFrom -> { output : String, tsType : String }
+    runExample encoder_ encodeFrom =
+        { tsType = typeDef encoder_, output = encodeFrom |> encoder encoder_ |> Json.Encode.encode 0 }
+
+    elmJsonNameEncoder : { first : String, last : String }
+        -> Json.Encode.Value
+    elmJsonNameEncoder { first, last } =
+        Json.Encode.object
+            [ ( "first", Json.Encode.string first )
+            , ( "last", Json.Encode.string last )
+            ]
+
+    { first = "James", last = "Kirk" }
+            |> elmJsonNameEncoder
+            |> Json.Encode.encode 0
+    --> """{"first":"James","last":"Kirk"}"""
+
+    nameEncoder : Encoder { first : String, last : String }
+    nameEncoder =
+        object
+            [ required "first" .first string
+            , required "last" .last string
+            ]
+
+    { first = "James", last = "Kirk" }
+            |> runExample nameEncoder
+    --> { output = """{"first":"James","last":"Kirk"}"""
+    --> , tsType = "{ first : string; last : string }"
+    --> }
+
+-}
 type Encoder encodesFrom
     = Encoder (encodesFrom -> Encode.Value) TsType
 
