@@ -262,19 +262,61 @@ object propertyEncoders =
     Encoder encodeObject propertyTypes
 
 
-{-| -}
+{-|
+
+    import Json.Encode as Encode
+
+    runExample : Encoder encodeFrom -> encodeFrom -> { output : String, tsType : String }
+    runExample encoder_ encodeFrom = { tsType = typeDef encoder_ , output = encodeFrom |> encoder encoder_ |> Encode.encode 0 }
+
+
+    True
+        |> runExample bool
+    --> { output = "true"
+    --> , tsType = "boolean"
+    --> }
+
+-}
 bool : Encoder Bool
 bool =
     Encoder Encode.bool TsType.Boolean
 
 
-{-| -}
+{-|
+
+    import Json.Encode as Encode
+
+    runExample : Encoder encodeFrom -> encodeFrom -> { output : String, tsType : String }
+    runExample encoder_ encodeFrom = { tsType = typeDef encoder_ , output = encodeFrom |> encoder encoder_ |> Encode.encode 0 }
+
+
+    123
+        |> runExample int
+    --> { output = "123"
+    --> , tsType = "number"
+    --> }
+
+-}
 int : Encoder Int
 int =
     Encoder Encode.int TsType.Number
 
 
-{-| -}
+{-|
+
+    import Json.Encode as Encode
+
+    runExample : Encoder encodeFrom -> encodeFrom -> { output : String, tsType : String }
+    runExample encoder_ encodeFrom = { tsType = typeDef encoder_ , output = encodeFrom |> encoder encoder_ |> Encode.encode 0 }
+
+
+    123.45
+        |> runExample float
+    --> { output = "123.45"
+    --> , tsType = "number"
+    --> }
+
+-}
 float : Encoder Float
 float =
     Encoder Encode.float TsType.Number
@@ -308,7 +350,58 @@ string =
     Encoder Encode.string TsType.String
 
 
-{-| -}
+{-| TypeScript has the concept of a [Literal Type](https://www.typescriptlang.org/docs/handbook/literal-types.html).
+A LiteralType is just a JSON value. But unlike other types, it is constrained to a specific literal.
+
+For example, `200` is a Literal Value (not just any `number`). Elm doesn't have the concept of Literal Values that the
+compiler checks. But you can map Elm Custom Types nicely into TypeScript Literal Types. For example, you could represent
+HTTP Status Codes in TypeScript with a Union of Literal Types like this:
+
+```typescript
+type HttpStatus = 200 | 404 // you can include more status codes
+```
+
+The type `HttpStatus` is limited to that set of numbers. In Elm, you might represent that discrete set of values with
+a Custom Type, like so:
+
+    type HttpStatus
+        = Success
+        | NotFound
+
+However you name them, you can map those Elm types into equivalent TypeScript values using
+
+    import Json.Encode as Encode
+
+    runExample : Encoder encodeFrom -> encodeFrom -> { output : String, tsType : String }
+    runExample encoder_ encodeFrom = { tsType = typeDef encoder_ , output = encodeFrom |> encoder encoder_ |> Encode.encode 0 }
+
+    httpStatusEncoder : Encoder HttpStatus
+    httpStatusEncoder =
+        union
+            (\vSuccess vNotFound value ->
+                case value of
+                    Success ->
+                        vSuccess
+                    NotFound ->
+                        vNotFound
+            )
+            |> variantLiteral (Encode.int 200)
+            |> variantLiteral (Encode.int 404)
+            |> buildUnion
+
+    NotFound
+        |> runExample httpStatusEncoder
+    --> { output = "404"
+    --> , tsType = "404 | 200"
+    --> }
+
+    ()
+        |> runExample (literal (Encode.string "admin"))
+    --> { output = "\"admin\""
+    --> , tsType = "\"admin\""
+    --> }
+
+-}
 literal : Encode.Value -> Encoder a
 literal literalValue =
     Encoder (\_ -> literalValue) (TsType.Literal literalValue)
