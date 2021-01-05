@@ -286,7 +286,30 @@ map8 mapFn (Decoder innerDecoder1 innerType1) (Decoder innerDecoder2 innerType2)
         )
 
 
-{-| -}
+{-|
+
+    import Json.Decode
+
+
+    runExample : String -> Decoder value -> { decoded : Result String value, tsType : String }
+    runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
+
+    nullable int |> runExample "13"
+    --> { decoded = Ok (Just 13)
+    --> , tsType = "number | null"
+    --> }
+
+    nullable int |> runExample "null"
+    --> { decoded = Ok Nothing
+    --> , tsType = "number | null"
+    --> }
+
+    nullable int |> runExample "true"
+    --> { decoded = Err "Json.Decode.oneOf failed in the following 2 ways:\n\n\n\n(1) Problem with the given value:\n    \n    true\n    \n    Expecting null\n\n\n\n(2) Problem with the given value:\n    \n    true\n    \n    Expecting an INT"
+    --> , tsType = "number | null"
+    --> }
+
+-}
 nullable : Decoder value -> Decoder (Maybe value)
 nullable (Decoder innerDecoder innerType) =
     Decoder (Decode.nullable innerDecoder) (TsType.union [ innerType, TsType.null ])
