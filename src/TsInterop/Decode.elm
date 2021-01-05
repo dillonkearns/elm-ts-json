@@ -419,24 +419,6 @@ andThen (StaticAndThen function tsTypes) (Decoder innerDecoder innerType) =
     Decoder (Decode.andThen andThenDecoder_ innerDecoder) (TsType.intersect innerType (TsType.union tsTypes))
 
 
-
---type AndThenDecoder decodesTo
---    = AndThenDecoder (Decoder decodesTo)
---
---
---andThenNew : (startingValue -> AndThenDecoder decodesTo) -> Decoder startingValue -> Decoder decodesTo
---andThenNew function (Decoder innerDecoder innerType) =
---    let
---        andThenDecoder_ =
---            \value_ ->
---                case function value_ of
---                    Decoder innerDecoder_ innerType_ ->
---                        innerDecoder_
---    in
---    Decoder (Decode.andThen andThenDecoder_ innerDecoder) (TsType.intersect innerType (TsType.union tsTypes))
---
-
-
 {-| -}
 type AndThenContinuation a
     = StaticAndThen a (List TsType)
