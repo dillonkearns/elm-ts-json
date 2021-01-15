@@ -65,7 +65,7 @@ module TsInterop.Decode exposing
 
 ## elm/json Decoder Escape Hatches
 
-If you have an existing decoder, you can use it with an `unknown` type in TypeScript.
+If you have an existing decoder, you can use it with an [`unknown` type](https://mariusschulz.com/blog/the-unknown-type-in-typescript) in TypeScript.
 
 You can also decode an arbitrary JSON value as with `elm/json`, and then use `elm/json` to process it further.
 
@@ -134,8 +134,8 @@ andMap =
     map2 (|>)
 
 
-{-| You can use `map2`, `map3`, etc. to build up decoders that have somewhat clearer error messages if something goes wrong.
-Some people prefer the pipeline style using `andMap` as it has fewer parentheses and you don't have to change the number when
+{-| You can use [`map2`](#map2), [`map3`](#map3), etc. to build up decoders that have somewhat clearer error messages if something goes wrong.
+Some people prefer the pipeline style using [`andMap`](#andMap) as it has fewer parentheses and you don't have to change the number when
 you add a new field. It's a matter of personal preference.
 
     import Json.Decode
@@ -316,7 +316,7 @@ nullable (Decoder innerDecoder innerType) =
 
 
 {-| You can express quite a bit with `oneOf`! The resulting TypeScript types will be a Union of all the TypeScript types
-for each Decoder in the List.
+for each [`Decoder`](#Decoder) in the List.
 
     import Json.Decode
     import Json.Encode
@@ -442,7 +442,7 @@ andThen (StaticAndThen function tsTypes) (Decoder innerDecoder innerType) =
     Decoder (Decode.andThen andThenDecoder_ innerDecoder) (TsType.intersect innerType (TsType.union tsTypes))
 
 
-{-| This type allows you to combine all the possible Decoders you could run in an `andThen` continuation.
+{-| This type allows you to combine all the possible Decoders you could run in an [`andThen`](#andThen) continuation.
 
 This API allows you to define all possible Decoders you might use up front, so that all possible TypeScript types
 the continuation could decode are known _after building up the decoder instead of after running the decoder._
@@ -467,7 +467,22 @@ andThenDecoder ((Decoder _ innerType) as interopDecoder) (StaticAndThen function
     StaticAndThen (function interopDecoder) (innerType :: tsTypes)
 
 
-{-| -}
+{-| Gives you an escape hatch to decode to a plain `elm/json` `Json.Decode.Value`. This has the TypeScript type `unknown`.
+Avoid using this when possible.
+
+    import Json.Decode
+
+
+    runExample : String -> Decoder value -> { decoded : Result String value, tsType : String }
+    runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
+
+    value
+        |> runExample "Hello"
+    --> { decoded = (Json.Decode.decodeString Json.Decode.value "Hello" |> Result.mapError Json.Decode.errorToString)
+    --> , tsType = "JsonValue"
+    --> }
+
+-}
 value : Decoder Decode.Value
 value =
     Decoder Decode.value TsType.Unknown
@@ -514,7 +529,7 @@ null value_ =
 
 {-| This function is somewhat risky in that it could cover up a failing Decoder by turning it into a `Nothing`. In
 some cases, this may be what you're looking for, but if you're trying to deal with optional fields, it's safer to use
-`optionalField` and it will give you better type information. See the `thisShouldBeABoolean` example below. In that example,
+[`optionalField`](#optionalField) and it will give you better type information. See the `thisShouldBeABoolean` example below. In that example,
 we're decoding a JSON value which should have been a `boolean` but instead is a `string`. We'd like the `Decoder` to fail
 to let us know it wasn't able to process the value correctly, but instead it covers up the failure and decodes to `Nothing`.
 
@@ -555,8 +570,8 @@ maybe interopDecoder =
         ]
 
 
-{-| This is a safer (and more explicit) way to deal with optional fields compared to `maybe`. It may seem that wrapping
-a `field` `Decoder` in a `maybe` `Decoder` achieves the same behavior, but the key difference is that the `maybe` version
+{-| This is a safer (and more explicit) way to deal with optional fields compared to [`maybe`](#maybe). It may seem that wrapping
+a [`field`](#field) `Decoder` in a [`maybe`](#maybe) `Decoder` achieves the same behavior, but the key difference is that the `maybe` version
 will convert a failing decoder on a value that is present into `Nothing`, as if it wasn't present. Often what you want
 is for the malformed version to fail, which is exactly what this function will do.
 
@@ -889,7 +904,7 @@ oneOrMore constructor (Decoder innerDecoder innerType) =
     Decoder (Decode.oneOrMore constructor innerDecoder) (Tuple [ innerType ] (Just innerType))
 
 
-{-| Exactly the same as the `list` Decoder except that it wraps the decoded `List` into an Elm `Array`.
+{-| Exactly the same as the [`list`](#list) `Decoder` except that it wraps the decoded `List` into an Elm `Array`.
 -}
 array : Decoder value -> Decoder (Array value)
 array (Decoder innerDecoder innerType) =
