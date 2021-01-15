@@ -14,7 +14,61 @@ module TsInterop.Decode exposing
     , decoder, tsTypeToString
     )
 
-{-|
+{-| The `TsInterop.Decode` module is what you use for
+
+  - Flags
+  - ToElm Ports
+
+By building a Decoder with this API, you're also describing the source of truth for how to take a TypeScript type and
+turn it into an Elm type. Note that there is complete type information here just by using this API (no magic parsing or
+static analysis needed).
+
+Let's take this example:
+
+    import Json.Decode
+
+
+    runExample : String -> Decoder value -> { decoded : Result String value, tsType : String }
+    runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
+
+    int
+        |> map String.fromInt
+        |> runExample "1000"
+    --> { decoded = Ok "1000"
+    --> , tsType = "number"
+    --> }
+
+In this example, there are no differences from how we would write this with the `elm/json` API. Let's consider the type
+information from two different sides: the Elm types (which would be used in an Elm type annotation), and the TypeScript
+types (which show up in the TypeScript Declaration file that `elm-ts-interop` generates to gives you nice autocompletion and type information).
+
+
+### The Elm type information
+
+  - The initial `Decoder`, `TsInterop.Decode.int`, has the Elm type `TsInterop.Decode.Decoder Int`. So Elm knows
+    this `Decoder` will either fail, or give us an `Int`.
+  - When we call `TsInterop.Decode.map String.fromInt`, the Elm type information changes. We're mapping with
+    `String.fromInt : String -> Int`. So that means we'll now decode into an Elm `String` instead of an `Int`. And that's
+    the final Elm type we'll end up with.
+
+
+### The TypeScript type information
+
+  - `TsInterop.Decode.int` expects a number from TypeScript.
+  - `TsInterop.Decode.map` applies a function to the decoded Elm value, but it doesn't change what we expect from TypeScript.
+    So we still expect a `number` from TypeScript. And we're done, so that's the final type we expect to receive from TypeScript.
+
+
+### Summary
+
+We can apply more Decoders, like `TsInterop.Decode.list`, for example, to expect an array of that type from TypeScript,
+and a `List` of that Elm type. From there, it's just the same concept. **All the type information about the type that Elm will decode into, and the type that Elm expects from TypeScript, is built up as you build a Decoder**.
+
+That means that the source of truth is the Decoder itself. Note that the Decoder doesn't specify just the Elm format, or just the TypeScript type as the source
+of truth. It specifies **how to turn a TypeScript type into an Elm type as the source of truth**. That means that
+
+  - You can change the decoder to change either type independently
+  - The two sides (Elm and TS) will always be in sync (as long as you are re-running the `elm-ts-interop` CLI at the appropriate time)
 
 
 ## Decoders
