@@ -1,6 +1,6 @@
 module Ports exposing (..)
 
-import TsInterop.Encode as Encoder exposing (property)
+import TsInterop.Encode as Encoder exposing (required, string)
 
 
 type ToJs
@@ -20,5 +20,5 @@ toElm =
                     vAlert string
         )
         |> Encoder.variant0 "SendPresenceHeartbeat"
-        |> Encoder.variantObject "Alert" [ ( "message", Encoder.string ) ]
+        |> Encoder.variantObject "Alert" [ required "message" identity string ]
         |> Encoder.buildUnion
