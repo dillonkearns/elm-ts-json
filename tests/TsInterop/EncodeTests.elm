@@ -267,8 +267,8 @@ type ToJs
 
 
 expectEncodes :
-    { output : String, input : encodesFrom, typeDef : String }
-    -> Encoder encodesFrom
+    { output : String, input : input, typeDef : String }
+    -> Encoder input
     -> Expectation
 expectEncodes expect interop =
     expect.input
@@ -281,9 +281,9 @@ expectEncodes expect interop =
 
 
 expectEncodesNew :
-    List ( encodesFrom, String )
+    List ( input, String )
     -> String
-    -> Encoder encodesFrom
+    -> Encoder input
     -> Expectation
 expectEncodesNew cases expectedTypeDef interop =
     ()

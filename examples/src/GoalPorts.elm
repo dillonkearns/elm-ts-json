@@ -4,8 +4,8 @@ import ScrollIntoView
 import TsInterop.Encode as Encode exposing (Encoder, Property, optional, required)
 
 
-type alias Properties encodesFrom =
-    List (Property encodesFrom)
+type alias Properties input =
+    List (Property input)
 
 
 {-| Generates `Ports.sendPresenceHeartbeat : Cmd msg`

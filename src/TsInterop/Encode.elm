@@ -43,9 +43,9 @@ TypeScript Declaration file for your compiled Elm code.
 
     import Json.Encode as Encode
 
-    runExample : Encoder encodeFrom -> encodeFrom -> { output : String, tsType : String }
-    runExample encoder_ encodeFrom =
-        { tsType = typeDef encoder_, output = encodeFrom |> encoder encoder_ |> Encode.encode 0 }
+    runExample : Encoder input -> input -> { output : String, tsType : String }
+    runExample encoder_ input =
+        { tsType = typeDef encoder_, output = input |> encoder encoder_ |> Encode.encode 0 }
 
     type ToJs
         = SendPresenceHeartbeat
@@ -185,9 +185,9 @@ Let's compare the two with an example for encoding a first and last name.
 
     import Json.Encode
 
-    runExample : Encoder encodeFrom -> encodeFrom -> { output : String, tsType : String }
-    runExample encoder_ encodeFrom =
-        { tsType = typeDef encoder_, output = encodeFrom |> encoder encoder_ |> Json.Encode.encode 0 }
+    runExample : Encoder input -> input -> { output : String, tsType : String }
+    runExample encoder_ input =
+        { tsType = typeDef encoder_, output = input |> encoder encoder_ |> Json.Encode.encode 0 }
 
     elmJsonNameEncoder : { first : String, last : String }
         -> Json.Encode.Value
@@ -216,44 +216,44 @@ Let's compare the two with an example for encoding a first and last name.
     --> }
 
 -}
-type Encoder encodesFrom
-    = Encoder (encodesFrom -> Encode.Value) TsType
+type Encoder input
+    = Encoder (input -> Encode.Value) TsType
 
 
 {-| -}
-encoder : Encoder encodesFrom -> (encodesFrom -> Encode.Value)
-encoder (Encoder encodeFn _) encodesFrom =
-    encodeFn encodesFrom
+encoder : Encoder input -> (input -> Encode.Value)
+encoder (Encoder encodeFn _) input =
+    encodeFn input
 
 
 {-| -}
-typeDef : Encoder encodesFrom -> String
+typeDef : Encoder input -> String
 typeDef (Encoder _ tsType_) =
     TsType.toString tsType_
 
 
 {-| -}
-type Property encodesFrom
-    = Property PropertyOptionality String (encodesFrom -> Maybe Encode.Value) TsType
+type Property input
+    = Property PropertyOptionality String (input -> Maybe Encode.Value) TsType
 
 
 {-| -}
-optional : String -> (encodesFrom -> Maybe value) -> Encoder value -> Property encodesFrom
+optional : String -> (input -> Maybe value) -> Encoder value -> Property input
 optional name getter (Encoder encodeFn tsType_) =
     Property
         TsType.Optional
         name
-        (\encodesFrom -> encodesFrom |> getter |> Maybe.map encodeFn)
+        (\input -> input |> getter |> Maybe.map encodeFn)
         tsType_
 
 
 {-| -}
-required : String -> (encodesFrom -> value) -> Encoder value -> Property encodesFrom
+required : String -> (input -> value) -> Encoder value -> Property input
 required name getter (Encoder encodeFn tsType_) =
     Property
         TsType.Required
         name
-        (\encodesFrom -> encodesFrom |> getter |> encodeFn |> Just)
+        (\input -> input |> getter |> encodeFn |> Just)
         tsType_
 
 
@@ -261,9 +261,9 @@ required name getter (Encoder encodeFn tsType_) =
 
     import Json.Encode as Encode
 
-    runExample : Encoder encodeFrom -> encodeFrom -> { output : String, tsType : String }
-    runExample encoder_ encodeFrom =
-        { tsType = typeDef encoder_, output = encodeFrom |> encoder encoder_ |> Encode.encode 0 }
+    runExample : Encoder input -> input -> { output : String, tsType : String }
+    runExample encoder_ input =
+        { tsType = typeDef encoder_, output = input |> encoder encoder_ |> Encode.encode 0 }
 
     nameEncoder : Encoder { first : String, last : String }
     nameEncoder =
@@ -307,11 +307,11 @@ object propertyEncoders =
                 |> TsType.TypeObject
 
         encodeObject : value -> Encode.Value
-        encodeObject encodesFrom =
+        encodeObject input =
             propertyEncoders
                 |> List.filterMap
                     (\(Property _ propertyName encodeFn _) ->
-                        encodeFn encodesFrom
+                        encodeFn input
                             |> Maybe.map
                                 (\encoded ->
                                     ( propertyName, encoded )
@@ -326,8 +326,8 @@ object propertyEncoders =
 
     import Json.Encode as Encode
 
-    runExample : Encoder encodeFrom -> encodeFrom -> { output : String, tsType : String }
-    runExample encoder_ encodeFrom = { tsType = typeDef encoder_ , output = encodeFrom |> encoder encoder_ |> Encode.encode 0 }
+    runExample : Encoder input -> input -> { output : String, tsType : String }
+    runExample encoder_ input = { tsType = typeDef encoder_ , output = input |> encoder encoder_ |> Encode.encode 0 }
 
 
     True
@@ -346,8 +346,8 @@ bool =
 
     import Json.Encode as Encode
 
-    runExample : Encoder encodeFrom -> encodeFrom -> { output : String, tsType : String }
-    runExample encoder_ encodeFrom = { tsType = typeDef encoder_ , output = encodeFrom |> encoder encoder_ |> Encode.encode 0 }
+    runExample : Encoder input -> input -> { output : String, tsType : String }
+    runExample encoder_ input = { tsType = typeDef encoder_ , output = input |> encoder encoder_ |> Encode.encode 0 }
 
 
     123
@@ -366,8 +366,8 @@ int =
 
     import Json.Encode as Encode
 
-    runExample : Encoder encodeFrom -> encodeFrom -> { output : String, tsType : String }
-    runExample encoder_ encodeFrom = { tsType = typeDef encoder_ , output = encodeFrom |> encoder encoder_ |> Encode.encode 0 }
+    runExample : Encoder input -> input -> { output : String, tsType : String }
+    runExample encoder_ input = { tsType = typeDef encoder_ , output = input |> encoder encoder_ |> Encode.encode 0 }
 
 
     123.45
@@ -386,8 +386,8 @@ float =
 
     import Json.Encode as Encode
 
-    runExample : Encoder encodeFrom -> encodeFrom -> { output : String, tsType : String }
-    runExample encoder_ encodeFrom = { tsType = typeDef encoder_ , output = encodeFrom |> encoder encoder_ |> Encode.encode 0 }
+    runExample : Encoder input -> input -> { output : String, tsType : String }
+    runExample encoder_ input = { tsType = typeDef encoder_ , output = input |> encoder encoder_ |> Encode.encode 0 }
 
 
     "Hello!"
@@ -432,8 +432,8 @@ However you name them, you can map those Elm types into equivalent TypeScript va
 
     import Json.Encode as Encode
 
-    runExample : Encoder encodeFrom -> encodeFrom -> { output : String, tsType : String }
-    runExample encoder_ encodeFrom = { tsType = typeDef encoder_ , output = encodeFrom |> encoder encoder_ |> Encode.encode 0 }
+    runExample : Encoder input -> input -> { output : String, tsType : String }
+    runExample encoder_ input = { tsType = typeDef encoder_ , output = input |> encoder encoder_ |> Encode.encode 0 }
 
     httpStatusEncoder : Encoder HttpStatus
     httpStatusEncoder =
@@ -465,8 +465,8 @@ literal literalValue =
 
     import Json.Encode as Encode
 
-    runExample : Encoder encodeFrom -> encodeFrom -> { output : String, tsType : String }
-    runExample encoder_ encodeFrom = { tsType = typeDef encoder_ , output = encodeFrom |> encoder encoder_ |> Encode.encode 0 }
+    runExample : Encoder input -> input -> { output : String, tsType : String }
+    runExample encoder_ input = { tsType = typeDef encoder_ , output = input |> encoder encoder_ |> Encode.encode 0 }
 
 
     ()
@@ -502,8 +502,8 @@ if we're passing in some nested data and need to get a field
 
     import Json.Encode as Encode
 
-    runExample : encodeFrom -> Encoder encodeFrom -> { output : String, tsType : String }
-    runExample encodeFrom encoder_ = { tsType = typeDef encoder_ , output = encodeFrom |> encoder encoder_ |> Encode.encode 0 }
+    runExample : input -> Encoder input -> { output : String, tsType : String }
+    runExample input encoder_ = { tsType = typeDef encoder_ , output = input |> encoder encoder_ |> Encode.encode 0 }
 
     picardData : { data : { first : String, last : String, rank : String } }
     picardData = { data = { first = "Jean Luc", last = "Picard", rank = "Captain" } }
@@ -550,7 +550,7 @@ turn our input data into a String (because `string` is `Encoder String`).
     --> }
 
 -}
-map : (encodesFrom -> value) -> Encoder value -> Encoder encodesFrom
+map : (input -> value) -> Encoder value -> Encoder input
 map getter (Encoder encodeFn tsType_) =
     Encoder (\value_ -> value_ |> getter |> encodeFn) tsType_
 
@@ -559,8 +559,8 @@ map getter (Encoder encodeFn tsType_) =
 
     import Json.Encode as Encode
 
-    runExample : Encoder encodeFrom -> encodeFrom -> { output : String, tsType : String }
-    runExample encoder_ encodeFrom = { tsType = typeDef encoder_ , output = encodeFrom |> encoder encoder_ |> Encode.encode 0 }
+    runExample : Encoder input -> input -> { output : String, tsType : String }
+    runExample encoder_ input = { tsType = typeDef encoder_ , output = input |> encoder encoder_ |> Encode.encode 0 }
 
 
     Just 42
@@ -590,8 +590,8 @@ maybe encoder_ =
 
     import Json.Encode as Encode
 
-    runExample : Encoder encodeFrom -> encodeFrom -> { output : String, tsType : String }
-    runExample encoder_ encodeFrom = { tsType = typeDef encoder_ , output = encodeFrom |> encoder encoder_ |> Encode.encode 0 }
+    runExample : Encoder input -> input -> { output : String, tsType : String }
+    runExample encoder_ input = { tsType = typeDef encoder_ , output = input |> encoder encoder_ |> Encode.encode 0 }
 
 
     [ "Hello", "World!" ]
@@ -604,7 +604,7 @@ maybe encoder_ =
 list : Encoder a -> Encoder (List a)
 list (Encoder encodeFn tsType_) =
     Encoder
-        (\encodesFrom -> Encode.list encodeFn encodesFrom)
+        (\input -> Encode.list encodeFn input)
         (TsType.List tsType_)
 
 
@@ -614,8 +614,8 @@ into a TypeScript Tuple.
 
     import Json.Encode as Encode
 
-    runExample : Encoder encodeFrom -> encodeFrom -> { output : String, tsType : String }
-    runExample encoder_ encodeFrom = { tsType = typeDef encoder_ , output = encodeFrom |> encoder encoder_ |> Encode.encode 0 }
+    runExample : Encoder input -> input -> { output : String, tsType : String }
+    runExample encoder_ input = { tsType = typeDef encoder_ , output = input |> encoder encoder_ |> Encode.encode 0 }
 
 
     ( "John Doe", True )
@@ -652,8 +652,8 @@ tuple (Encoder encodeFn1 tsType1) (Encoder encodeFn2 tsType2) =
 
     import Json.Encode as Encode
 
-    runExample : Encoder encodeFrom -> encodeFrom -> { output : String, tsType : String }
-    runExample encoder_ encodeFrom = { tsType = typeDef encoder_ , output = encodeFrom |> encoder encoder_ |> Encode.encode 0 }
+    runExample : Encoder input -> input -> { output : String, tsType : String }
+    runExample encoder_ input = { tsType = typeDef encoder_ , output = input |> encoder encoder_ |> Encode.encode 0 }
 
 
     ( "Jane Doe", True, 123 )
@@ -681,8 +681,8 @@ triple (Encoder encodeFn1 tsType1) (Encoder encodeFn2 tsType2) (Encoder encodeFn
     import Json.Encode as Encode
     import Dict
 
-    runExample : Encoder encodeFrom -> encodeFrom -> { output : String, tsType : String }
-    runExample encoder_ encodeFrom = { tsType = typeDef encoder_ , output = encodeFrom |> encoder encoder_ |> Encode.encode 0 }
+    runExample : Encoder input -> input -> { output : String, tsType : String }
+    runExample encoder_ input = { tsType = typeDef encoder_ , output = input |> encoder encoder_ |> Encode.encode 0 }
 
 
     Dict.fromList [ ( "a", "123" ), ( "b", "456" ) ]
@@ -695,7 +695,7 @@ triple (Encoder encodeFn1 tsType1) (Encoder encodeFn2 tsType2) (Encoder encodeFn
 dict : (comparableKey -> String) -> Encoder value -> Encoder (Dict comparableKey value)
 dict keyToString (Encoder encodeFn tsType_) =
     Encoder
-        (\encodesFrom -> Encode.dict keyToString encodeFn encodesFrom)
+        (\input -> Encode.dict keyToString encodeFn input)
         (TsType.ObjectWithUniformValues tsType_)
 
 
@@ -740,8 +740,8 @@ variant0 variantName (UnionBuilder builder tsTypes_) =
 
 {-| -}
 variant :
-    Encoder encodesFrom
-    -> UnionBuilder ((encodesFrom -> UnionEncodeValue) -> match)
+    Encoder input
+    -> UnionBuilder ((input -> UnionEncodeValue) -> match)
     -> UnionBuilder match
 variant (Encoder encoder_ tsType_) (UnionBuilder builder tsTypes_) =
     UnionBuilder

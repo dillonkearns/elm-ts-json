@@ -69,7 +69,7 @@ individualThing ( tagName, encoderType ) =
 port fromElm : Json.Encode.Value -> Cmd msg
 
 
-encodePro : String -> Encode.Encoder encodesFrom -> encodesFrom -> Json.Encode.Value
+encodePro : String -> Encode.Encoder input -> input -> Json.Encode.Value
 encodePro tagName encoder =
     Encode.object
         [ Encode.required tagName identity encoder
