@@ -238,7 +238,7 @@ type Property input
 
 
 {-| -}
-optional : String -> (input -> Maybe value) -> Encoder value -> Property input
+optional : String -> (input -> Maybe mappedInput) -> Encoder mappedInput -> Property input
 optional name getter (Encoder encodeFn tsType_) =
     Property
         TsType.Optional
@@ -248,7 +248,7 @@ optional name getter (Encoder encodeFn tsType_) =
 
 
 {-| -}
-required : String -> (input -> value) -> Encoder value -> Property input
+required : String -> (input -> mappedInput) -> Encoder mappedInput -> Property input
 required name getter (Encoder encodeFn tsType_) =
     Property
         TsType.Required
@@ -294,7 +294,7 @@ required name getter (Encoder encodeFn tsType_) =
     --> }
 
 -}
-object : List (Property value) -> Encoder value
+object : List (Property input) -> Encoder input
 object propertyEncoders =
     let
         propertyTypes : TsType
@@ -306,7 +306,7 @@ object propertyEncoders =
                     )
                 |> TsType.TypeObject
 
-        encodeObject : value -> Encode.Value
+        encodeObject : input -> Encode.Value
         encodeObject input =
             propertyEncoders
                 |> List.filterMap
@@ -411,7 +411,7 @@ string =
 
 
 {-| TypeScript has the concept of a [Literal Type](https://www.typescriptlang.org/docs/handbook/literal-types.html).
-A LiteralType is just a JSON value. But unlike other types, it is constrained to a specific literal.
+A Literal Type is just a JSON value. But unlike other types, it is constrained to a specific literal.
 
 For example, `200` is a Literal Value (not just any `number`). Elm doesn't have the concept of Literal Values that the
 compiler checks. But you can map Elm Custom Types nicely into TypeScript Literal Types. For example, you could represent
@@ -428,7 +428,7 @@ a Custom Type, like so:
         = Success
         | NotFound
 
-However you name them, you can map those Elm types into equivalent TypeScript values using
+However you name them, you can map those Elm types into equivalent TypeScript values using a union of literals like so:
 
     import Json.Encode as Encode
 
@@ -476,7 +476,7 @@ literal literalValue =
     --> }
 
 -}
-null : Encoder value
+null : Encoder input
 null =
     literal Encode.null
 
@@ -491,7 +491,7 @@ value =
     Encoder identity TsType.Unknown
 
 
-{-| An [`Encoder`](#Encoder) represents turning an Elm value into a JSON value that has a TypeScript type information.
+{-| An [`Encoder`](#Encoder) represents turning an Elm input value into a JSON value that has a TypeScript type information.
 
 This `map` function allows you to transform the **Elm input value**, not the resulting JSON output. So this will feel
 different than using [`TsInterop.Decode.map`](TsInterop.Decode#map), or other familiar `map` functions
@@ -550,9 +550,9 @@ turn our input data into a String (because `string` is `Encoder String`).
     --> }
 
 -}
-map : (input -> value) -> Encoder value -> Encoder input
-map getter (Encoder encodeFn tsType_) =
-    Encoder (\value_ -> value_ |> getter |> encodeFn) tsType_
+map : (input -> mappedInput) -> Encoder mappedInput -> Encoder input
+map mapFunction (Encoder encodeFn tsType_) =
+    Encoder (\input -> input |> mapFunction |> encodeFn) tsType_
 
 
 {-|
@@ -639,11 +639,11 @@ If your target Elm value isn't a tuple, you can [`map`](#map) it into one
     --> }
 
 -}
-tuple : Encoder value1 -> Encoder value2 -> Encoder ( value1, value2 )
+tuple : Encoder input1 -> Encoder input2 -> Encoder ( input1, input2 )
 tuple (Encoder encodeFn1 tsType1) (Encoder encodeFn2 tsType2) =
     Encoder
-        (\( value1, value2 ) ->
-            Encode.list identity [ encodeFn1 value1, encodeFn2 value2 ]
+        (\( input1, input2 ) ->
+            Encode.list identity [ encodeFn1 input1, encodeFn2 input2 ]
         )
         (TsType.Tuple [ tsType1, tsType2 ] Nothing)
 
@@ -663,14 +663,14 @@ tuple (Encoder encodeFn1 tsType1) (Encoder encodeFn2 tsType2) =
     --> }
 
 -}
-triple : Encoder value1 -> Encoder value2 -> Encoder value3 -> Encoder ( value1, value2, value3 )
+triple : Encoder input1 -> Encoder input2 -> Encoder input3 -> Encoder ( input1, input2, input3 )
 triple (Encoder encodeFn1 tsType1) (Encoder encodeFn2 tsType2) (Encoder encodeFn3 tsType3) =
     Encoder
-        (\( value1, value2, value3 ) ->
+        (\( input1, input2, input3 ) ->
             Encode.list identity
-                [ encodeFn1 value1
-                , encodeFn2 value2
-                , encodeFn3 value3
+                [ encodeFn1 input1
+                , encodeFn2 input2
+                , encodeFn3 input3
                 ]
         )
         (TsType.Tuple [ tsType1, tsType2, tsType3 ] Nothing)
@@ -692,7 +692,7 @@ triple (Encoder encodeFn1 tsType1) (Encoder encodeFn2 tsType2) (Encoder encodeFn
     --> }
 
 -}
-dict : (comparableKey -> String) -> Encoder value -> Encoder (Dict comparableKey value)
+dict : (comparableKey -> String) -> Encoder input -> Encoder (Dict comparableKey input)
 dict keyToString (Encoder encodeFn tsType_) =
     Encoder
         (\input -> Encode.dict keyToString encodeFn input)
