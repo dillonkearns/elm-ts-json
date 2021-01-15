@@ -10,7 +10,16 @@ module TsInterop.Encode exposing
     , typeDef, encoder
     )
 
-{-|
+{-| The `TsInterop.Encode` module is what you use for
+
+  - FromElm Ports
+
+See [TsInterop.Decode](TsInterop.Decode) for the API used for Flags and ToElm Ports.
+
+By building an `Encoder` with this API, you're also describing the source of truth for taking an Elm type and
+turning it into a JSON value with a TypeScript type. Note that there is no magic involved in this process.
+The `elm-ts-interop` CLI simply gets the [`typeDef`](#typeDef) from your `Encoder` to generate the
+TypeScript Declaration file for your compiled Elm code.
 
 @docs Encoder
 
@@ -475,14 +484,72 @@ null =
 {-| This is an escape hatch that allows you to send arbitrary JSON data. The type will
 be JSON in TypeScript, so you won't have any specific type information. In some cases,
 this is fine, but in general you'll usually want to use other functions in this module
-to build up a well-typed `Encoder`.
+to build up a well-typed [`Encoder`](#Encoder).
 -}
 value : Encoder Encode.Value
 value =
     Encoder identity TsType.Unknown
 
 
-{-| -}
+{-| An [`Encoder`](#Encoder) represents turning an Elm value into a JSON value that has a TypeScript type information.
+
+This `map` function allows you to transform the **Elm input value**, not the resulting JSON output. So this will feel
+different than using [`TsInterop.Decode.map`](TsInterop.Decode#map), or other familiar `map` functions
+that transform an **Elm output value**, such as `Maybe.map` and `Json.Decode.map`.
+
+Think of `TsInterop.Encode.map` as changing **how to get the value that you want to turn into JSON**. For example,
+if we're passing in some nested data and need to get a field
+
+    import Json.Encode as Encode
+
+    runExample : encodeFrom -> Encoder encodeFrom -> { output : String, tsType : String }
+    runExample encodeFrom encoder_ = { tsType = typeDef encoder_ , output = encodeFrom |> encoder encoder_ |> Encode.encode 0 }
+
+    picardData : { data : { first : String, last : String, rank : String } }
+    picardData = { data = { first = "Jean Luc", last = "Picard", rank = "Captain" } }
+
+
+    string
+        |> map .rank
+        |> map .data
+        |> runExample picardData
+    --> { output = "\"Captain\""
+    --> , tsType = "string"
+    --> }
+
+Let's consider how the types change as we `map` the `Encoder`.
+
+    encoder1 : Encoder String
+    encoder1 =
+        string
+
+    encoder2 : Encoder { rank : String }
+    encoder2 =
+        string
+            |> map .rank
+
+    encoder3 : Encoder { data : { rank : String } }
+    encoder3 =
+        string
+            |> map .rank
+            |> map .data
+
+    (encoder1, encoder2, encoder3) |> always ()
+    --> ()
+
+So `map` is applying a function that tells the Encoder how to get the data it needs.
+
+If we want to send a string through a port, then we start with a [`string`](#string) `Encoder`. Then we `map` it to
+turn our input data into a String (because `string` is `Encoder String`).
+
+    string
+        |> map (\outerRecord -> outerRecord.data.first ++ " " ++ outerRecord.data.last)
+        |> runExample picardData
+    --> { output = "\"Jean Luc Picard\""
+    --> , tsType = "string"
+    --> }
+
+-}
 map : (encodesFrom -> value) -> Encoder value -> Encoder encodesFrom
 map getter (Encoder encodeFn tsType_) =
     Encoder (\value_ -> value_ |> getter |> encodeFn) tsType_
@@ -557,7 +624,7 @@ into a TypeScript Tuple.
     --> , tsType = "[ string, boolean ]"
     --> }
 
-If your target Elm value isn't a tuple, you can map it into one
+If your target Elm value isn't a tuple, you can [`map`](#map) it into one
 
     { name = "John Smith", isAdmin = False }
         |> runExample
@@ -581,7 +648,7 @@ tuple (Encoder encodeFn1 tsType1) (Encoder encodeFn2 tsType2) =
         (TsType.Tuple [ tsType1, tsType2 ] Nothing)
 
 
-{-| Same as `tuple`, but with Triples
+{-| Same as [`tuple`](#tuple), but with Triples
 
     import Json.Encode as Encode
 
