@@ -130,10 +130,10 @@ suite =
                         |> Expect.equal """{"type":"string"}"""
             , test "number" <|
                 \() ->
-                    TsType.String
+                    TsType.Number
                         |> TsType.toJsonSchema
                         |> Json.Encode.encode 0
-                        |> Expect.equal """{"type":"string"}"""
+                        |> Expect.equal """{"type":"number"}"""
             , test "object with no required properties" <|
                 \() ->
                     TsType.TypeObject
