@@ -355,6 +355,12 @@ toJsonSchema tsType =
                 [ ( "type", Encode.string "integer" )
                 ]
 
+        List listType ->
+            Encode.object
+                [ ( "type", Encode.string "array" )
+                , ( "items", toJsonSchema listType )
+                ]
+
         TypeObject properties ->
             let
                 -- according to the json schema spec, we can only include
