@@ -824,6 +824,14 @@ string =
     --> , tsType = "number"
     --> }
 
+    Floating point values will cause a decoding error.
+
+    int
+        |> runExample "1.23"
+    --> { decoded = Err "Problem with the given value:\n\n1.23\n\nExpecting an INT"
+    --> , tsType = "number"
+    --> }
+
 -}
 int : Decoder Int
 int =
