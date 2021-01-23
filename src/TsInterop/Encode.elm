@@ -359,7 +359,7 @@ bool =
 -}
 int : Encoder Int
 int =
-    Encoder Encode.int TsType.Number
+    Encoder Encode.int TsType.Integer
 
 
 {-|

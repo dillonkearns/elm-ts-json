@@ -30,6 +30,7 @@ type PropertyOptionality
 
 type TsType
     = String
+    | Integer
     | Number
     | Boolean
     | List TsType
@@ -167,6 +168,9 @@ isPrimitive tsType =
         Number ->
             True
 
+        Integer ->
+            True
+
         String ->
             True
 
@@ -201,6 +205,9 @@ toString tsType_ =
 
         String ->
             "string"
+
+        Integer ->
+            "number"
 
         Number ->
             "number"

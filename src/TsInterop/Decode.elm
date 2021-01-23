@@ -835,7 +835,7 @@ string =
 -}
 int : Decoder Int
 int =
-    Decoder Decode.int TsType.Number
+    Decoder Decode.int TsType.Integer
 
 
 {-|
