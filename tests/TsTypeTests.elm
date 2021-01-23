@@ -134,6 +134,26 @@ suite =
                         |> TsType.toJsonSchema
                         |> Json.Encode.encode 0
                         |> Expect.equal """{"type":"string"}"""
+            , test "object with no required properties" <|
+                \() ->
+                    TsType.TypeObject
+                        [ ( TsType.Optional, "first", TsType.String )
+                        , ( TsType.Optional, "middle", TsType.String )
+                        , ( TsType.Optional, "last", TsType.String )
+                        ]
+                        |> TsType.toJsonSchema
+                        |> Json.Encode.encode 0
+                        |> Expect.equal """{"type":"object","properties":{"first":{"type":"string"},"middle":{"type":"string"},"last":{"type":"string"}}}"""
+            , test "object with some required properties" <|
+                \() ->
+                    TsType.TypeObject
+                        [ ( TsType.Required, "first", TsType.String )
+                        , ( TsType.Optional, "middle", TsType.String )
+                        , ( TsType.Required, "last", TsType.String )
+                        ]
+                        |> TsType.toJsonSchema
+                        |> Json.Encode.encode 0
+                        |> Expect.equal """{"type":"object","properties":{"first":{"type":"string"},"middle":{"type":"string"},"last":{"type":"string"}},"required":["first","last"]}"""
             ]
         ]
 

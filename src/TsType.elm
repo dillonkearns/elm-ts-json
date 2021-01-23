@@ -11,6 +11,7 @@ module TsType exposing
 
 import Dict
 import Json.Encode as Encode
+import List.NonEmpty
 
 
 deduplicateBy : (a -> comparable) -> List a -> List a
@@ -336,6 +337,45 @@ toJsonSchema tsType =
             Encode.object
                 [ ( "type", Encode.string "string" )
                 ]
+
+        TypeObject properties ->
+            let
+                -- according to the json schema spec, we can only include
+                -- the "required" field if it is non-empty
+                -- <https://json-schema.org/understanding-json-schema/reference/object.html#required-properties>
+                requiredProperties : Maybe (List.NonEmpty.NonEmpty String)
+                requiredProperties =
+                    properties
+                        |> List.filterMap
+                            (\( requiredProperty, name, propertyType ) ->
+                                case requiredProperty of
+                                    Required ->
+                                        Just name
+
+                                    Optional ->
+                                        Nothing
+                            )
+                        |> List.NonEmpty.fromList
+            in
+            Encode.object
+                ([ Just ( "type", Encode.string "object" )
+                 , Just
+                    ( "properties"
+                    , Encode.object
+                        (properties
+                            |> List.map
+                                (\( requiredProperty, name, propertyType ) ->
+                                    ( name, toJsonSchema propertyType )
+                                )
+                        )
+                    )
+                 , requiredProperties
+                    |> Maybe.map List.NonEmpty.toList
+                    |> Maybe.map
+                        (\requiredProps -> ( "required", Encode.list Encode.string requiredProps ))
+                 ]
+                    |> List.filterMap identity
+                )
 
         _ ->
             Encode.string "Unhandled"
