@@ -2,6 +2,7 @@ module TsType exposing
     ( PropertyOptionality(..)
     , TsType(..)
     , intersect
+    , isPrimitive
     , null
     , toJsonSchema
     , toString

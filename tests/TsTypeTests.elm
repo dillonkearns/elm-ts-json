@@ -128,6 +128,12 @@ suite =
                         |> TsType.toJsonSchema
                         |> Json.Encode.encode 0
                         |> Expect.equal """{"type":"string"}"""
+            , test "number" <|
+                \() ->
+                    TsType.String
+                        |> TsType.toJsonSchema
+                        |> Json.Encode.encode 0
+                        |> Expect.equal """{"type":"string"}"""
             ]
         ]
 
