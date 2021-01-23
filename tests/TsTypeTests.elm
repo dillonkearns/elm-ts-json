@@ -1,6 +1,7 @@
 module TsTypeTests exposing (suite)
 
 import Expect
+import Json.Encode
 import Test exposing (..)
 import TsType exposing (PropertyOptionality(..), TsType(..))
 
@@ -119,6 +120,14 @@ suite =
                         )
                         |> TsType.toString
                         |> Expect.equal "(string | number)[]"
+            ]
+        , describe "toJsonSchema"
+            [ test "string" <|
+                \() ->
+                    TsType.String
+                        |> TsType.toJsonSchema
+                        |> Json.Encode.encode 0
+                        |> Expect.equal """{"type":"string"}"""
             ]
         ]
 

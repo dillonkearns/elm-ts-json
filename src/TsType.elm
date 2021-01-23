@@ -3,6 +3,7 @@ module TsType exposing
     , TsType(..)
     , intersect
     , null
+    , toJsonSchema
     , toString
     , union
     )
@@ -325,3 +326,15 @@ parenthesizeToString type_ =
 
     else
         toString type_
+
+
+toJsonSchema : TsType -> Encode.Value
+toJsonSchema tsType =
+    case tsType of
+        String ->
+            Encode.object
+                [ ( "type", Encode.string "string" )
+                ]
+
+        _ ->
+            Encode.string "Unhandled"
