@@ -400,5 +400,25 @@ toJsonSchema tsType =
                     |> List.filterMap identity
                 )
 
+        Boolean ->
+            Encode.object
+                [ ( "type", Encode.string "boolean" )
+                ]
+
+        Unknown ->
+            Encode.object []
+
         _ ->
-            Encode.string "Unhandled"
+            Encode.string "unhandled"
+
+
+
+--ArrayIndex (int, tsType) list ->
+--Tuple tsTypes maybeTsType ->
+--Literal value ->
+--ObjectWithUniformValues tsType ->
+--Union (tsType, tsTypes) ->
+--TsNever ->
+--Intersection tsTypes ->
+--_ ->
+--    Encode.string "Unhandled"
