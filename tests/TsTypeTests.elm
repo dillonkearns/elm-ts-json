@@ -134,6 +134,12 @@ suite =
                         |> TsType.toJsonSchema
                         |> Json.Encode.encode 0
                         |> Expect.equal """{"type":"number"}"""
+            , test "integer" <|
+                \() ->
+                    TsType.Integer
+                        |> TsType.toJsonSchema
+                        |> Json.Encode.encode 0
+                        |> Expect.equal """{"type":"integer"}"""
             , test "object with no required properties" <|
                 \() ->
                     TsType.TypeObject

@@ -350,6 +350,11 @@ toJsonSchema tsType =
                 [ ( "type", Encode.string "number" )
                 ]
 
+        Integer ->
+            Encode.object
+                [ ( "type", Encode.string "integer" )
+                ]
+
         TypeObject properties ->
             let
                 -- according to the json schema spec, we can only include
