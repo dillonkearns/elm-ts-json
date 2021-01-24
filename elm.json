@@ -16,9 +16,6 @@
     },
     "test-dependencies": {
         "elm/html": "1.0.0 <= v < 2.0.0",
-        "elm-explorations/test": "1.0.0 <= v < 2.0.0",
-        "lattyware/elm-json-diff": "1.0.0 <= v < 2.0.0",
-        "norpan/elm-json-patch": "1.0.1 <= v < 2.0.0",
-        "1602/json-value": "3.0.1 <= v < 4.0.0"
+        "elm-explorations/test": "1.0.0 <= v < 2.0.0"
     }
 }
