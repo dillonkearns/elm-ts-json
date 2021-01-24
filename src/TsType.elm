@@ -442,12 +442,19 @@ toJsonSchema tsType =
                         , ( "type", Encode.string "array" )
                         ]
 
+        Intersection intersectionTypes ->
+            Encode.object
+                [ ( "allOf"
+                  , intersectionTypes
+                        |> Encode.list toJsonSchema
+                  )
+                ]
+
         _ ->
             Encode.string "unhandled"
 
 
 
---Intersection tsTypes ->
 --ObjectWithUniformValues tsType ->
 --ArrayIndex (int, tsType) list ->
 --

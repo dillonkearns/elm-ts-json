@@ -173,6 +173,19 @@ suite =
                         |> TsType.toJsonSchema
                         |> Json.Encode.encode 0
                         |> Expect.equal """{"anyOf":[{"const":"guest"},{"const":"admin"}]}"""
+            , test "intersection" <|
+                \() ->
+                    TsType.Intersection
+                        [ TsType.TypeObject
+                            [ ( TsType.Required, "first", TsType.String )
+                            ]
+                        , TsType.TypeObject
+                            [ ( TsType.Required, "last", TsType.String )
+                            ]
+                        ]
+                        |> TsType.toJsonSchema
+                        |> Json.Encode.encode 0
+                        |> Expect.equal """{"allOf":[{"type":"object","properties":{"first":{"type":"string"}},"required":["first"]},{"type":"object","properties":{"last":{"type":"string"}},"required":["last"]}]}"""
             , test "tuple" <|
                 \() ->
                     TsType.Tuple
