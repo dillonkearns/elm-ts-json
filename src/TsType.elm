@@ -420,15 +420,25 @@ toJsonSchema tsType =
                   )
                 ]
 
+        Tuple tupleTypes restType ->
+            Encode.object
+                [ ( "items"
+                  , Encode.list toJsonSchema tupleTypes
+                  )
+                , ( "maxItems", Encode.int 2 )
+                , ( "minItems", Encode.int 2 )
+                , ( "type", Encode.string "array" )
+                ]
+
         _ ->
             Encode.string "unhandled"
 
 
 
---ArrayIndex (int, tsType) list ->
---Tuple tsTypes maybeTsType ->
---ObjectWithUniformValues tsType ->
---TsNever ->
 --Intersection tsTypes ->
---_ ->
---    Encode.string "Unhandled"
+--ObjectWithUniformValues tsType ->
+--ArrayIndex (int, tsType) list ->
+--
+-- don't know how to handle yet
+--
+--TsNever ->

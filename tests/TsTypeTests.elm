@@ -173,6 +173,14 @@ suite =
                         |> TsType.toJsonSchema
                         |> Json.Encode.encode 0
                         |> Expect.equal """{"anyOf":[{"const":"guest"},{"const":"admin"}]}"""
+            , test "tuple" <|
+                \() ->
+                    TsType.Tuple
+                        [ TsType.String, TsType.Boolean ]
+                        Nothing
+                        |> TsType.toJsonSchema
+                        |> Json.Encode.encode 0
+                        |> Expect.equal """{"items":[{"type":"string"},{"type":"boolean"}],"maxItems":2,"minItems":2,"type":"array"}"""
             , test "object with no required properties" <|
                 \() ->
                     TsType.TypeObject
