@@ -484,10 +484,18 @@ toJsonSchema tsType =
                 , ( "type", Encode.string "array" )
                 ]
 
-        _ ->
-            Encode.string "unhandled"
-
-
-
--- don't know how to handle this case yet
---TsNever ->
+        TsNever ->
+            Encode.object
+                [ {- There may be a more direct way to
+                     express this. This is just a roundabout
+                     way of saying this can never happen.
+                     Because a JSON value will never be both
+                     a `string` and `boolean`, this is a
+                     contradiction, and therefore equivalent
+                     to marking a JSON value with a
+                     TypeScript `never` type.
+                  -}
+                  ( "allOf"
+                  , Encode.list toJsonSchema [ String, Boolean ]
+                  )
+                ]
