@@ -7,7 +7,7 @@ module TsInterop.Encode exposing
     , UnionEncodeValue
     , list, dict, tuple, triple, maybe
     , value
-    , typeDef, encoder
+    , typeDef, encoder, tsType
     )
 
 {-| The `TsInterop.Encode` module is what you use for
