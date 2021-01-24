@@ -456,13 +456,38 @@ toJsonSchema tsType =
                 , ( "type", Encode.string "object" )
                 ]
 
+        ArrayIndex first rest ->
+            let
+                dict =
+                    Dict.fromList (first :: rest)
+
+                highestIndex : Int
+                highestIndex =
+                    dict
+                        |> Dict.keys
+                        |> List.maximum
+                        |> Maybe.withDefault 0
+            in
+            Encode.object
+                [ ( "additionalItems", toJsonSchema Unknown )
+                , ( "items"
+                  , (List.range 0 highestIndex
+                        |> List.map
+                            (\cur ->
+                                Dict.get cur dict
+                                    |> Maybe.withDefault Unknown
+                            )
+                    )
+                        |> Encode.list toJsonSchema
+                  )
+                , ( "minItems", Encode.int (highestIndex + 1) )
+                , ( "type", Encode.string "array" )
+                ]
+
         _ ->
             Encode.string "unhandled"
 
 
 
---ArrayIndex (int, tsType) list ->
---
--- don't know how to handle yet
---
+-- don't know how to handle this case yet
 --TsNever ->

@@ -222,6 +222,12 @@ suite =
                         |> TsType.toJsonSchema
                         |> Json.Encode.encode 0
                         |> Expect.equal """{"additionalProperties":{"type":"boolean"},"type":"object"}"""
+            , test "array index" <|
+                \() ->
+                    TsType.ArrayIndex ( 1, TsType.Boolean ) []
+                        |> TsType.toJsonSchema
+                        |> Json.Encode.encode 0
+                        |> Expect.equal """{"additionalItems":{},"items":[{},{"type":"boolean"}],"minItems":2,"type":"array"}"""
             , test "object with no required properties" <|
                 \() ->
                     TsType.TypeObject
