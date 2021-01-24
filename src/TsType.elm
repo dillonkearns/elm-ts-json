@@ -420,15 +420,27 @@ toJsonSchema tsType =
                   )
                 ]
 
-        Tuple tupleTypes restType ->
-            Encode.object
-                [ ( "items"
-                  , Encode.list toJsonSchema tupleTypes
-                  )
-                , ( "maxItems", Encode.int (List.length tupleTypes) )
-                , ( "minItems", Encode.int (List.length tupleTypes) )
-                , ( "type", Encode.string "array" )
-                ]
+        Tuple tupleTypes maybeRestType ->
+            case maybeRestType of
+                Just restType ->
+                    Encode.object
+                        [ ( "additionalItems", toJsonSchema restType )
+                        , ( "items"
+                          , Encode.list toJsonSchema tupleTypes
+                          )
+                        , ( "minItems", Encode.int (List.length tupleTypes) )
+                        , ( "type", Encode.string "array" )
+                        ]
+
+                Nothing ->
+                    Encode.object
+                        [ ( "items"
+                          , Encode.list toJsonSchema tupleTypes
+                          )
+                        , ( "maxItems", Encode.int (List.length tupleTypes) )
+                        , ( "minItems", Encode.int (List.length tupleTypes) )
+                        , ( "type", Encode.string "array" )
+                        ]
 
         _ ->
             Encode.string "unhandled"
