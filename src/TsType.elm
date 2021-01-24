@@ -408,6 +408,9 @@ toJsonSchema tsType =
         Unknown ->
             Encode.object []
 
+        Literal literalJson ->
+            Encode.object [ ( "const", literalJson ) ]
+
         _ ->
             Encode.string "unhandled"
 

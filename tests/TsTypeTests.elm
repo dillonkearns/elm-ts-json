@@ -158,6 +158,12 @@ suite =
                         |> TsType.toJsonSchema
                         |> Json.Encode.encode 0
                         |> Expect.equal """{}"""
+            , test "literal string" <|
+                \() ->
+                    TsType.Literal (Json.Encode.string "literalString")
+                        |> TsType.toJsonSchema
+                        |> Json.Encode.encode 0
+                        |> Expect.equal """{"const":"literalString"}"""
             , test "object with no required properties" <|
                 \() ->
                     TsType.TypeObject
