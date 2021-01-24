@@ -425,8 +425,8 @@ toJsonSchema tsType =
                 [ ( "items"
                   , Encode.list toJsonSchema tupleTypes
                   )
-                , ( "maxItems", Encode.int 2 )
-                , ( "minItems", Encode.int 2 )
+                , ( "maxItems", Encode.int (List.length tupleTypes) )
+                , ( "minItems", Encode.int (List.length tupleTypes) )
                 , ( "type", Encode.string "array" )
                 ]
 
