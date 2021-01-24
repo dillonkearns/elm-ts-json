@@ -450,12 +450,17 @@ toJsonSchema tsType =
                   )
                 ]
 
+        ObjectWithUniformValues objectValueType ->
+            Encode.object
+                [ ( "additionalProperties", toJsonSchema objectValueType )
+                , ( "type", Encode.string "object" )
+                ]
+
         _ ->
             Encode.string "unhandled"
 
 
 
---ObjectWithUniformValues tsType ->
 --ArrayIndex (int, tsType) list ->
 --
 -- don't know how to handle yet

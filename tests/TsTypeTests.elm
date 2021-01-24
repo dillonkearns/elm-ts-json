@@ -1,7 +1,13 @@
 module TsTypeTests exposing (suite)
 
+import Dict exposing (Dict)
 import Expect
+import Json.Decode
+import Json.Diff
 import Json.Encode
+import Json.Patch
+import Json.Value
+import JsonDiff
 import Test exposing (..)
 import TsType exposing (PropertyOptionality(..), TsType(..))
 
@@ -210,6 +216,12 @@ suite =
                         |> TsType.toJsonSchema
                         |> Json.Encode.encode 0
                         |> Expect.equal """{"additionalItems":{"type":"number"},"items":[{"type":"string"},{"type":"boolean"}],"minItems":2,"type":"array"}"""
+            , test "object with uniform values" <|
+                \() ->
+                    TsType.ObjectWithUniformValues TsType.Boolean
+                        |> TsType.toJsonSchema
+                        |> Json.Encode.encode 0
+                        |> Expect.equal """{"additionalProperties":{"type":"boolean"},"type":"object"}"""
             , test "object with no required properties" <|
                 \() ->
                     TsType.TypeObject
@@ -244,3 +256,68 @@ combinesToNever : TsType -> TsType -> Expect.Expectation
 combinesToNever type1 type2 =
     TsType.intersect type1 type2
         |> Expect.equal TsType.TsNever
+
+
+equalJson2 jsonString1 jsonString2 =
+    let
+        json1 =
+            jsonString1
+                |> Json.Decode.decodeString Json.Value.decoder
+
+        json2 =
+            jsonString2
+                |> Json.Decode.decodeString Json.Value.decoder
+    in
+    case ( json1, json2 ) of
+        ( Ok ok1, Ok ok2 ) ->
+            JsonDiff.expectEqual (JsonDiff.toUnorderedJsonValue ok1) (JsonDiff.toUnorderedJsonValue ok2)
+
+        _ ->
+            Expect.fail "Invalid JSON."
+
+
+equalJson : String -> String -> Expect.Expectation
+equalJson jsonString2 jsonString1 =
+    let
+        json1 =
+            jsonString1
+                |> Json.Decode.decodeString Json.Decode.value
+
+        json2 =
+            jsonString2
+                |> Json.Decode.decodeString Json.Decode.value
+    in
+    case ( json1, json2 ) of
+        ( Ok ok1, Ok ok2 ) ->
+            Expect.equalLists
+                (Json.Encode.encode 2 ok1 |> String.lines)
+                (Json.Encode.encode 2 ok2 |> String.lines)
+
+        _ ->
+            Expect.fail "Invalid JSON."
+
+
+patchToString : Json.Encode.Value -> Json.Encode.Value -> Json.Patch.Operation -> String
+patchToString json1 json2 patch =
+    case patch of
+        Json.Patch.Replace pointer jsonValue ->
+            (pointer |> String.join ".")
+                ++ Json.Encode.encode 2 jsonValue
+                ++ "\n\nJSON 1:\n"
+                ++ Json.Encode.encode 2 json1
+                ++ "\n\nJSON 2:\n"
+                ++ Json.Encode.encode 2 json2
+
+        Json.Patch.Add pointer jsonValue ->
+            (pointer |> String.join ".")
+                ++ Json.Encode.encode 2 jsonValue
+                ++ "\n\nJSON 1:\n"
+                ++ Json.Encode.encode 2 json1
+                ++ "\n\nJSON 2:\n"
+                ++ Json.Encode.encode 2 json2
+
+        Json.Patch.Remove pointer ->
+            "Missing key `" ++ String.join "." pointer ++ "`"
+
+        _ ->
+            "TODO"
