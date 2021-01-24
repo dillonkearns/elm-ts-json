@@ -411,6 +411,15 @@ toJsonSchema tsType =
         Literal literalJson ->
             Encode.object [ ( "const", literalJson ) ]
 
+        Union nonEmptyTypes ->
+            Encode.object
+                [ ( "anyOf"
+                  , nonEmptyTypes
+                        |> List.NonEmpty.toList
+                        |> Encode.list toJsonSchema
+                  )
+                ]
+
         _ ->
             Encode.string "unhandled"
 
@@ -418,9 +427,7 @@ toJsonSchema tsType =
 
 --ArrayIndex (int, tsType) list ->
 --Tuple tsTypes maybeTsType ->
---Literal value ->
 --ObjectWithUniformValues tsType ->
---Union (tsType, tsTypes) ->
 --TsNever ->
 --Intersection tsTypes ->
 --_ ->

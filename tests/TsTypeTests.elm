@@ -164,6 +164,15 @@ suite =
                         |> TsType.toJsonSchema
                         |> Json.Encode.encode 0
                         |> Expect.equal """{"const":"literalString"}"""
+            , test "union" <|
+                \() ->
+                    TsType.Union
+                        ( TsType.Literal (Json.Encode.string "guest")
+                        , [ TsType.Literal (Json.Encode.string "admin") ]
+                        )
+                        |> TsType.toJsonSchema
+                        |> Json.Encode.encode 0
+                        |> Expect.equal """{"anyOf":[{"const":"guest"},{"const":"admin"}]}"""
             , test "object with no required properties" <|
                 \() ->
                     TsType.TypeObject
