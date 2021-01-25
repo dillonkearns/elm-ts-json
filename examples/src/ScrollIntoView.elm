@@ -1,7 +1,7 @@
 module ScrollIntoView exposing (Alignment(..), Behavior(..), alignmentEncoder, behaviorEncoder, encoder)
 
 import Json.Encode
-import TsInterop.Encode exposing (Encoder, buildUnion, object, optional, union, variantLiteral)
+import TsJson.Encode exposing (Encoder, buildUnion, object, optional, union, variantLiteral)
 
 
 type Behavior

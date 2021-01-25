@@ -8,7 +8,7 @@ port module GoalGenerated exposing
 import GoalPorts
 import Json.Encode
 import ScrollIntoView
-import TsInterop.Encode as Encode
+import TsJson.Encode as Encode
 
 
 sendPresenceHeartbeat : Cmd msg

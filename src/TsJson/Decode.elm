@@ -1027,7 +1027,7 @@ decoder (Decoder decoder_ _) =
 {-| -}
 tsTypeToString : Decoder value -> String
 tsTypeToString (Decoder _ tsType_) =
-    TsJson.Type.toString tsType_
+    TsJson.Type.toTypeScript tsType_
 
 
 {-| -}

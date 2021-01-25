@@ -5,8 +5,8 @@ import GoalPorts
 import GoalPortsFromTs
 import Json.Encode as Encode
 import ScrollIntoView
-import TsInterop.Encode as Encoder
 import TsJson.Decode as Decode
+import TsJson.Encode as Encoder
 
 
 {-| TODO only generate for temp file

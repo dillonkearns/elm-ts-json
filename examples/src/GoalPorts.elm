@@ -1,7 +1,7 @@
 module GoalPorts exposing (..)
 
 import ScrollIntoView
-import TsInterop.Encode as Encode exposing (Encoder, Property, optional, required)
+import TsJson.Encode as Encode exposing (Encoder, Property, optional, required)
 
 
 type alias Properties input =

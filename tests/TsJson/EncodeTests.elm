@@ -1,10 +1,10 @@
-module TsInterop.EncodeTests exposing (suite)
+module TsJson.EncodeTests exposing (suite)
 
 import Dict
 import Expect exposing (Expectation)
 import Json.Encode as Encode
 import Test exposing (Test, describe, only, skip, test, todo)
-import TsInterop.Encode as Encoder exposing (Encoder, required)
+import TsJson.Encode as Encoder exposing (Encoder, required)
 
 
 suite : Test

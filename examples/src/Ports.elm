@@ -1,6 +1,6 @@
 module Ports exposing (..)
 
-import TsInterop.Encode as Encoder exposing (required, string)
+import TsJson.Encode as Encoder exposing (required, string)
 
 
 type ToJs

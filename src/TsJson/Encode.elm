@@ -1,4 +1,4 @@
-module TsInterop.Encode exposing
+module TsJson.Encode exposing
     ( Encoder
     , string, int, float, literal, bool, null
     , map
@@ -10,7 +10,7 @@ module TsInterop.Encode exposing
     , typeDef, encoder, tsType
     )
 
-{-| The `TsInterop.Encode` module is what you use for
+{-| The `TsJson.Encode` module is what you use for
 
   - FromElm Ports
 
@@ -176,10 +176,10 @@ import Internal.TypeToString as TypeToString
 import Json.Encode as Encode
 
 
-{-| Similar to a `Json.Encode.Value` in `elm/json`. However, a `TsInterop.Encode.Encoder` in `elm-ts-interop` has this key difference from an `elm/json` `Encode.Value`:
+{-| Similar to a `Json.Encode.Value` in `elm/json`. However, a `TsJson.Encode.Encoder` in `elm-ts-interop` has this key difference from an `elm/json` `Encode.Value`:
 
   - `elm/json` `Json.Encode.Value` - a value representing an encoded JSON value
-  - `elm-ts-interop` `TsInterop.Encode.Encoder` - a _function_ for turning an Elm value into an encoded JSON value. The `Encoder` itself has a definite TypeScript type, before you even pass in an Elm value to turn into JSON.
+  - `elm-ts-interop` `TsJson.Encode.Encoder` - a _function_ for turning an Elm value into an encoded JSON value. The `Encoder` itself has a definite TypeScript type, before you even pass in an Elm value to turn into JSON.
 
 So the `elm-ts-interop` `Encoder` expects a specific type of Elm value, and knows how to turn that Elm value into JSON.
 
@@ -505,7 +505,7 @@ This `map` function allows you to transform the **Elm input value**, not the res
 different than using [`TsJson.Decode.map`](TsJson.Decode#map), or other familiar `map` functions
 that transform an **Elm output value**, such as `Maybe.map` and `Json.Decode.map`.
 
-Think of `TsInterop.Encode.map` as changing **how to get the value that you want to turn into JSON**. For example,
+Think of `TsJson.Encode.map` as changing **how to get the value that you want to turn into JSON**. For example,
 if we're passing in some nested data and need to get a field
 
     import Json.Encode as Encode

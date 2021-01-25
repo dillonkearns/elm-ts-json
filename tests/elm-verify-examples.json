@@ -2,7 +2,7 @@
   "root": "../src",
   "tests": [
     "TsJson.Decode",
-    "TsInterop.Encode",
+    "TsJson.Encode",
     "./README.md"
   ]
 }

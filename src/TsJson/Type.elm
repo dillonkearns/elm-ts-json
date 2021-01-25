@@ -1,6 +1,14 @@
-module TsJson.Type exposing (..)
+module TsJson.Type exposing
+    ( Type
+    , toTypeScript, toJsonSchema
+    )
 
-{-| -}
+{-|
+
+@docs Type
+@docs toTypeScript, toJsonSchema
+
+-}
 
 import Internal.TsJsonType
 import Json.Encode
@@ -19,6 +27,6 @@ toJsonSchema =
 
 
 {-| -}
-toString : Type -> String
-toString =
+toTypeScript : Type -> String
+toTypeScript =
     TsType.toString
