@@ -1,7 +1,7 @@
 {
   "root": "../src",
   "tests": [
-    "TsInterop.Decode",
+    "TsJson.Decode",
     "TsInterop.Encode",
     "./README.md"
   ]

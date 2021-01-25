@@ -1,7 +1,7 @@
 module GoalPortsFromTs exposing (..)
 
 import Json.Encode as Encode
-import TsInterop.Decode as Decode exposing (Decoder, literal, oneOf)
+import TsJson.Decode as Decode exposing (Decoder, literal, oneOf)
 
 
 type Severity

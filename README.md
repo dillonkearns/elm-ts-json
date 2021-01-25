@@ -12,7 +12,7 @@ TypeScript declaration files (with extension `.d.ts`) allow you to supplement pl
 
 ### Figure out the types for your ports (to and from Elm)
 
-How does `elm-ts-interop` figure out the types of your ports? There's no magic involved at all. You define a special type of Encoder/Decoder using the `TsInterop.Encoder` and `TsInterop.Decoder` modules.
+How does `elm-ts-interop` figure out the types of your ports? There's no magic involved at all. You define a special type of Encoder/Decoder using the `TsInterop.Encoder` and `TsJson.Decoder` modules.
 
 These `Decoder`s and `Encoder`s that you write are the source of truth. It doesn't rely on implicitly generated Decoders or Encoders
 (Evan generally recommends against implicitly defined serialization because of limitations to that approach that he describes in his [vision for data interchange](https://gist.github.com/evancz/1c5f2cf34939336ecb79b97bb89d9da6#gistcomment-2606737)). Instead, you define code with an API that is very similar to `elm/json`. But this API knows the type information of the Encoder or Decoder you've built.
@@ -32,7 +32,7 @@ typed interop, even sending/receiving Elm Custom Types, and sending/receiving Ty
 ```elm
 import Json.Encode as JE
 import TsInterop.Encode as Encode exposing (Encoder)
-import TsInterop.Decode as Decode exposing (Decoder)
+import TsJson.Decode as Decode exposing (Decoder)
 
 type User
     = Regular { name : String }
