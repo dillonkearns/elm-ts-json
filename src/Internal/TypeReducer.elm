@@ -1,6 +1,5 @@
 module Internal.TypeReducer exposing
     ( intersect
-    , isPrimitive
     , union
     )
 

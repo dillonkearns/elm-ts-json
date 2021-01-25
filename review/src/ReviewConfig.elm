@@ -38,8 +38,7 @@ config =
 
     --, NoUnused.Variables.rule
     -- , NoUnused.CustomTypeConstructors.rule []
-    , NoUnused.Parameters.rule
-
+    --, NoUnused.Parameters.rule
     --, NoUnused.Patterns.rule
     , NoDebug.Log.rule
     , NoDebug.TodoOrToString.rule

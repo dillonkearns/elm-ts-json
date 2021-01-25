@@ -1,10 +1,6 @@
 module TsType exposing
-    ( intersect
-    , isPrimitive
-    , null
-    , toJsonSchema
+    ( toJsonSchema
     , toString
-    , union
     )
 
 import Dict
