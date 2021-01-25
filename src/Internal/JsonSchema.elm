@@ -1,9 +1,9 @@
 module Internal.JsonSchema exposing (toJsonSchema, toJsonSchemaTopLevel)
 
 import Dict
+import Internal.TsJsonType exposing (PropertyOptionality(..), TsType(..))
 import Json.Encode as Encode
 import List.NonEmpty
-import TsType exposing (PropertyOptionality(..), TsType(..))
 
 
 toJsonSchemaTopLevel : TsType -> Encode.Value

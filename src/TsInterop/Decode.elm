@@ -137,9 +137,11 @@ tool will use these for you under the hood. These can be helpful for debugging, 
 
 import Array exposing (Array)
 import Dict exposing (Dict)
+import Internal.TsJsonType exposing (..)
+import Internal.TypeReducer as TypeReducer
 import Json.Decode as Decode
 import Json.Encode as Encode
-import TsType exposing (TsType(..))
+import TsJson.Type
 
 
 {-|
@@ -211,17 +213,17 @@ you add a new field. It's a matter of personal preference.
 -}
 map2 : (value1 -> value2 -> mapped) -> Decoder value1 -> Decoder value2 -> Decoder mapped
 map2 mapFn (Decoder innerDecoder1 innerType1) (Decoder innerDecoder2 innerType2) =
-    Decoder (Decode.map2 mapFn innerDecoder1 innerDecoder2) (TsType.intersect innerType1 innerType2)
+    Decoder (Decode.map2 mapFn innerDecoder1 innerDecoder2) (TypeReducer.intersect innerType1 innerType2)
 
 
 {-| -}
 map3 : (value1 -> value2 -> value3 -> mapped) -> Decoder value1 -> Decoder value2 -> Decoder value3 -> Decoder mapped
 map3 mapFn (Decoder innerDecoder1 innerType1) (Decoder innerDecoder2 innerType2) (Decoder innerDecoder3 innerType3) =
     Decoder (Decode.map3 mapFn innerDecoder1 innerDecoder2 innerDecoder3)
-        (TsType.intersect
+        (TypeReducer.intersect
             innerType1
             innerType2
-            |> TsType.intersect innerType3
+            |> TypeReducer.intersect innerType3
         )
 
 
@@ -235,7 +237,7 @@ map4 :
     -> Decoder mapped
 map4 mapFn (Decoder innerDecoder1 innerType1) (Decoder innerDecoder2 innerType2) (Decoder innerDecoder3 innerType3) (Decoder innerDecoder4 innerType4) =
     Decoder (Decode.map4 mapFn innerDecoder1 innerDecoder2 innerDecoder3 innerDecoder4)
-        (TsType.Intersection
+        (Intersection
             [ innerType1
             , innerType2
             , innerType3
@@ -255,7 +257,7 @@ map5 :
     -> Decoder mapped
 map5 mapFn (Decoder innerDecoder1 innerType1) (Decoder innerDecoder2 innerType2) (Decoder innerDecoder3 innerType3) (Decoder innerDecoder4 innerType4) (Decoder innerDecoder5 innerType5) =
     Decoder (Decode.map5 mapFn innerDecoder1 innerDecoder2 innerDecoder3 innerDecoder4 innerDecoder5)
-        (TsType.Intersection
+        (Intersection
             [ innerType1
             , innerType2
             , innerType3
@@ -277,7 +279,7 @@ map6 :
     -> Decoder mapped
 map6 mapFn (Decoder innerDecoder1 innerType1) (Decoder innerDecoder2 innerType2) (Decoder innerDecoder3 innerType3) (Decoder innerDecoder4 innerType4) (Decoder innerDecoder5 innerType5) (Decoder innerDecoder6 innerType6) =
     Decoder (Decode.map6 mapFn innerDecoder1 innerDecoder2 innerDecoder3 innerDecoder4 innerDecoder5 innerDecoder6)
-        (TsType.Intersection
+        (Intersection
             [ innerType1
             , innerType2
             , innerType3
@@ -301,7 +303,7 @@ map7 :
     -> Decoder mapped
 map7 mapFn (Decoder innerDecoder1 innerType1) (Decoder innerDecoder2 innerType2) (Decoder innerDecoder3 innerType3) (Decoder innerDecoder4 innerType4) (Decoder innerDecoder5 innerType5) (Decoder innerDecoder6 innerType6) (Decoder innerDecoder7 innerType7) =
     Decoder (Decode.map7 mapFn innerDecoder1 innerDecoder2 innerDecoder3 innerDecoder4 innerDecoder5 innerDecoder6 innerDecoder7)
-        (TsType.Intersection
+        (Intersection
             [ innerType1
             , innerType2
             , innerType3
@@ -327,7 +329,7 @@ map8 :
     -> Decoder mapped
 map8 mapFn (Decoder innerDecoder1 innerType1) (Decoder innerDecoder2 innerType2) (Decoder innerDecoder3 innerType3) (Decoder innerDecoder4 innerType4) (Decoder innerDecoder5 innerType5) (Decoder innerDecoder6 innerType6) (Decoder innerDecoder7 innerType7) (Decoder innerDecoder8 innerType8) =
     Decoder (Decode.map8 mapFn innerDecoder1 innerDecoder2 innerDecoder3 innerDecoder4 innerDecoder5 innerDecoder6 innerDecoder7 innerDecoder8)
-        (TsType.Intersection
+        (Intersection
             [ innerType1
             , innerType2
             , innerType3
@@ -366,7 +368,7 @@ map8 mapFn (Decoder innerDecoder1 innerType1) (Decoder innerDecoder2 innerType2)
 -}
 nullable : Decoder value -> Decoder (Maybe value)
 nullable (Decoder innerDecoder innerType) =
-    Decoder (Decode.nullable innerDecoder) (TsType.union [ innerType, TsType.null ])
+    Decoder (Decode.nullable innerDecoder) (TypeReducer.union [ innerType, Literal Encode.null ])
 
 
 {-| You can express quite a bit with `oneOf`! The resulting TypeScript types will be a Union of all the TypeScript types
@@ -401,7 +403,7 @@ oneOf decoders =
                 (\(Decoder _ innerType) ->
                     innerType
                 )
-            |> TsType.union
+            |> TypeReducer.union
         )
 
 
@@ -428,7 +430,7 @@ type Decoder value
 -}
 succeed : value -> Decoder value
 succeed value_ =
-    Decoder (Decode.succeed value_) TsType.Unknown
+    Decoder (Decode.succeed value_) Unknown
 
 
 {-| If you need to run a regular JSON Decoder in an `andThen`, you can use this function, but it will yield a Decoder
@@ -454,7 +456,7 @@ with an unknown TypeScript type.
 -}
 unknownAndThen : (a -> Decode.Decoder b) -> Decoder a -> Decoder b
 unknownAndThen function (Decoder innerDecoder innerType) =
-    Decoder (Decode.andThen function innerDecoder) TsType.Unknown
+    Decoder (Decode.andThen function innerDecoder) Unknown
 
 
 {-|
@@ -493,7 +495,7 @@ andThen (StaticAndThen function tsTypes) (Decoder innerDecoder innerType) =
                     Decoder innerDecoder_ innerType_ ->
                         innerDecoder_
     in
-    Decoder (Decode.andThen andThenDecoder_ innerDecoder) (TsType.intersect innerType (TsType.union tsTypes))
+    Decoder (Decode.andThen andThenDecoder_ innerDecoder) (TypeReducer.intersect innerType (TypeReducer.union tsTypes))
 
 
 {-| This type allows you to combine all the possible Decoders you could run in an [`andThen`](#andThen) continuation.
@@ -539,7 +541,7 @@ Avoid using this when possible.
 -}
 value : Decoder Decode.Value
 value =
-    Decoder Decode.value TsType.Unknown
+    Decoder Decode.value Unknown
 
 
 {-|
@@ -559,7 +561,7 @@ value =
 -}
 fail : String -> Decoder value
 fail message =
-    Decoder (Decode.fail message) TsType.Unknown
+    Decoder (Decode.fail message) Unknown
 
 
 {-|
@@ -666,7 +668,7 @@ optionalField fieldName (Decoder innerDecoder innerType) =
         (Decode.value
             |> Decode.andThen finishDecoding
         )
-        (TsType.TypeObject [ ( TsType.Optional, fieldName, innerType ) ])
+        (TypeObject [ ( Optional, fieldName, innerType ) ])
 
 
 {-|
@@ -751,7 +753,7 @@ field : String -> Decoder value -> Decoder value
 field fieldName (Decoder innerDecoder innerType) =
     Decoder
         (Decode.field fieldName innerDecoder)
-        (TsType.TypeObject [ ( TsType.Required, fieldName, innerType ) ])
+        (TypeObject [ ( Required, fieldName, innerType ) ])
 
 
 {-|
@@ -784,7 +786,7 @@ at location (Decoder innerDecoder innerType) =
         (location
             |> List.foldr
                 (\fieldName typeSoFar ->
-                    TsType.TypeObject [ ( TsType.Required, fieldName, typeSoFar ) ]
+                    TypeObject [ ( Required, fieldName, typeSoFar ) ]
                 )
                 innerType
         )
@@ -835,7 +837,7 @@ string =
 -}
 int : Decoder Int
 int =
-    Decoder Decode.int TsType.Integer
+    Decoder Decode.int Integer
 
 
 {-|
@@ -855,7 +857,7 @@ int =
 -}
 float : Decoder Float
 float =
-    Decoder Decode.float TsType.Number
+    Decoder Decode.float Number
 
 
 {-|
@@ -875,7 +877,7 @@ float =
 -}
 bool : Decoder Bool
 bool =
-    Decoder Decode.bool TsType.Boolean
+    Decoder Decode.bool Boolean
 
 
 {-|
@@ -923,7 +925,7 @@ list (Decoder innerDecoder innerType) =
 -}
 index : Int -> Decoder value -> Decoder value
 index n (Decoder innerDecoder innerType) =
-    Decoder (Decode.index n innerDecoder) (TsType.ArrayIndex ( n, innerType ) [])
+    Decoder (Decode.index n innerDecoder) (ArrayIndex ( n, innerType ) [])
 
 
 {-|
@@ -992,7 +994,7 @@ array (Decoder innerDecoder innerType) =
 -}
 dict : Decoder value -> Decoder (Dict String value)
 dict (Decoder innerDecoder innerType) =
-    Decoder (Decode.dict innerDecoder) (TsType.ObjectWithUniformValues innerType)
+    Decoder (Decode.dict innerDecoder) (ObjectWithUniformValues innerType)
 
 
 {-|
@@ -1012,7 +1014,7 @@ dict (Decoder innerDecoder innerType) =
 -}
 keyValuePairs : Decoder value -> Decoder (List ( String, value ))
 keyValuePairs (Decoder innerDecoder innerType) =
-    Decoder (Decode.keyValuePairs innerDecoder) (TsType.ObjectWithUniformValues innerType)
+    Decoder (Decode.keyValuePairs innerDecoder) (ObjectWithUniformValues innerType)
 
 
 {-| Get a regular JSON Decoder that you can run using the `elm/json` API.
@@ -1025,7 +1027,7 @@ decoder (Decoder decoder_ _) =
 {-| -}
 tsTypeToString : Decoder value -> String
 tsTypeToString (Decoder _ tsType_) =
-    TsType.toString tsType_
+    TsJson.Type.toString tsType_
 
 
 {-| -}

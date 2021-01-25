@@ -170,8 +170,10 @@ tool will use these for you under the hood. These can be helpful for debugging, 
 -}
 
 import Dict exposing (Dict)
+import Internal.TsJsonType exposing (..)
+import Internal.TypeReducer as TypeReducer
+import Internal.TypeToString as TypeToString
 import Json.Encode as Encode
-import TsType exposing (PropertyOptionality, TsType)
 
 
 {-| Similar to a `Json.Encode.Value` in `elm/json`. However, a `TsInterop.Encode.Encoder` in `elm-ts-interop` has this key difference from an `elm/json` `Encode.Value`:
@@ -229,7 +231,7 @@ encoder (Encoder encodeFn _) input =
 {-| -}
 typeDef : Encoder input -> String
 typeDef (Encoder _ tsType_) =
-    TsType.toString tsType_
+    TypeToString.toString tsType_
 
 
 {-| -}
@@ -247,7 +249,7 @@ type Property input
 optional : String -> (input -> Maybe mappedInput) -> Encoder mappedInput -> Property input
 optional name getter (Encoder encodeFn tsType_) =
     Property
-        TsType.Optional
+        Optional
         name
         (\input -> input |> getter |> Maybe.map encodeFn)
         tsType_
@@ -257,7 +259,7 @@ optional name getter (Encoder encodeFn tsType_) =
 required : String -> (input -> mappedInput) -> Encoder mappedInput -> Property input
 required name getter (Encoder encodeFn tsType_) =
     Property
-        TsType.Required
+        Required
         name
         (\input -> input |> getter |> encodeFn |> Just)
         tsType_
@@ -310,7 +312,7 @@ object propertyEncoders =
                     (\(Property optionality propertyName _ tsType_) ->
                         ( optionality, propertyName, tsType_ )
                     )
-                |> TsType.TypeObject
+                |> TypeObject
 
         encodeObject : input -> Encode.Value
         encodeObject input =
@@ -345,7 +347,7 @@ object propertyEncoders =
 -}
 bool : Encoder Bool
 bool =
-    Encoder Encode.bool TsType.Boolean
+    Encoder Encode.bool Boolean
 
 
 {-|
@@ -365,7 +367,7 @@ bool =
 -}
 int : Encoder Int
 int =
-    Encoder Encode.int TsType.Integer
+    Encoder Encode.int Integer
 
 
 {-|
@@ -385,7 +387,7 @@ int =
 -}
 float : Encoder Float
 float =
-    Encoder Encode.float TsType.Number
+    Encoder Encode.float Number
 
 
 {-| Encode a string.
@@ -413,7 +415,7 @@ You can use `map` to apply an accessor function for how to get that String.
 -}
 string : Encoder String
 string =
-    Encoder Encode.string TsType.String
+    Encoder Encode.string String
 
 
 {-| TypeScript has the concept of a [Literal Type](https://www.typescriptlang.org/docs/handbook/literal-types.html).
@@ -464,7 +466,7 @@ However you name them, you can map those Elm types into equivalent TypeScript va
 -}
 literal : Encode.Value -> Encoder a
 literal literalValue =
-    Encoder (\_ -> literalValue) (TsType.Literal literalValue)
+    Encoder (\_ -> literalValue) (Literal literalValue)
 
 
 {-| Equivalent to `literal Encode.null`.
@@ -494,7 +496,7 @@ to build up a well-typed [`Encoder`](#Encoder).
 -}
 value : Encoder Encode.Value
 value =
-    Encoder identity TsType.Unknown
+    Encoder identity Unknown
 
 
 {-| An [`Encoder`](#Encoder) represents turning an Elm input value into a JSON value that has a TypeScript type information.
@@ -611,7 +613,7 @@ list : Encoder a -> Encoder (List a)
 list (Encoder encodeFn tsType_) =
     Encoder
         (\input -> Encode.list encodeFn input)
-        (TsType.List tsType_)
+        (List tsType_)
 
 
 {-| TypeScript [has a Tuple type](https://www.typescriptlang.org/docs/handbook/basic-types.html#tuple). It's just an
@@ -651,7 +653,7 @@ tuple (Encoder encodeFn1 tsType1) (Encoder encodeFn2 tsType2) =
         (\( input1, input2 ) ->
             Encode.list identity [ encodeFn1 input1, encodeFn2 input2 ]
         )
-        (TsType.Tuple [ tsType1, tsType2 ] Nothing)
+        (Tuple [ tsType1, tsType2 ] Nothing)
 
 
 {-| Same as [`tuple`](#tuple), but with Triples
@@ -679,7 +681,7 @@ triple (Encoder encodeFn1 tsType1) (Encoder encodeFn2 tsType2) (Encoder encodeFn
                 , encodeFn3 input3
                 ]
         )
-        (TsType.Tuple [ tsType1, tsType2, tsType3 ] Nothing)
+        (Tuple [ tsType1, tsType2, tsType3 ] Nothing)
 
 
 {-|
@@ -702,7 +704,7 @@ dict : (comparableKey -> String) -> Encoder input -> Encoder (Dict comparableKey
 dict keyToString (Encoder encodeFn tsType_) =
     Encoder
         (\input -> Encode.dict keyToString encodeFn input)
-        (TsType.ObjectWithUniformValues tsType_)
+        (ObjectWithUniformValues tsType_)
 
 
 {-| -}
@@ -763,7 +765,7 @@ variantLiteral :
 variantLiteral literalValue (UnionBuilder builder tsTypes) =
     UnionBuilder
         (builder (literalValue |> UnionEncodeValue))
-        (TsType.Literal literalValue :: tsTypes)
+        (Literal literalValue :: tsTypes)
 
 
 {-| -}
@@ -804,4 +806,4 @@ unwrapUnion (UnionEncodeValue rawValue) =
 {-| -}
 buildUnion : UnionBuilder (match -> UnionEncodeValue) -> Encoder match
 buildUnion (UnionBuilder toValue tsTypes_) =
-    Encoder (toValue >> unwrapUnion) (TsType.union tsTypes_)
+    Encoder (toValue >> unwrapUnion) (TypeReducer.union tsTypes_)

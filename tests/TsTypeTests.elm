@@ -1,10 +1,12 @@
 module TsTypeTests exposing (suite)
 
 import Expect
+import Internal.TsJsonType exposing (..)
+import Internal.TypeReducer as TypeReducer
+import Internal.TypeToString as TypeToString
 import Json.Decode
 import Json.Encode
 import Test exposing (..)
-import TsType exposing (PropertyOptionality(..), TsType(..))
 
 
 suite : Test
@@ -13,37 +15,37 @@ suite =
         [ describe "combine"
             [ test "two object types are merged" <|
                 \() ->
-                    TsType.intersect
-                        (TsType.TypeObject [])
-                        (TsType.TypeObject [])
+                    TypeReducer.intersect
+                        (TypeObject [])
+                        (TypeObject [])
                         |> Expect.equal
-                            (TsType.TypeObject [])
+                            (TypeObject [])
             , test "arrays with complementary indices are merged" <|
                 \() ->
-                    TsType.intersect
-                        (TsType.ArrayIndex ( 0, TsType.String ) [])
-                        (TsType.ArrayIndex ( 1, TsType.Number ) [])
+                    TypeReducer.intersect
+                        (ArrayIndex ( 0, String ) [])
+                        (ArrayIndex ( 1, Number ) [])
                         |> expectEqualTypes
                             "[string,number,...JsonValue[]]"
             , test "a known value intersected with JsonValue is the known value" <|
                 \() ->
-                    TsType.intersect
-                        TsType.Boolean
-                        TsType.Unknown
-                        |> Expect.equal TsType.Boolean
+                    TypeReducer.intersect
+                        Boolean
+                        Unknown
+                        |> Expect.equal Boolean
             , test "merge object type into union of objects" <|
                 \() ->
-                    TsType.intersect
-                        (TsType.TypeObject [ ( Required, "version", Number ) ])
-                        (TsType.union
+                    TypeReducer.intersect
+                        (TypeObject [ ( Required, "version", Number ) ])
+                        (TypeReducer.union
                             [ TypeObject [ ( Required, "data", TypeObject [ ( Required, "payload", String ) ] ) ]
                             , TypeObject [ ( Required, "payload", String ) ]
                             ]
                         )
                         |> Expect.equal
-                            (TsType.Intersection
-                                [ TsType.TypeObject [ ( Required, "version", Number ) ]
-                                , TsType.union
+                            (Intersection
+                                [ TypeObject [ ( Required, "version", Number ) ]
+                                , TypeReducer.union
                                     [ TypeObject [ ( Required, "data", TypeObject [ ( Required, "payload", String ) ] ) ]
                                     , TypeObject [ ( Required, "payload", String ) ]
                                     ]
@@ -51,24 +53,24 @@ suite =
                             )
             , test "object fields are merged together" <|
                 \() ->
-                    TsType.intersect
-                        (TsType.TypeObject [ ( Required, "version", Number ) ])
-                        (TsType.TypeObject [ ( Required, "author", TsType.String ) ])
+                    TypeReducer.intersect
+                        (TypeObject [ ( Required, "version", Number ) ])
+                        (TypeObject [ ( Required, "author", String ) ])
                         |> Expect.equal
-                            (TsType.TypeObject
+                            (TypeObject
                                 [ ( Required, "version", Number )
-                                , ( Required, "author", TsType.String )
+                                , ( Required, "author", String )
                                 ]
                             )
             , test "all objects in intersection are merged" <|
                 \() ->
-                    TsType.TypeObject [ ( Required, "author", String ) ]
-                        |> TsType.intersect
-                            (TsType.TypeObject [ ( Required, "version", Number ) ])
-                        |> TsType.intersect
-                            (TsType.TypeObject [ ( Required, "license", String ) ])
+                    TypeObject [ ( Required, "author", String ) ]
+                        |> TypeReducer.intersect
+                            (TypeObject [ ( Required, "version", Number ) ])
+                        |> TypeReducer.intersect
+                            (TypeObject [ ( Required, "license", String ) ])
                         |> Expect.equal
-                            (TsType.TypeObject
+                            (TypeObject
                                 [ ( Required, "license", String )
                                 , ( Required, "version", Number )
                                 , ( Required, "author", String )
@@ -76,18 +78,18 @@ suite =
                             )
             , test "intersections are merged" <|
                 \() ->
-                    TsType.intersect
-                        (TsType.Intersection
-                            [ TsType.TypeObject [ ( Required, "version", Number ) ]
-                            , TsType.union
+                    TypeReducer.intersect
+                        (Intersection
+                            [ TypeObject [ ( Required, "version", Number ) ]
+                            , TypeReducer.union
                                 [ TypeObject [ ( Required, "data", TypeObject [ ( Required, "payload", String ) ] ) ]
                                 , TypeObject [ ( Required, "payload", String ) ]
                                 ]
                             ]
                         )
-                        (TsType.Intersection
-                            [ TsType.TypeObject [ ( Required, "author", String ) ]
-                            , TsType.union
+                        (Intersection
+                            [ TypeObject [ ( Required, "author", String ) ]
+                            , TypeReducer.union
                                 [ TypeObject [ ( Required, "data", TypeObject [ ( Required, "payload", String ) ] ) ]
                                 , TypeObject [ ( Required, "payload", String ) ]
                                 ]
@@ -97,29 +99,29 @@ suite =
                             "({ version : number; author : string } & { data : { payload : string } } | { payload : string })"
             , test "contradictory scalars" <|
                 \() ->
-                    combinesToNever TsType.String TsType.Number
+                    combinesToNever String Number
             , test "contradictory scalars reversed" <|
                 \() ->
-                    combinesToNever TsType.Number TsType.String
+                    combinesToNever Number String
             , test "never in a union is factored out" <|
                 \() ->
-                    TsType.union [ TsType.TsNever, TsType.String ]
-                        |> Expect.equal TsType.String
+                    TypeReducer.union [ TsNever, String ]
+                        |> Expect.equal String
             , test "unioning with just a single never is never" <|
                 \() ->
-                    TsType.union [ TsType.TsNever ]
-                        |> Expect.equal TsType.TsNever
+                    TypeReducer.union [ TsNever ]
+                        |> Expect.equal TsNever
             ]
         , describe "parenthesized when needed"
             [ test "list of union" <|
                 \() ->
-                    TsType.List
-                        (TsType.union
-                            [ TsType.String
-                            , TsType.Number
+                    List
+                        (TypeReducer.union
+                            [ String
+                            , Number
                             ]
                         )
-                        |> TsType.toString
+                        |> TypeToString.toString
                         |> Expect.equal "(string | number)[]"
             ]
         ]
@@ -127,11 +129,11 @@ suite =
 
 expectEqualTypes : String -> TsType -> Expect.Expectation
 expectEqualTypes expected type2 =
-    TsType.toString type2
+    TypeToString.toString type2
         |> Expect.equal expected
 
 
 combinesToNever : TsType -> TsType -> Expect.Expectation
 combinesToNever type1 type2 =
-    TsType.intersect type1 type2
-        |> Expect.equal TsType.TsNever
+    TypeReducer.intersect type1 type2
+        |> Expect.equal TsNever
