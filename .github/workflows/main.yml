@@ -54,6 +54,8 @@ jobs:
         run: npm test
       - name: elm-format
         run: npx --no-install elm-format --validate
+      - name: elm-review
+        run: npx --no-install elm-review
       # - name: prettier
       #   run: npx --no-install prettier --check .
       - name: Build elm docs
