@@ -1,4 +1,4 @@
-module TsInterop.Decode exposing
+module TsJson.Decode exposing
     ( Decoder
     , succeed, fail
     , bool, float, int, string
@@ -14,7 +14,7 @@ module TsInterop.Decode exposing
     , decoder, tsTypeToString, tsType
     )
 
-{-| The `TsInterop.Decode` module is what you use for
+{-| The `TsJson.Decode` module is what you use for
 
   - Flags
   - ToElm Ports
@@ -45,23 +45,23 @@ types (which show up in the TypeScript Declaration file that `elm-ts-interop` ge
 
 ### The Elm type information
 
-  - The initial `Decoder`, `TsInterop.Decode.int`, has the Elm type `TsInterop.Decode.Decoder Int`. So Elm knows
+  - The initial `Decoder`, `TsJson.Decode.int`, has the Elm type `TsJson.Decode.Decoder Int`. So Elm knows
     this `Decoder` will either fail, or give us an `Int`.
-  - When we call `TsInterop.Decode.map String.fromInt`, the Elm type information changes. We're mapping with
+  - When we call `TsJson.Decode.map String.fromInt`, the Elm type information changes. We're mapping with
     `String.fromInt : String -> Int`. So that means we'll now decode into an Elm `String` instead of an `Int`. And that's
     the final Elm type we'll end up with.
 
 
 ### The TypeScript type information
 
-  - `TsInterop.Decode.int` expects a number from TypeScript.
-  - `TsInterop.Decode.map` applies a function to the decoded Elm value, but it doesn't change what we expect from TypeScript.
+  - `TsJson.Decode.int` expects a number from TypeScript.
+  - `TsJson.Decode.map` applies a function to the decoded Elm value, but it doesn't change what we expect from TypeScript.
     So we still expect a `number` from TypeScript. And we're done, so that's the final type we expect to receive from TypeScript.
 
 
 ### Summary
 
-We can apply more Decoders, like `TsInterop.Decode.list`, for example, to expect an array of that type from TypeScript,
+We can apply more Decoders, like `TsJson.Decode.list`, for example, to expect an array of that type from TypeScript,
 and a `List` of that Elm type. From there, it's just the same concept. **All the type information about the type that Elm will decode into, and the type that Elm expects from TypeScript, is built up as you build a Decoder**.
 
 That means that the source of truth is the Decoder itself. Note that the Decoder doesn't specify just the Elm format, or just the TypeScript type as the source

@@ -1,11 +1,11 @@
-module TsInterop.DecodeTests exposing (suite)
+module TsJson.DecodeTests exposing (suite)
 
 import Array
 import Expect exposing (Expectation)
 import Json.Decode as Decode
 import Json.Encode as Encode
 import Test exposing (..)
-import TsInterop.Decode exposing (..)
+import TsJson.Decode exposing (..)
 
 
 suite : Test
