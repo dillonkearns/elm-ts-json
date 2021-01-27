@@ -964,7 +964,7 @@ tuple (Decoder innerDecoder1 innerType1) (Decoder innerDecoder2 innerType2) =
     triple string int bool
         |> runExample """["abc", 123, true]"""
     --> { decoded = Ok ( "abc", 123, True )
-    --> , tsType = "[ string, number ]"
+    --> , tsType = "[ string, number, boolean ]"
     --> }
 
 -}
