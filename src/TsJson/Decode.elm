@@ -4,7 +4,7 @@ module TsJson.Decode exposing
     , bool, float, int, string
     , field, at
     , list, array, nullable, oneOf, dict, keyValuePairs, oneOrMore, optionalField, optionalNullableField
-    , index, tuple
+    , index, tuple, triple
     , map
     , map2, andMap
     , map3, map4, map5, map6, map7, map8
@@ -92,7 +92,7 @@ of truth. It specifies **how to turn a TypeScript type into an Elm type as the s
 
 @docs list, array, nullable, oneOf, dict, keyValuePairs, oneOrMore, optionalField, optionalNullableField
 
-@docs index, tuple
+@docs index, tuple, triple
 
 
 ## Transformations
@@ -936,12 +936,6 @@ index n (Decoder innerDecoder innerType) =
     runExample : String -> Decoder value -> { decoded : Result String value, tsType : String }
     runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
 
-    index 1 int
-        |> runExample "[0,100,200]"
-    --> { decoded = Ok 100
-    --> , tsType = "[JsonValue,number,...JsonValue[]]"
-    --> }
-
     tuple string int
         |> runExample """["abc", 123]"""
     --> { decoded = Ok ( "abc", 123 )
@@ -957,6 +951,36 @@ tuple (Decoder innerDecoder1 innerType1) (Decoder innerDecoder2 innerType2) =
             (Decode.index 1 innerDecoder2)
         )
         (Tuple [ innerType1, innerType2 ] Nothing)
+
+
+{-|
+
+    import Json.Decode
+
+
+    runExample : String -> Decoder value -> { decoded : Result String value, tsType : String }
+    runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
+
+    triple string int bool
+        |> runExample """["abc", 123, true]"""
+    --> { decoded = Ok ( "abc", 123, True )
+    --> , tsType = "[ string, number ]"
+    --> }
+
+-}
+triple :
+    Decoder value1
+    -> Decoder value2
+    -> Decoder value3
+    -> Decoder ( value1, value2, value3 )
+triple (Decoder innerDecoder1 innerType1) (Decoder innerDecoder2 innerType2) (Decoder innerDecoder3 innerType3) =
+    Decoder
+        (Decode.map3 (\a b c -> ( a, b, c ))
+            (Decode.index 0 innerDecoder1)
+            (Decode.index 1 innerDecoder2)
+            (Decode.index 2 innerDecoder3)
+        )
+        (Tuple [ innerType1, innerType2, innerType3 ] Nothing)
 
 
 {-|
