@@ -4,7 +4,7 @@ module TsJson.Decode exposing
     , bool, float, int, string
     , field, at
     , list, array, nullable, oneOf, dict, keyValuePairs, oneOrMore, optionalField, optionalNullableField
-    , index
+    , index, tuple
     , map
     , map2, andMap
     , map3, map4, map5, map6, map7, map8
@@ -92,7 +92,7 @@ of truth. It specifies **how to turn a TypeScript type into an Elm type as the s
 
 @docs list, array, nullable, oneOf, dict, keyValuePairs, oneOrMore, optionalField, optionalNullableField
 
-@docs index
+@docs index, tuple
 
 
 ## Transformations
@@ -926,6 +926,37 @@ list (Decoder innerDecoder innerType) =
 index : Int -> Decoder value -> Decoder value
 index n (Decoder innerDecoder innerType) =
     Decoder (Decode.index n innerDecoder) (ArrayIndex ( n, innerType ) [])
+
+
+{-|
+
+    import Json.Decode
+
+
+    runExample : String -> Decoder value -> { decoded : Result String value, tsType : String }
+    runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
+
+    index 1 int
+        |> runExample "[0,100,200]"
+    --> { decoded = Ok 100
+    --> , tsType = "[JsonValue,number,...JsonValue[]]"
+    --> }
+
+    tuple string int
+        |> runExample """["abc", 123]"""
+    --> { decoded = Ok ( "abc", 123 )
+    --> , tsType = "[ string, number ]"
+    --> }
+
+-}
+tuple : Decoder value1 -> Decoder value2 -> Decoder ( value1, value2 )
+tuple (Decoder innerDecoder1 innerType1) (Decoder innerDecoder2 innerType2) =
+    Decoder
+        (Decode.map2 Tuple.pair
+            (Decode.index 0 innerDecoder1)
+            (Decode.index 1 innerDecoder2)
+        )
+        (Tuple [ innerType1, innerType2 ] Nothing)
 
 
 {-|
