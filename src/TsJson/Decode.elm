@@ -5,6 +5,7 @@ module TsJson.Decode exposing
     , field, at
     , list, array, nullable, oneOf, dict, keyValuePairs, oneOrMore, optionalField, optionalNullableField
     , index, tuple, triple
+    , TupleBuilder, buildTuple, startTuple, tupleElement
     , map
     , map2, andMap
     , map3, map4, map5, map6, map7, map8
@@ -93,6 +94,19 @@ of truth. It specifies **how to turn a TypeScript type into an Elm type as the s
 @docs list, array, nullable, oneOf, dict, keyValuePairs, oneOrMore, optionalField, optionalNullableField
 
 @docs index, tuple, triple
+
+
+## Arbitrary-Length Tuples
+
+[TypeScript allows you to define a tuple](https://www.typescriptlang.org/docs/handbook/basic-types.html#tuple) that can
+have any length of items with specific types.
+
+TypeScript tuples are much like an Elm tuples, except two key differences:
+
+  - Elm tuples can only have 2 or 3 items, while TypeScript tuples can have any length
+  - Elm tuples are a distinct type, while TypeScript tuples are just arrays with a statically known length
+
+@docs TupleBuilder, buildTuple, startTuple, tupleElement
 
 
 ## Transformations
@@ -944,13 +958,11 @@ index n (Decoder innerDecoder innerType) =
 
 -}
 tuple : Decoder value1 -> Decoder value2 -> Decoder ( value1, value2 )
-tuple (Decoder innerDecoder1 innerType1) (Decoder innerDecoder2 innerType2) =
-    Decoder
-        (Decode.map2 Tuple.pair
-            (Decode.index 0 innerDecoder1)
-            (Decode.index 1 innerDecoder2)
-        )
-        (Tuple [ innerType1, innerType2 ] Nothing)
+tuple decoder1 decoder2 =
+    startTuple Tuple.pair
+        |> tupleElement decoder1
+        |> tupleElement decoder2
+        |> buildTuple
 
 
 {-|
@@ -973,14 +985,59 @@ triple :
     -> Decoder value2
     -> Decoder value3
     -> Decoder ( value1, value2, value3 )
-triple (Decoder innerDecoder1 innerType1) (Decoder innerDecoder2 innerType2) (Decoder innerDecoder3 innerType3) =
-    Decoder
-        (Decode.map3 (\a b c -> ( a, b, c ))
-            (Decode.index 0 innerDecoder1)
-            (Decode.index 1 innerDecoder2)
-            (Decode.index 2 innerDecoder3)
-        )
-        (Tuple [ innerType1, innerType2, innerType3 ] Nothing)
+triple decoder1 decoder2 decoder3 =
+    startTuple (\a b c -> ( a, b, c ))
+        |> tupleElement decoder1
+        |> tupleElement decoder2
+        |> tupleElement decoder3
+        |> buildTuple
+
+
+{-| -}
+startTuple : a -> TupleBuilder a
+startTuple constructor =
+    TupleBuilder (Decode.succeed constructor) []
+
+
+{-| -}
+buildTuple : TupleBuilder a -> Decoder a
+buildTuple (TupleBuilder pipelineDecoder pipelineType) =
+    Decoder pipelineDecoder (Tuple pipelineType Nothing)
+
+
+{-| -}
+type TupleBuilder value
+    = TupleBuilder (Decode.Decoder value) (List TsType)
+
+
+{-|
+
+    import Json.Decode
+
+
+    runExample : String -> Decoder value -> { decoded : Result String value, tsType : String }
+    runExample inputJson interopDecoder = { tsType = tsTypeToString interopDecoder , decoded = Json.Decode.decodeString (decoder interopDecoder) inputJson |> Result.mapError Json.Decode.errorToString }
+
+    startTuple (\a b c d -> { a = a, b = b, c = c, d = d })
+        |> tupleElement string
+        |> tupleElement int
+        |> tupleElement bool
+        |> tupleElement string
+        |> buildTuple
+        |> runExample """["abc", 123, true, "xyz"]"""
+    --> { decoded = Ok { a = "abc", b = 123, c = True, d = "xyz" }
+    --> , tsType = "[ string, number, boolean, string ]"
+    --> }
+
+-}
+tupleElement :
+    Decoder a
+    -> TupleBuilder (a -> b)
+    -> TupleBuilder b
+tupleElement (Decoder innerDecoder1 innerType1) (TupleBuilder pipelineDecoder pipelineType) =
+    TupleBuilder
+        (pipelineDecoder |> Decode.map2 (|>) (Decode.index (List.length pipelineType) innerDecoder1))
+        (pipelineType ++ [ innerType1 ])
 
 
 {-|
