@@ -57,3 +57,8 @@ config =
     --    |> NoInconsistentAliases.rule
     , NoModuleOnExposedNames.rule
     ]
+        |> List.map
+            (\rule ->
+                rule
+                    |> Review.Rule.ignoreErrorsForDirectories [ "src/List" ]
+            )
