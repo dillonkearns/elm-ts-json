@@ -79,7 +79,7 @@ jobs:
           description: "View Elm doc preview."
           name: "Elm Docs"
       - name: Elm Publish
-        uses: dillonkearns/elm-publish-action@use-main-or-master
+        uses: dillonkearns/elm-publish-action@v1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path-to-elm: ./node_modules/.bin/elm
