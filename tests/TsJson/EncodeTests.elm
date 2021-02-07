@@ -5,6 +5,7 @@ import Expect exposing (Expectation)
 import Json.Encode as Encode
 import Test exposing (Test, describe, only, skip, test, todo)
 import TsJson.Encode as Encoder exposing (Encoder, required)
+import TsType
 
 
 suite : Test
@@ -276,7 +277,7 @@ expectEncodes expect interop =
         |> Encode.encode 0
         |> Expect.all
             [ \encodedString -> encodedString |> Expect.equal expect.output
-            , \_ -> Encoder.typeDef interop |> Expect.equal expect.typeDef
+            , \_ -> encoderType interop |> Expect.equal expect.typeDef
             ]
 
 
@@ -288,7 +289,7 @@ expectEncodesNew :
 expectEncodesNew cases expectedTypeDef interop =
     ()
         |> Expect.all
-            ((\() -> Encoder.typeDef interop |> Expect.equal expectedTypeDef)
+            ((\() -> encoderType interop |> Expect.equal expectedTypeDef)
                 :: (cases
                         |> List.map
                             (\( input, expectedOutput ) ->
@@ -300,3 +301,10 @@ expectEncodesNew cases expectedTypeDef interop =
                             )
                    )
             )
+
+
+encoderType : Encoder input -> String
+encoderType encoder_ =
+    encoder_
+        |> Encoder.tsType
+        |> TsType.toString

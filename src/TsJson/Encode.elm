@@ -7,7 +7,8 @@ module TsJson.Encode exposing
     , UnionEncodeValue
     , list, dict, tuple, triple, maybe
     , value
-    , typeDef, encoder, tsType
+    , encoder, tsType
+    , runExample
     )
 
 {-| The `TsJson.Encode` module is what you use for
@@ -167,13 +168,18 @@ tool will use these for you under the hood. These can be helpful for debugging, 
 
 @docs typeDef, encoder, tsType
 
+
+## Documentation Helper
+
+@docs runExample
+
 -}
 
 import Dict exposing (Dict)
 import Internal.TsJsonType exposing (..)
 import Internal.TypeReducer as TypeReducer
-import Internal.TypeToString as TypeToString
 import Json.Encode as Encode
+import TsType
 
 
 {-| Similar to a `Json.Encode.Value` in `elm/json`. However, a `TsJson.Encode.Encoder` in `elm-ts-interop` has this key difference from an `elm/json` `Encode.Value`:
@@ -186,10 +192,6 @@ So the `elm-ts-interop` `Encoder` expects a specific type of Elm value, and know
 Let's compare the two with an example for encoding a first and last name.
 
     import Json.Encode
-
-    runExample : Encoder input -> input -> { output : String, tsType : String }
-    runExample encoder_ input =
-        { tsType = typeDef encoder_, output = input |> encoder encoder_ |> Json.Encode.encode 0 }
 
     elmJsonNameEncoder : { first : String, last : String }
         -> Json.Encode.Value
@@ -229,12 +231,6 @@ encoder (Encoder encodeFn _) input =
 
 
 {-| -}
-typeDef : Encoder input -> String
-typeDef (Encoder _ tsType_) =
-    TypeToString.toString tsType_
-
-
-{-| -}
 tsType : Encoder input -> TsType
 tsType (Encoder _ tsType_) =
     tsType_
@@ -268,10 +264,6 @@ required name getter (Encoder encodeFn tsType_) =
 {-|
 
     import Json.Encode as Encode
-
-    runExample : Encoder input -> input -> { output : String, tsType : String }
-    runExample encoder_ input =
-        { tsType = typeDef encoder_, output = input |> encoder encoder_ |> Encode.encode 0 }
 
     nameEncoder : Encoder { first : String, last : String }
     nameEncoder =
@@ -334,10 +326,6 @@ object propertyEncoders =
 
     import Json.Encode as Encode
 
-    runExample : Encoder input -> input -> { output : String, tsType : String }
-    runExample encoder_ input = { tsType = typeDef encoder_ , output = input |> encoder encoder_ |> Encode.encode 0 }
-
-
     True
         |> runExample bool
     --> { output = "true"
@@ -353,10 +341,6 @@ bool =
 {-|
 
     import Json.Encode as Encode
-
-    runExample : Encoder input -> input -> { output : String, tsType : String }
-    runExample encoder_ input = { tsType = typeDef encoder_ , output = input |> encoder encoder_ |> Encode.encode 0 }
-
 
     123
         |> runExample int
@@ -374,10 +358,6 @@ int =
 
     import Json.Encode as Encode
 
-    runExample : Encoder input -> input -> { output : String, tsType : String }
-    runExample encoder_ input = { tsType = typeDef encoder_ , output = input |> encoder encoder_ |> Encode.encode 0 }
-
-
     123.45
         |> runExample float
     --> { output = "123.45"
@@ -393,10 +373,6 @@ float =
 {-| Encode a string.
 
     import Json.Encode as Encode
-
-    runExample : Encoder input -> input -> { output : String, tsType : String }
-    runExample encoder_ input = { tsType = typeDef encoder_ , output = input |> encoder encoder_ |> Encode.encode 0 }
-
 
     "Hello!"
         |> runExample string
@@ -440,9 +416,6 @@ However you name them, you can map those Elm types into equivalent TypeScript va
 
     import Json.Encode as Encode
 
-    runExample : Encoder input -> input -> { output : String, tsType : String }
-    runExample encoder_ input = { tsType = typeDef encoder_ , output = input |> encoder encoder_ |> Encode.encode 0 }
-
     httpStatusEncoder : Encoder HttpStatus
     httpStatusEncoder =
         union
@@ -472,10 +445,6 @@ literal literalValue =
 {-| Equivalent to `literal Encode.null`.
 
     import Json.Encode as Encode
-
-    runExample : Encoder input -> input -> { output : String, tsType : String }
-    runExample encoder_ input = { tsType = typeDef encoder_ , output = input |> encoder encoder_ |> Encode.encode 0 }
-
 
     ()
         |> runExample null
@@ -510,17 +479,17 @@ if we're passing in some nested data and need to get a field
 
     import Json.Encode as Encode
 
-    runExample : input -> Encoder input -> { output : String, tsType : String }
-    runExample input encoder_ = { tsType = typeDef encoder_ , output = input |> encoder encoder_ |> Encode.encode 0 }
-
     picardData : { data : { first : String, last : String, rank : String } }
     picardData = { data = { first = "Jean Luc", last = "Picard", rank = "Captain" } }
 
+    rankEncoder : Encoder { data : { officer | rank : String } }
+    rankEncoder =
+        string
+            |> map .rank
+            |> map .data
 
-    string
-        |> map .rank
-        |> map .data
-        |> runExample picardData
+    picardData
+        |> runExample rankEncoder
     --> { output = "\"Captain\""
     --> , tsType = "string"
     --> }
@@ -550,9 +519,13 @@ So `map` is applying a function that tells the Encoder how to get the data it ne
 If we want to send a string through a port, then we start with a [`string`](#string) `Encoder`. Then we `map` it to
 turn our input data into a String (because `string` is `Encoder String`).
 
-    string
-        |> map (\outerRecord -> outerRecord.data.first ++ " " ++ outerRecord.data.last)
-        |> runExample picardData
+    encoderThing : Encoder { data : { officer | first : String, last : String } }
+    encoderThing =
+        string
+            |> map (\outerRecord -> outerRecord.data.first ++ " " ++ outerRecord.data.last)
+
+    picardData
+        |> runExample encoderThing
     --> { output = "\"Jean Luc Picard\""
     --> , tsType = "string"
     --> }
@@ -566,10 +539,6 @@ map mapFunction (Encoder encodeFn tsType_) =
 {-|
 
     import Json.Encode as Encode
-
-    runExample : Encoder input -> input -> { output : String, tsType : String }
-    runExample encoder_ input = { tsType = typeDef encoder_ , output = input |> encoder encoder_ |> Encode.encode 0 }
-
 
     Just 42
         |> runExample ( maybe int )
@@ -598,10 +567,6 @@ maybe encoder_ =
 
     import Json.Encode as Encode
 
-    runExample : Encoder input -> input -> { output : String, tsType : String }
-    runExample encoder_ input = { tsType = typeDef encoder_ , output = input |> encoder encoder_ |> Encode.encode 0 }
-
-
     [ "Hello", "World!" ]
         |> runExample ( list string )
     --> { output = """["Hello","World!"]"""
@@ -621,10 +586,6 @@ Array with 2 items, and the TypeScript compiler will enforce that there are two 
 into a TypeScript Tuple.
 
     import Json.Encode as Encode
-
-    runExample : Encoder input -> input -> { output : String, tsType : String }
-    runExample encoder_ input = { tsType = typeDef encoder_ , output = input |> encoder encoder_ |> Encode.encode 0 }
-
 
     ( "John Doe", True )
         |> runExample ( tuple string bool )
@@ -660,10 +621,6 @@ tuple (Encoder encodeFn1 tsType1) (Encoder encodeFn2 tsType2) =
 
     import Json.Encode as Encode
 
-    runExample : Encoder input -> input -> { output : String, tsType : String }
-    runExample encoder_ input = { tsType = typeDef encoder_ , output = input |> encoder encoder_ |> Encode.encode 0 }
-
-
     ( "Jane Doe", True, 123 )
         |> runExample ( triple string bool int )
     --> { output = """["Jane Doe",true,123]"""
@@ -688,10 +645,6 @@ triple (Encoder encodeFn1 tsType1) (Encoder encodeFn2 tsType2) (Encoder encodeFn
 
     import Json.Encode as Encode
     import Dict
-
-    runExample : Encoder input -> input -> { output : String, tsType : String }
-    runExample encoder_ input = { tsType = typeDef encoder_ , output = input |> encoder encoder_ |> Encode.encode 0 }
-
 
     Dict.fromList [ ( "a", "123" ), ( "b", "456" ) ]
         |> runExample ( dict identity string )
@@ -807,3 +760,17 @@ unwrapUnion (UnionEncodeValue rawValue) =
 buildUnion : UnionBuilder (match -> UnionEncodeValue) -> Encoder match
 buildUnion (UnionBuilder toValue tsTypes_) =
     Encoder (toValue >> unwrapUnion) (TypeReducer.union tsTypes_)
+
+
+{-| -}
+runExample : Encoder input -> input -> { output : String, tsType : String }
+runExample encoder_ input =
+    { tsType =
+        encoder_
+            |> tsType
+            |> TsType.toString
+    , output =
+        input
+            |> encoder encoder_
+            |> Encode.encode 0
+    }

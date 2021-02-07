@@ -85,8 +85,11 @@ nameDecoder =
         |> Decode.andMap (Decode.field "first" Decode.string)
         |> Decode.andMap (Decode.field "last" Decode.string)
 
-userEncoder |> Encode.typeDef
---> """{"kind":"guest"} | { kind : "regular"; name : string }"""
+Guest
+    |> Encode.runExample userEncoder
+--> { output = """{"kind":"guest"}"""
+--> , tsType = """{"kind":"guest"} | { kind : "regular"; name : string }"""
+--> }
 
 userDecoder |> Decode.runExample """{"kind":"guest"}"""
 --> { decoded = Ok Guest
