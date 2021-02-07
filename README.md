@@ -1,14 +1,8 @@
 # `elm-ts-json` [![Build Status](https://github.com/dillonkearns/elm-ts-json/workflows/CI/badge.svg)](https://github.com/dillonkearns/elm-ts-json/actions?query=branch%3Amain)
 
-Build up Encoders/Decoders with well-defined TypeScript types! This is different than the approach of [`elm-typescript-interop`](https://github.com/dillonkearns/elm-typescript-interop).
-
-You can read more about the redesign in this article: [Types Without Borders Isn't Enough](https://functional.christmas/2020/11).
+Build up Encoders/Decoders with well-defined TypeScript types! The API in this package is the foundation of the [`elm-ts-interop`](https://github.com/dillonkearns/elm-ts-interop) CLI tool, but can be used for other purposes as well.
 
 ## Core concepts
-
-### Provide type information about your Elm app
-
-TypeScript declaration files (with extension `.d.ts`) allow you to supplement plain JS (like compiled Elm code) with TypeScript type information. `elm-ts-interop` creates declaration files so that you get autocompletion and type errors as you wire up your ports, so you can be confident that you're sending/expecting the right data types.
 
 ### Figure out the types for your ports (to and from Elm)
 
@@ -21,11 +15,21 @@ For example, if you use `TsDecode.string`, it knows that will expect to receive 
 will expect to receive `string[]` from TypeScript. You can even build up more expressive TypeScript types like Unions:
 
 ```elm
-    TsDecode.oneOf [ TsDecode.string TsDecode.map, TsDecode.bool |> TsDecode.map boolToString ]
+import TsJson.Decode as TsDecode
+import TsJson.Type
+
+TsDecode.oneOf
+    [ TsDecode.string
+    , TsDecode.int |> TsDecode.map String.fromInt
+    ]
+    |> TsDecode.tsType
+    |> TsJson.Type.toTypeScript --> "string | number"
 ```
 
-This will expect to receive a `string | boolean` from TypeScript! From this simple idea, you can build very sophisticated
-typed interop, even sending/receiving Elm Custom Types, and sending/receiving TypeScript discriminated unions.
+So we've written a Decoder very similar to how we would with `elm/json`, but this `Decoder` has one key difference.
+We can turn the `Decoder` itself into a TypeScript type (`string | number`). And without even passing a value through the `Decoder`
+ From this simple idea, you can build very sophisticated typed interop, even sending/receiving Elm Custom Types,
+and sending/receiving TypeScript discriminated unions.
 
 ## Example
 
@@ -95,27 +99,4 @@ userDecoder |> Decode.runExample """{"kind":"guest"}"""
 --> { decoded = Ok Guest
 --> , tsType = """{ name : string; kind : "regular" } | {"kind":"guest"}"""
 --> }
-
-
 ```
-
-## Do I need to pay to use elm-ts-interop?
-
-You don't need to pay, and the core features of `elm-ts-interop` will always be free. If you're getting value from `elm-ts-interop` and you'd like to get some additional code generation features that make it nicer to work with, then you can upgrade to the pro version at elm-ts-interop.com. Thank you to pro users for supporting my work!
-
-## Wasn't this called elm-typescript-interop before?
-
-Yes, you can think of `elm-ts-interop` as version 2.0 of `elm-typescript-interop` (which is now deprecated). The old approach scanned your Elm project's source code to find all ports and their types. This worked, but it had limitations. Some of the benefits of the new approach with `elm-ts-interop` include:
-
-- No performance bottlenecks for large apps - performance is the same no matter how big your source code is because it doesn't scan your whole app
-- You can now send/receive Custom Types through ports!
-- The types you can send/receive through ports are now much more expressive. The types you can annotate an Elm port with to automatically serialize are limited to Bool, Int, Float, String, Maybe, List, Array, tuples, records, and Json.Decode.Value. With `elm-ts-interop`, you can serialize/de-serialize anything that you could express through a TypeScript annotation of a JSON value. That includes:
-  - array
-  - unions (including discriminated unions, which can express the same possibilities as an Elm Custom type!)
-  - Literal types, like `type role = 'admin' | 'regular' | 'guest'`
-
-## Can I use elm-ts-interop with plain JavaScript?
-
-You absolutely can! `elm-ts-interop` works great with plain `.js` files.
-
-Here are some docs on using TypeScript through JSDoc comments in JS: <https://www.typescriptlang.org/docs/handbook/intro-to-js-ts.html>.
