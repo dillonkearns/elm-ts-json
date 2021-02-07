@@ -88,8 +88,12 @@ nameDecoder =
 userEncoder |> Encode.typeDef
 --> """{"kind":"guest"} | { kind : "regular"; name : string }"""
 
-userDecoder |> Decode.tsTypeToString
---> """{ name : string; kind : "regular" } | {"kind":"guest"}"""
+userDecoder |> Decode.runExample """{"kind":"guest"}"""
+--> { decoded = Ok Guest
+--> , tsType = """{ name : string; kind : "regular" } | {"kind":"guest"}"""
+--> }
+
+
 ```
 
 ## Do I need to pay to use elm-ts-interop?
