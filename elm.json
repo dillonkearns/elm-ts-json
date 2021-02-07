@@ -1,7 +1,7 @@
 {
     "type": "package",
     "name": "dillonkearns/elm-ts-json",
-    "summary": "Keep your TypeScript type definitions in sync with your ports.",
+    "summary": "JSON Encoders and Decoders with TypeScript type information.",
     "license": "BSD-3-Clause",
     "version": "1.0.0",
     "exposed-modules": [
