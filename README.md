@@ -23,7 +23,8 @@ TsDecode.oneOf
     , TsDecode.int |> TsDecode.map String.fromInt
     ]
     |> TsDecode.tsType
-    |> TsJson.Type.toTypeScript --> "string | number"
+    |> TsJson.Type.toTypeScript
+    --> "string | number"
 ```
 
 So we've written a Decoder very similar to how we would with `elm/json`, but this `Decoder` has one key difference.
