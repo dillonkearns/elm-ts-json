@@ -5,6 +5,7 @@
   "dependencies": {},
   "devDependencies": {
     "elm-review": "^2.3.3",
+    "elm-test": "^0.19.1-revision6",
     "elm-tooling": "^0.6.2",
     "elm-verify-examples": "^5.0.0",
     "prettier": "^2.2.1"
