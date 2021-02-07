@@ -5,7 +5,7 @@ module TsJson.Decode exposing
     , field, at
     , list, array, nullable, oneOf, dict, keyValuePairs, oneOrMore, optionalField, optionalNullableField
     , index, tuple, triple
-    , TupleBuilder, buildTuple, startTuple, tupleElement
+    , TupleBuilder, startTuple, buildTuple, tupleElement
     , map
     , map2, andMap
     , map3, map4, map5, map6, map7, map8
@@ -104,7 +104,7 @@ TypeScript tuples are much like an Elm tuples, except two key differences:
   - Elm tuples can only have 2 or 3 items, while TypeScript tuples can have any length
   - Elm tuples are a distinct type, while TypeScript tuples are just arrays with a statically known length
 
-@docs TupleBuilder, buildTuple, startTuple, tupleElement
+@docs TupleBuilder, startTuple, buildTuple, tupleElement
 
 
 ## Transformations
