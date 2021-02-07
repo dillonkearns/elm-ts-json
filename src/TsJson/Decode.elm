@@ -5,7 +5,7 @@ module TsJson.Decode exposing
     , field, at
     , list, array, nullable, oneOf, dict, keyValuePairs, oneOrMore, optionalField, optionalNullableField
     , index, tuple, triple
-    , TupleBuilder, startTuple, buildTuple, tupleElement
+    , TupleBuilder, startTuple, buildTuple, element
     , map
     , map2, andMap
     , map3, map4, map5, map6, map7, map8
@@ -104,7 +104,7 @@ TypeScript tuples are much like an Elm tuples, except two key differences:
   - Elm tuples can only have 2 or 3 items, while TypeScript tuples can have any length
   - Elm tuples are a distinct type, while TypeScript tuples are just arrays with a statically known length
 
-@docs TupleBuilder, startTuple, buildTuple, tupleElement
+@docs TupleBuilder, startTuple, buildTuple, element
 
 
 ## Transformations
@@ -891,8 +891,8 @@ index n (Decoder innerDecoder innerType) =
 tuple : Decoder value1 -> Decoder value2 -> Decoder ( value1, value2 )
 tuple decoder1 decoder2 =
     startTuple Tuple.pair
-        |> tupleElement decoder1
-        |> tupleElement decoder2
+        |> element decoder1
+        |> element decoder2
         |> buildTuple
 
 
@@ -915,9 +915,9 @@ triple :
     -> Decoder ( value1, value2, value3 )
 triple decoder1 decoder2 decoder3 =
     startTuple (\a b c -> ( a, b, c ))
-        |> tupleElement decoder1
-        |> tupleElement decoder2
-        |> tupleElement decoder3
+        |> element decoder1
+        |> element decoder2
+        |> element decoder3
         |> buildTuple
 
 
@@ -944,10 +944,10 @@ type TupleBuilder value
 
 
     startTuple (\a b c d -> { a = a, b = b, c = c, d = d })
-        |> tupleElement string
-        |> tupleElement int
-        |> tupleElement bool
-        |> tupleElement string
+        |> element string
+        |> element int
+        |> element bool
+        |> element string
         |> buildTuple
         |> runExample """["abc", 123, true, "xyz"]"""
     --> { decoded = Ok { a = "abc", b = 123, c = True, d = "xyz" }
@@ -955,11 +955,11 @@ type TupleBuilder value
     --> }
 
 -}
-tupleElement :
+element :
     Decoder a
     -> TupleBuilder (a -> b)
     -> TupleBuilder b
-tupleElement (Decoder innerDecoder1 innerType1) (TupleBuilder pipelineDecoder pipelineType) =
+element (Decoder innerDecoder1 innerType1) (TupleBuilder pipelineDecoder pipelineType) =
     TupleBuilder
         (pipelineDecoder |> Decode.map2 (|>) (Decode.index (List.length pipelineType) innerDecoder1))
         (pipelineType ++ [ innerType1 ])
