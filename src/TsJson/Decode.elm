@@ -706,11 +706,8 @@ literal value_ literalValue =
 
     import Json.Decode
 
-    exampleDecoder : Decoder String
-    exampleDecoder =
-        field "first" string
 
-    exampleDecoder
+    field "first" string
         |> runExample """{"first":"James","middle":"Tiberius","last":"Kirk"}"""
     --> { decoded = Ok "James"
     --> , tsType = "{ first : string }"
@@ -736,11 +733,13 @@ field fieldName (Decoder innerDecoder innerType) =
     modeDecoder : Decoder Mode
     modeDecoder =
         oneOf [ literal DarkMode <| Json.Encode.string "dark", literal LightMode <| Json.Encode.string "light" ]
-            (at [ "options", "mode" ] modeDecoder)
-            |> runExample """{"options":
-                           { "mode": "dark" },
-                        "version": "1.2.3"}"""
+            |> (at [ "options", "mode" ])
 
+    modeDecoder
+        |> runExample """{
+                           "options": { "mode": "dark" },
+                           "version": "1.2.3"
+                         }"""
     --> { decoded = Ok DarkMode
     --> , tsType = """{ options : { mode : "dark" | "light" } }"""
     --> }
