@@ -558,7 +558,8 @@ fail message =
     import Json.Decode
 
 
-    null False |> runExample "null"
+    null False
+        |> runExample "null"
     --> { decoded = Ok False
     --> , tsType = "null"
     --> }
@@ -585,17 +586,20 @@ So use this `Decoder` with care!
 
 
     -- WARNING: uh oh, this may not be the desired behavior!
-    maybe (field "thisShouldBeABoolean" bool) |> runExample json
+    maybe (field "thisShouldBeABoolean" bool)
+        |> runExample json
     --> { decoded = Ok Nothing
     --> , tsType = "{ thisShouldBeABoolean : boolean } | JsonValue"
     --> }
 
-    maybe (field "height" float) |> runExample json
+    maybe (field "height" float)
+        |> runExample json
     --> { decoded = Ok Nothing
     --> , tsType = "{ height : number } | JsonValue"
     --> }
 
-    field "height" (maybe float) |> runExample json
+    field "height" (maybe float)
+        |> runExample json
     --> { decoded = Err "Problem with the given value:\n\n{\n        \"name\": \"tom\",\n        \"age\": 42,\n        \"thisShouldBeABoolean\": \"true\"\n    }\n\nExpecting an OBJECT with a field named `height`"
     --> , tsType = "{ height : number | JsonValue }"
     --> }
@@ -620,12 +624,14 @@ is for the malformed version to fail, which is exactly what this function will d
     json : String
     json = """{ "name": "tom", "age": null }"""
 
-    optionalField "height" float |> runExample json
+    optionalField "height" float
+        |> runExample json
     --> { decoded = Ok Nothing
     --> , tsType = "{ height? : number }"
     --> }
 
-    optionalField "age" int |> runExample json
+    optionalField "age" int
+        |> runExample json
     --> { decoded = Err "Problem with the value at json.age:\n\n    null\n\nExpecting an INT"
     --> , tsType = "{ age? : number }"
     --> }
@@ -659,12 +665,14 @@ optionalField fieldName (Decoder innerDecoder innerType) =
     json : String
     json = """{ "name": "tom", "age": null }"""
 
-    optionalNullableField "height" float |> runExample json
+    optionalNullableField "height" float
+        |> runExample json
     --> { decoded = Ok Nothing
     --> , tsType = "{ height? : number | null }"
     --> }
 
-    optionalNullableField "age" int |> runExample json
+    optionalNullableField "age" int
+        |> runExample json
     --> { decoded = Ok Nothing
     --> , tsType = "{ age? : number | null }"
     --> }
