@@ -8,11 +8,11 @@ module TsJson.Decode exposing
     , TupleBuilder, startTuple, buildTuple, element
     , map
     , map2, andMap
-    , map3, map4, map5, map6, map7, map8
     , literal, null
     , andThen, AndThenContinuation, andThenInit, andThenDecoder
     , value, unknownAndThen, maybe
     , decoder, tsType
+    , map3, map4, map5, map6, map7, map8
     , runExample
     )
 
@@ -116,8 +116,6 @@ TypeScript tuples are much like an Elm tuples, except two key differences:
 
 @docs map2, andMap
 
-@docs map3, map4, map5, map6, map7, map8
-
 
 ## TypeScript Literals
 
@@ -144,6 +142,11 @@ Usually you don't need to use these functions directly, but instead the code gen
 tool will use these for you under the hood. These can be helpful for debugging, or for building new tools on top of this package.
 
 @docs decoder, tsType
+
+
+## mapN for Combining More Than Two Items
+
+@docs map3, map4, map5, map6, map7, map8
 
 
 ## Internals
