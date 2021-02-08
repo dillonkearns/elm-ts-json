@@ -1,4 +1,4 @@
-module CodecBaseTests exposing (..)
+module CodecBaseTests exposing (suite)
 
 import Dict
 import Expect
@@ -9,6 +9,7 @@ import Test exposing (Test, describe, fuzz, test)
 import TsJson.Codec as Codec exposing (Codec)
 import TsJson.Decode
 import TsJson.Encode
+import TsJson.Type
 
 
 suite : Test
@@ -41,6 +42,22 @@ decodeValue codec =
 
 roundtrips : Fuzzer a -> Codec a -> Test
 roundtrips fuzzer codec =
+    fuzz fuzzer "is a roundtrip" <|
+        \value ->
+            value
+                |> TsJson.Encode.encoder (Codec.encoder codec)
+                |> Codec.decodeValue codec
+                |> Expect.all
+                    [ Expect.equal (Ok value)
+                    , \_ ->
+                        Expect.equal
+                            (codec |> Codec.encoder |> TsJson.Encode.tsType |> TsJson.Type.toTypeScript)
+                            (codec |> Codec.decoder |> TsJson.Decode.tsType |> TsJson.Type.toTypeScript)
+                    ]
+
+
+roundtripsWithDifferentAnnotations : Fuzzer a -> Codec a -> Test
+roundtripsWithDifferentAnnotations fuzzer codec =
     fuzz fuzzer "is a roundtrip" <|
         \value ->
             value
@@ -263,7 +280,7 @@ bimapTests =
 maybeTests : List Test
 maybeTests =
     [ describe "single"
-        [ roundtrips
+        [ roundtripsWithDifferentAnnotations
             (Fuzz.oneOf
                 [ Fuzz.constant Nothing
                 , Fuzz.map Just Fuzz.int
