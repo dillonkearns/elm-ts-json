@@ -1,14 +1,15 @@
 module TsJson.Codec exposing
     ( Codec, Value, Error
-    , Decoder, decoder
-    , encoder
+    , Decoder, decoder, decodeString, decodeValue
+    , encoder, encodeToString, encodeToValue
     , string, bool, int, float
-    , maybe, list, array, dict, set, tuple, triple, result
-    , ObjectCodec, object, field, maybeField, nullableField, buildObject
-    , CustomCodec, custom, variant0, variant1, variant2, variant3, variant4, variant5, variant6, variant7, variant8, buildCustom
+    , maybe, list, array, dict, set, tuple, triple
+    , ObjectCodec, object
+    , CustomCodec, custom
     , oneOf
     , map
-    , succeed, recursive, fail, andThen, lazy, value, build
+    , succeed, fail, value, build
+    --recursive, andThen, lazy,
     )
 
 {-| A `Codec a` contain a JSON `Decoder a` and the corresponding `a -> Value` encoder.
@@ -119,6 +120,23 @@ decoder (Codec m) =
     m.decoder
 
 
+{-| Parse the given string into a JSON value and then run the `Codec` on it.
+This will fail if the string is not well-formed JSON or if the `Codec`
+fails for some reason.
+-}
+decodeString : Codec a -> String -> Result Error a
+decodeString codec =
+    Json.Decode.decodeString (decoder codec |> JD.decoder)
+
+
+{-| Run a `Codec` to decode some JSON `Value`. You can send these JSON values
+through ports, so that is probably the main time you would use this function.
+-}
+decodeValue : Codec a -> Value -> Result Error a
+decodeValue codec =
+    Json.Decode.decodeValue (decoder codec |> JD.decoder)
+
+
 
 -- ENCODE
 
@@ -128,6 +146,23 @@ decoder (Codec m) =
 encoder : Codec a -> JE.Encoder a
 encoder (Codec m) =
     m.encoder
+
+
+{-| Convert a value into a prettified JSON string. The first argument specifies
+the amount of indentation in the result string.
+-}
+encodeToString : Int -> Codec a -> (a -> String)
+encodeToString indentation codec =
+    encodeToValue codec >> Json.Encode.encode indentation
+
+
+{-| Convert a value into a Javascript `Value`.
+-}
+encodeToValue : Codec a -> a -> Value
+encodeToValue codec =
+    codec
+        |> encoder
+        |> JE.encoder
 
 
 
@@ -261,25 +296,23 @@ triple m1 m2 m3 =
         }
 
 
-{-| `Codec` for `Result` values.
--}
-result : Codec error -> Codec value -> Codec (Result error value)
-result errorCodec valueCodec =
-    custom
-        (\ferr fok v ->
-            case v of
-                Err err ->
-                    ferr err
 
-                Ok ok ->
-                    fok ok
-        )
-        |> variant1 "Err" Err errorCodec
-        |> variant1 "Ok" Ok valueCodec
-        |> buildCustom
-
-
-
+--{-| `Codec` for `Result` values.
+---}
+--result : Codec error -> Codec value -> Codec (Result error value)
+--result errorCodec valueCodec =
+--    custom
+--        (\ferr fok v ->
+--            case v of
+--                Err err ->
+--                    ferr err
+--
+--                Ok ok ->
+--                    fok ok
+--        )
+--        |> variant1 "Err" Err errorCodec
+--        |> variant1 "Ok" Ok valueCodec
+--        |> buildCustom
 -- OBJECTS
 
 
@@ -327,70 +360,68 @@ object ctor =
         }
 
 
-{-| Specify the name, getter and `Codec` for a field.
 
-The name is only used as the field name in the resulting JSON, and has no impact on the Elm side.
-
--}
-field : String -> (a -> f) -> Codec f -> ObjectCodec a (f -> b) -> ObjectCodec a b
-field name getter codec (ObjectCodec ocodec) =
-    ObjectCodec
-        { encoder = \v -> ( name, encoder codec <| getter v ) :: ocodec.encoder v
-        , decoder = JD.map2 (\f x -> f x) ocodec.decoder (JD.field name (decoder codec))
-        }
-
-
-{-| Specify the name getter and `Codec` for an optional field.
-
-This is particularly useful for evolving your `Codec`s.
-
-If the field is not present in the input then it gets decoded to `Nothing`.
-If the optional field's value is `Nothing` then the resulting object will not contain that field.
-
--}
-maybeField : String -> (a -> Maybe f) -> Codec f -> ObjectCodec a (Maybe f -> b) -> ObjectCodec a b
-maybeField name getter codec (ObjectCodec ocodec) =
-    ObjectCodec
-        { encoder =
-            \v ->
-                case getter v of
-                    Just present ->
-                        ( name, encoder codec present ) :: ocodec.encoder v
-
-                    Nothing ->
-                        ocodec.encoder v
-        , decoder =
-            decoder codec
-                |> JD.field name
-                |> JD.maybe
-                |> JD.map2 (\f x -> f x) ocodec.decoder
-        }
-
-
-{-| Specify the name getter and `Codec` for a required field, whose value can be `null`.
-
-If the field is not present in the input then _the decoding fails_.
-If the field's value is `Nothing` then the resulting object will contain the field with a `null` value.
-
-This is a shorthand for a field having a codec built using `Codec.maybe`.
-
--}
-nullableField : String -> (a -> Maybe f) -> Codec f -> ObjectCodec a (Maybe f -> b) -> ObjectCodec a b
-nullableField name getter codec ocodec =
-    field name getter (maybe codec) ocodec
-
-
-{-| Create a `Codec` from a fully specified `ObjectCodec`.
--}
-buildObject : ObjectCodec a a -> Codec a
-buildObject (ObjectCodec om) =
-    Codec
-        { encoder = \v -> JE.object <| List.reverse <| om.encoder v
-        , decoder = om.decoder
-        }
-
-
-
+--{-| Specify the name, getter and `Codec` for a field.
+--
+--The name is only used as the field name in the resulting JSON, and has no impact on the Elm side.
+--
+---}
+--field : String -> (a -> f) -> Codec f -> ObjectCodec a (f -> b) -> ObjectCodec a b
+--field name getter codec (ObjectCodec ocodec) =
+--    ObjectCodec
+--        { encoder = \v -> ( name, encoder codec <| getter v ) :: ocodec.encoder v
+--        , decoder = JD.map2 (\f x -> f x) ocodec.decoder (JD.field name (decoder codec))
+--        }
+--
+--
+--{-| Specify the name getter and `Codec` for an optional field.
+--
+--This is particularly useful for evolving your `Codec`s.
+--
+--If the field is not present in the input then it gets decoded to `Nothing`.
+--If the optional field's value is `Nothing` then the resulting object will not contain that field.
+--
+---}
+--maybeField : String -> (a -> Maybe f) -> Codec f -> ObjectCodec a (Maybe f -> b) -> ObjectCodec a b
+--maybeField name getter codec (ObjectCodec ocodec) =
+--    ObjectCodec
+--        { encoder =
+--            \v ->
+--                case getter v of
+--                    Just present ->
+--                        ( name, encoder codec present ) :: ocodec.encoder v
+--
+--                    Nothing ->
+--                        ocodec.encoder v
+--        , decoder =
+--            decoder codec
+--                |> JD.field name
+--                |> JD.maybe
+--                |> JD.map2 (\f x -> f x) ocodec.decoder
+--        }
+--
+--
+--{-| Specify the name getter and `Codec` for a required field, whose value can be `null`.
+--
+--If the field is not present in the input then _the decoding fails_.
+--If the field's value is `Nothing` then the resulting object will contain the field with a `null` value.
+--
+--This is a shorthand for a field having a codec built using `Codec.maybe`.
+--
+---}
+--nullableField : String -> (a -> Maybe f) -> Codec f -> ObjectCodec a (Maybe f -> b) -> ObjectCodec a b
+--nullableField name getter codec ocodec =
+--    field name getter (maybe codec) ocodec
+--
+--
+--{-| Create a `Codec` from a fully specified `ObjectCodec`.
+---}
+--buildObject : ObjectCodec a a -> Codec a
+--buildObject (ObjectCodec om) =
+--    Codec
+--        { encoder = \v -> JE.object <| List.reverse <| om.encoder v
+--        , decoder = om.decoder
+--        }
 -- CUSTOM
 
 
@@ -440,304 +471,302 @@ custom match =
         }
 
 
-variant :
-    String
-    -> ((List Value -> Value) -> a)
-    -> Decoder v
-    -> CustomCodec (a -> b) v
-    -> CustomCodec b v
-variant name matchPiece decoderPiece (CustomCodec am) =
-    let
-        enc v =
-            JE.object
-                [ ( "tag", JE.string name )
-                , ( "args", JE.list identity v )
-                ]
-    in
-    CustomCodec
-        { match = am.match <| matchPiece enc
-        , decoder = Dict.insert name decoderPiece am.decoder
-        }
 
-
-{-| Define a variant with 0 parameters for a custom type.
--}
-variant0 :
-    String
-    -> v
-    -> CustomCodec (Value -> a) v
-    -> CustomCodec a v
-variant0 name ctor =
-    variant name
-        (\c -> c [])
-        (JD.succeed ctor)
-
-
-{-| Define a variant with 1 parameters for a custom type.
--}
-variant1 :
-    String
-    -> (a -> v)
-    -> Codec a
-    -> CustomCodec ((a -> Value) -> b) v
-    -> CustomCodec b v
-variant1 name ctor m1 =
-    variant name
-        (\c v ->
-            c
-                [ encoder m1 v
-                ]
-        )
-        (JD.map ctor
-            (JD.index 0 <| decoder m1)
-        )
-
-
-{-| Define a variant with 2 parameters for a custom type.
--}
-variant2 :
-    String
-    -> (a -> b -> v)
-    -> Codec a
-    -> Codec b
-    -> CustomCodec ((a -> b -> Value) -> c) v
-    -> CustomCodec c v
-variant2 name ctor m1 m2 =
-    variant name
-        (\c v1 v2 ->
-            c
-                [ encoder m1 v1
-                , encoder m2 v2
-                ]
-        )
-        (JD.map2 ctor
-            (JD.index 0 <| decoder m1)
-            (JD.index 1 <| decoder m2)
-        )
-
-
-{-| Define a variant with 3 parameters for a custom type.
--}
-variant3 :
-    String
-    -> (a -> b -> c -> v)
-    -> Codec a
-    -> Codec b
-    -> Codec c
-    -> CustomCodec ((a -> b -> c -> Value) -> partial) v
-    -> CustomCodec partial v
-variant3 name ctor m1 m2 m3 =
-    variant name
-        (\c v1 v2 v3 ->
-            c
-                [ encoder m1 v1
-                , encoder m2 v2
-                , encoder m3 v3
-                ]
-        )
-        (JD.map3 ctor
-            (JD.index 0 <| decoder m1)
-            (JD.index 1 <| decoder m2)
-            (JD.index 2 <| decoder m3)
-        )
-
-
-{-| Define a variant with 4 parameters for a custom type.
--}
-variant4 :
-    String
-    -> (a -> b -> c -> d -> v)
-    -> Codec a
-    -> Codec b
-    -> Codec c
-    -> Codec d
-    -> CustomCodec ((a -> b -> c -> d -> Value) -> partial) v
-    -> CustomCodec partial v
-variant4 name ctor m1 m2 m3 m4 =
-    variant name
-        (\c v1 v2 v3 v4 ->
-            c
-                [ encoder m1 v1
-                , encoder m2 v2
-                , encoder m3 v3
-                , encoder m4 v4
-                ]
-        )
-        (JD.map4 ctor
-            (JD.index 0 <| decoder m1)
-            (JD.index 1 <| decoder m2)
-            (JD.index 2 <| decoder m3)
-            (JD.index 3 <| decoder m4)
-        )
-
-
-{-| Define a variant with 5 parameters for a custom type.
--}
-variant5 :
-    String
-    -> (a -> b -> c -> d -> e -> v)
-    -> Codec a
-    -> Codec b
-    -> Codec c
-    -> Codec d
-    -> Codec e
-    -> CustomCodec ((a -> b -> c -> d -> e -> Value) -> partial) v
-    -> CustomCodec partial v
-variant5 name ctor m1 m2 m3 m4 m5 =
-    variant name
-        (\c v1 v2 v3 v4 v5 ->
-            c
-                [ encoder m1 v1
-                , encoder m2 v2
-                , encoder m3 v3
-                , encoder m4 v4
-                , encoder m5 v5
-                ]
-        )
-        (JD.map5 ctor
-            (JD.index 0 <| decoder m1)
-            (JD.index 1 <| decoder m2)
-            (JD.index 2 <| decoder m3)
-            (JD.index 3 <| decoder m4)
-            (JD.index 4 <| decoder m5)
-        )
-
-
-{-| Define a variant with 6 parameters for a custom type.
--}
-variant6 :
-    String
-    -> (a -> b -> c -> d -> e -> f -> v)
-    -> Codec a
-    -> Codec b
-    -> Codec c
-    -> Codec d
-    -> Codec e
-    -> Codec f
-    -> CustomCodec ((a -> b -> c -> d -> e -> f -> Value) -> partial) v
-    -> CustomCodec partial v
-variant6 name ctor m1 m2 m3 m4 m5 m6 =
-    variant name
-        (\c v1 v2 v3 v4 v5 v6 ->
-            c
-                [ encoder m1 v1
-                , encoder m2 v2
-                , encoder m3 v3
-                , encoder m4 v4
-                , encoder m5 v5
-                , encoder m6 v6
-                ]
-        )
-        (JD.map6 ctor
-            (JD.index 0 <| decoder m1)
-            (JD.index 1 <| decoder m2)
-            (JD.index 2 <| decoder m3)
-            (JD.index 3 <| decoder m4)
-            (JD.index 4 <| decoder m5)
-            (JD.index 5 <| decoder m6)
-        )
-
-
-{-| Define a variant with 7 parameters for a custom type.
--}
-variant7 :
-    String
-    -> (a -> b -> c -> d -> e -> f -> g -> v)
-    -> Codec a
-    -> Codec b
-    -> Codec c
-    -> Codec d
-    -> Codec e
-    -> Codec f
-    -> Codec g
-    -> CustomCodec ((a -> b -> c -> d -> e -> f -> g -> Value) -> partial) v
-    -> CustomCodec partial v
-variant7 name ctor m1 m2 m3 m4 m5 m6 m7 =
-    variant name
-        (\c v1 v2 v3 v4 v5 v6 v7 ->
-            c
-                [ encoder m1 v1
-                , encoder m2 v2
-                , encoder m3 v3
-                , encoder m4 v4
-                , encoder m5 v5
-                , encoder m6 v6
-                , encoder m7 v7
-                ]
-        )
-        (JD.map7 ctor
-            (JD.index 0 <| decoder m1)
-            (JD.index 1 <| decoder m2)
-            (JD.index 2 <| decoder m3)
-            (JD.index 3 <| decoder m4)
-            (JD.index 4 <| decoder m5)
-            (JD.index 5 <| decoder m6)
-            (JD.index 6 <| decoder m7)
-        )
-
-
-{-| Define a variant with 8 parameters for a custom type.
--}
-variant8 :
-    String
-    -> (a -> b -> c -> d -> e -> f -> g -> h -> v)
-    -> Codec a
-    -> Codec b
-    -> Codec c
-    -> Codec d
-    -> Codec e
-    -> Codec f
-    -> Codec g
-    -> Codec h
-    -> CustomCodec ((a -> b -> c -> d -> e -> f -> g -> h -> Value) -> partial) v
-    -> CustomCodec partial v
-variant8 name ctor m1 m2 m3 m4 m5 m6 m7 m8 =
-    variant name
-        (\c v1 v2 v3 v4 v5 v6 v7 v8 ->
-            c
-                [ encoder m1 v1
-                , encoder m2 v2
-                , encoder m3 v3
-                , encoder m4 v4
-                , encoder m5 v5
-                , encoder m6 v6
-                , encoder m7 v7
-                , encoder m8 v8
-                ]
-        )
-        (JD.map8 ctor
-            (JD.index 0 <| decoder m1)
-            (JD.index 1 <| decoder m2)
-            (JD.index 2 <| decoder m3)
-            (JD.index 3 <| decoder m4)
-            (JD.index 4 <| decoder m5)
-            (JD.index 5 <| decoder m6)
-            (JD.index 6 <| decoder m7)
-            (JD.index 7 <| decoder m8)
-        )
-
-
-{-| Build a `Codec` for a fully specified custom type.
--}
-buildCustom : CustomCodec (a -> Value) a -> Codec a
-buildCustom (CustomCodec am) =
-    Codec
-        { encoder = \v -> am.match v
-        , decoder =
-            JD.field "tag" JD.string
-                |> JD.andThen
-                    (\tag ->
-                        case Dict.get tag am.decoder of
-                            Nothing ->
-                                JD.fail <| "tag " ++ tag ++ "did not match"
-
-                            Just dec ->
-                                JD.field "args" dec
-                    )
-        }
-
-
-
+--variant :
+--    String
+--    -> ((List Value -> Value) -> a)
+--    -> Decoder v
+--    -> CustomCodec (a -> b) v
+--    -> CustomCodec b v
+--variant name matchPiece decoderPiece (CustomCodec am) =
+--    let
+--        enc v =
+--            JE.object
+--                [ ( "tag", JE.string name )
+--                , ( "args", JE.list identity v )
+--                ]
+--    in
+--    CustomCodec
+--        { match = am.match <| matchPiece enc
+--        , decoder = Dict.insert name decoderPiece am.decoder
+--        }
+--
+--
+--{-| Define a variant with 0 parameters for a custom type.
+---}
+--variant0 :
+--    String
+--    -> v
+--    -> CustomCodec (Value -> a) v
+--    -> CustomCodec a v
+--variant0 name ctor =
+--    variant name
+--        (\c -> c [])
+--        (JD.succeed ctor)
+--
+--
+--{-| Define a variant with 1 parameters for a custom type.
+---}
+--variant1 :
+--    String
+--    -> (a -> v)
+--    -> Codec a
+--    -> CustomCodec ((a -> Value) -> b) v
+--    -> CustomCodec b v
+--variant1 name ctor m1 =
+--    variant name
+--        (\c v ->
+--            c
+--                [ encoder m1 v
+--                ]
+--        )
+--        (JD.map ctor
+--            (JD.index 0 <| decoder m1)
+--        )
+--
+--
+--{-| Define a variant with 2 parameters for a custom type.
+---}
+--variant2 :
+--    String
+--    -> (a -> b -> v)
+--    -> Codec a
+--    -> Codec b
+--    -> CustomCodec ((a -> b -> Value) -> c) v
+--    -> CustomCodec c v
+--variant2 name ctor m1 m2 =
+--    variant name
+--        (\c v1 v2 ->
+--            c
+--                [ encoder m1 v1
+--                , encoder m2 v2
+--                ]
+--        )
+--        (JD.map2 ctor
+--            (JD.index 0 <| decoder m1)
+--            (JD.index 1 <| decoder m2)
+--        )
+--
+--
+--{-| Define a variant with 3 parameters for a custom type.
+---}
+--variant3 :
+--    String
+--    -> (a -> b -> c -> v)
+--    -> Codec a
+--    -> Codec b
+--    -> Codec c
+--    -> CustomCodec ((a -> b -> c -> Value) -> partial) v
+--    -> CustomCodec partial v
+--variant3 name ctor m1 m2 m3 =
+--    variant name
+--        (\c v1 v2 v3 ->
+--            c
+--                [ encoder m1 v1
+--                , encoder m2 v2
+--                , encoder m3 v3
+--                ]
+--        )
+--        (JD.map3 ctor
+--            (JD.index 0 <| decoder m1)
+--            (JD.index 1 <| decoder m2)
+--            (JD.index 2 <| decoder m3)
+--        )
+--
+--
+--{-| Define a variant with 4 parameters for a custom type.
+---}
+--variant4 :
+--    String
+--    -> (a -> b -> c -> d -> v)
+--    -> Codec a
+--    -> Codec b
+--    -> Codec c
+--    -> Codec d
+--    -> CustomCodec ((a -> b -> c -> d -> Value) -> partial) v
+--    -> CustomCodec partial v
+--variant4 name ctor m1 m2 m3 m4 =
+--    variant name
+--        (\c v1 v2 v3 v4 ->
+--            c
+--                [ encoder m1 v1
+--                , encoder m2 v2
+--                , encoder m3 v3
+--                , encoder m4 v4
+--                ]
+--        )
+--        (JD.map4 ctor
+--            (JD.index 0 <| decoder m1)
+--            (JD.index 1 <| decoder m2)
+--            (JD.index 2 <| decoder m3)
+--            (JD.index 3 <| decoder m4)
+--        )
+--
+--
+--{-| Define a variant with 5 parameters for a custom type.
+---}
+--variant5 :
+--    String
+--    -> (a -> b -> c -> d -> e -> v)
+--    -> Codec a
+--    -> Codec b
+--    -> Codec c
+--    -> Codec d
+--    -> Codec e
+--    -> CustomCodec ((a -> b -> c -> d -> e -> Value) -> partial) v
+--    -> CustomCodec partial v
+--variant5 name ctor m1 m2 m3 m4 m5 =
+--    variant name
+--        (\c v1 v2 v3 v4 v5 ->
+--            c
+--                [ encoder m1 v1
+--                , encoder m2 v2
+--                , encoder m3 v3
+--                , encoder m4 v4
+--                , encoder m5 v5
+--                ]
+--        )
+--        (JD.map5 ctor
+--            (JD.index 0 <| decoder m1)
+--            (JD.index 1 <| decoder m2)
+--            (JD.index 2 <| decoder m3)
+--            (JD.index 3 <| decoder m4)
+--            (JD.index 4 <| decoder m5)
+--        )
+--
+--
+--{-| Define a variant with 6 parameters for a custom type.
+---}
+--variant6 :
+--    String
+--    -> (a -> b -> c -> d -> e -> f -> v)
+--    -> Codec a
+--    -> Codec b
+--    -> Codec c
+--    -> Codec d
+--    -> Codec e
+--    -> Codec f
+--    -> CustomCodec ((a -> b -> c -> d -> e -> f -> Value) -> partial) v
+--    -> CustomCodec partial v
+--variant6 name ctor m1 m2 m3 m4 m5 m6 =
+--    variant name
+--        (\c v1 v2 v3 v4 v5 v6 ->
+--            c
+--                [ encoder m1 v1
+--                , encoder m2 v2
+--                , encoder m3 v3
+--                , encoder m4 v4
+--                , encoder m5 v5
+--                , encoder m6 v6
+--                ]
+--        )
+--        (JD.map6 ctor
+--            (JD.index 0 <| decoder m1)
+--            (JD.index 1 <| decoder m2)
+--            (JD.index 2 <| decoder m3)
+--            (JD.index 3 <| decoder m4)
+--            (JD.index 4 <| decoder m5)
+--            (JD.index 5 <| decoder m6)
+--        )
+--
+--
+--{-| Define a variant with 7 parameters for a custom type.
+---}
+--variant7 :
+--    String
+--    -> (a -> b -> c -> d -> e -> f -> g -> v)
+--    -> Codec a
+--    -> Codec b
+--    -> Codec c
+--    -> Codec d
+--    -> Codec e
+--    -> Codec f
+--    -> Codec g
+--    -> CustomCodec ((a -> b -> c -> d -> e -> f -> g -> Value) -> partial) v
+--    -> CustomCodec partial v
+--variant7 name ctor m1 m2 m3 m4 m5 m6 m7 =
+--    variant name
+--        (\c v1 v2 v3 v4 v5 v6 v7 ->
+--            c
+--                [ encoder m1 v1
+--                , encoder m2 v2
+--                , encoder m3 v3
+--                , encoder m4 v4
+--                , encoder m5 v5
+--                , encoder m6 v6
+--                , encoder m7 v7
+--                ]
+--        )
+--        (JD.map7 ctor
+--            (JD.index 0 <| decoder m1)
+--            (JD.index 1 <| decoder m2)
+--            (JD.index 2 <| decoder m3)
+--            (JD.index 3 <| decoder m4)
+--            (JD.index 4 <| decoder m5)
+--            (JD.index 5 <| decoder m6)
+--            (JD.index 6 <| decoder m7)
+--        )
+--
+--
+--{-| Define a variant with 8 parameters for a custom type.
+---}
+--variant8 :
+--    String
+--    -> (a -> b -> c -> d -> e -> f -> g -> h -> v)
+--    -> Codec a
+--    -> Codec b
+--    -> Codec c
+--    -> Codec d
+--    -> Codec e
+--    -> Codec f
+--    -> Codec g
+--    -> Codec h
+--    -> CustomCodec ((a -> b -> c -> d -> e -> f -> g -> h -> Value) -> partial) v
+--    -> CustomCodec partial v
+--variant8 name ctor m1 m2 m3 m4 m5 m6 m7 m8 =
+--    variant name
+--        (\c v1 v2 v3 v4 v5 v6 v7 v8 ->
+--            c
+--                [ encoder m1 v1
+--                , encoder m2 v2
+--                , encoder m3 v3
+--                , encoder m4 v4
+--                , encoder m5 v5
+--                , encoder m6 v6
+--                , encoder m7 v7
+--                , encoder m8 v8
+--                ]
+--        )
+--        (JD.map8 ctor
+--            (JD.index 0 <| decoder m1)
+--            (JD.index 1 <| decoder m2)
+--            (JD.index 2 <| decoder m3)
+--            (JD.index 3 <| decoder m4)
+--            (JD.index 4 <| decoder m5)
+--            (JD.index 5 <| decoder m6)
+--            (JD.index 6 <| decoder m7)
+--            (JD.index 7 <| decoder m8)
+--        )
+--
+--
+--{-| Build a `Codec` for a fully specified custom type.
+---}
+--buildCustom : CustomCodec (a -> Value) a -> Codec a
+--buildCustom (CustomCodec am) =
+--    Codec
+--        { encoder = \v -> am.match v
+--        , decoder =
+--            JD.field "tag" JD.string
+--                |> JD.andThen
+--                    (\tag ->
+--                        case Dict.get tag am.decoder of
+--                            Nothing ->
+--                                JD.fail <| "tag " ++ tag ++ "did not match"
+--
+--                            Just dec ->
+--                                JD.field "args" dec
+--                    )
+--        }
 -- INCONSISTENT STRUCTURE
 
 
