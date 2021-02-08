@@ -5,7 +5,7 @@ module TsJson.Codec exposing
     , string, bool, int, float
     , maybe, list, array, dict, set, tuple, triple
     , ObjectCodec, object, field, maybeField, nullableField, buildObject
-    , CustomCodec, custom, variant0, buildCustom
+    , CustomCodec, custom, variant0, variant1, buildCustom
     , oneOf
     , map
     , succeed, fail, value, build
@@ -482,7 +482,7 @@ variant codec_ (CustomCodec am) =
         { match =
             am.match
                 |> JE.variant (encoder codec_)
-        , decoder = am.decoder -- Dict.insert name decoderPiece am.decoder
+        , decoder = am.decoder
         }
 
 
@@ -504,27 +504,49 @@ variant0 name ctor (CustomCodec am) =
         }
 
 
+{-| Define a variant with 0 parameters for a custom type.
+-}
+variant1 :
+    String
+    -> (input -> decodesTo)
+    -> Codec input
+    ->
+        CustomCodec
+            ((input
+              -> JE.UnionEncodeValue
+             )
+             -> decodesTo
+             -> JE.UnionEncodeValue
+            )
+            decodesTo
+    -> CustomCodec (decodesTo -> JE.UnionEncodeValue) decodesTo
+variant1 name ctor codec (CustomCodec am) =
+    let
+        variantDecoder : JD.Decoder decodesTo
+        variantDecoder =
+            JD.map2 (\() -> ctor)
+                (JD.field "tag"
+                    (JD.literal () (Json.Encode.string name))
+                )
+                (decoder codec |> JD.field "args")
 
---{-| Define a variant with 1 parameters for a custom type.
----}
---variant1 :
---    String
---    -> (a -> v)
---    -> Codec a
---    -> CustomCodec ((a -> Value) -> b) v
---    -> CustomCodec b v
---variant1 name ctor m1 =
---    variant name
---        (\c v ->
---            c
---                [ encoder m1 v
---                ]
---        )
---        (JD.map ctor
---            (JD.index 0 <| decoder m1)
---        )
---
---
+        encoderThing : JE.UnionBuilder (decodesTo -> JE.UnionEncodeValue)
+        encoderThing =
+            am.match
+                |> JE.variant
+                    (JE.object
+                        [ JE.required "tag" (\_ -> name) JE.string
+                        , JE.required "args" identity (encoder codec)
+                        ]
+                    )
+    in
+    CustomCodec
+        { match = encoderThing
+        , decoder = variantDecoder :: am.decoder
+        }
+
+
+
 --{-| Define a variant with 2 parameters for a custom type.
 ---}
 --variant2 :
@@ -755,23 +777,6 @@ variant0 name ctor (CustomCodec am) =
 -}
 buildCustom : CustomCodec (a -> JE.UnionEncodeValue) a -> Codec a
 buildCustom (CustomCodec am) =
-    --Codec
-    --{ encoder = Debug.todo "" -- am.match |> JE.buildUnion
-    --, decoder = Debug.todo ""
-    --
-    ----JD.fail ""
-    ----Debug.todo ""
-    ----JD.field "tag" JD.string
-    ----    |> JD.andThen
-    ----        (\tag ->
-    ----            case Dict.get tag am.decoder of
-    ----                Nothing ->
-    ----                    JD.fail <| "tag " ++ tag ++ "did not match"
-    ----
-    ----                Just dec ->
-    ----                    JD.field "args" dec
-    ----        )
-    --}
     Codec
         { encoder = am.match |> JE.buildUnion
         , decoder = JD.oneOf am.decoder

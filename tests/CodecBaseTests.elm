@@ -46,6 +46,7 @@ roundtrips fuzzer codec =
             value
                 |> TsJson.Encode.encoder (Codec.encoder codec)
                 |> Codec.decodeValue codec
+                |> Result.mapError JD.errorToString
                 |> Expect.all
                     [ Expect.equal (Ok value)
                     , \_ ->
@@ -222,19 +223,19 @@ customTests =
                 |> Codec.buildCustom
             )
         ]
+    , describe "with 1 ctor, 1 arg"
+        [ roundtripsWithDifferentAnnotations (Fuzz.map Newtype Fuzz.int)
+            (Codec.custom
+                (\f v ->
+                    case v of
+                        Newtype a ->
+                            f a
+                )
+                |> Codec.variant1 "Newtype" Newtype Codec.int
+                |> Codec.buildCustom
+            )
+        ]
 
-    --, describe "with 1 ctor, 1 arg"
-    --    [ roundtrips (Fuzz.map Newtype Fuzz.int)
-    --        (Codec.custom
-    --            (\f v ->
-    --                case v of
-    --                    Newtype a ->
-    --                        f a
-    --            )
-    --            |> Codec.variant1 "Newtype" Newtype Codec.int
-    --            |> Codec.buildCustom
-    --        )
-    --    ]
     --, describe "with 2 ctors, 0,1 args" <|
     --    let
     --        match fnothing fjust value =
