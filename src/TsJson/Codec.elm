@@ -5,7 +5,7 @@ module TsJson.Codec exposing
     , string, bool, int, float
     , maybe, list, array, dict, set, tuple, triple
     , ObjectCodec, object, field, maybeField, nullableField, buildObject
-    , CustomCodec, custom
+    , CustomCodec, custom, variant0, buildCustom
     , oneOf
     , map
     , succeed, fail, value, build
@@ -431,8 +431,8 @@ buildObject (ObjectCodec om) =
 -}
 type CustomCodec match v
     = CustomCodec
-        { match : match
-        , decoder : Dict String (Decoder v)
+        { match : JE.UnionBuilder match
+        , decoder : List (Decoder v)
         }
 
 
@@ -468,45 +468,43 @@ You need to pass a pattern matching function, built like this:
 custom : match -> CustomCodec match value
 custom match =
     CustomCodec
-        { match = match
-        , decoder = Dict.empty
+        { match = JE.union match
+        , decoder = []
+        }
+
+
+variant :
+    Codec input
+    -> CustomCodec ((input -> JE.UnionEncodeValue) -> match) v
+    -> CustomCodec match v
+variant codec_ (CustomCodec am) =
+    CustomCodec
+        { match =
+            am.match
+                |> JE.variant (encoder codec_)
+        , decoder = am.decoder -- Dict.insert name decoderPiece am.decoder
+        }
+
+
+{-| Define a variant with 0 parameters for a custom type.
+-}
+variant0 :
+    String
+    -> decodesTo
+    -> CustomCodec (JE.UnionEncodeValue -> input) decodesTo
+    -> CustomCodec input decodesTo
+variant0 name ctor (CustomCodec am) =
+    CustomCodec
+        { match =
+            am.match
+                |> JE.variant0 name
+        , decoder =
+            JD.field "tag" (JD.literal ctor (Json.Encode.string name))
+                :: am.decoder
         }
 
 
 
---variant :
---    String
---    -> ((List Value -> Value) -> a)
---    -> Decoder v
---    -> CustomCodec (a -> b) v
---    -> CustomCodec b v
---variant name matchPiece decoderPiece (CustomCodec am) =
---    let
---        enc v =
---            JE.object
---                [ ( "tag", JE.string name )
---                , ( "args", JE.list identity v )
---                ]
---    in
---    CustomCodec
---        { match = am.match <| matchPiece enc
---        , decoder = Dict.insert name decoderPiece am.decoder
---        }
---
---
---{-| Define a variant with 0 parameters for a custom type.
----}
---variant0 :
---    String
---    -> v
---    -> CustomCodec (Value -> a) v
---    -> CustomCodec a v
---variant0 name ctor =
---    variant name
---        (\c -> c [])
---        (JD.succeed ctor)
---
---
 --{-| Define a variant with 1 parameters for a custom type.
 ---}
 --variant1 :
@@ -751,24 +749,36 @@ custom match =
 --        )
 --
 --
---{-| Build a `Codec` for a fully specified custom type.
----}
---buildCustom : CustomCodec (a -> Value) a -> Codec a
---buildCustom (CustomCodec am) =
---    Codec
---        { encoder = \v -> am.match v
---        , decoder =
---            JD.field "tag" JD.string
---                |> JD.andThen
---                    (\tag ->
---                        case Dict.get tag am.decoder of
---                            Nothing ->
---                                JD.fail <| "tag " ++ tag ++ "did not match"
---
---                            Just dec ->
---                                JD.field "args" dec
---                    )
---        }
+
+
+{-| Build a `Codec` for a fully specified custom type.
+-}
+buildCustom : CustomCodec (a -> JE.UnionEncodeValue) a -> Codec a
+buildCustom (CustomCodec am) =
+    --Codec
+    --{ encoder = Debug.todo "" -- am.match |> JE.buildUnion
+    --, decoder = Debug.todo ""
+    --
+    ----JD.fail ""
+    ----Debug.todo ""
+    ----JD.field "tag" JD.string
+    ----    |> JD.andThen
+    ----        (\tag ->
+    ----            case Dict.get tag am.decoder of
+    ----                Nothing ->
+    ----                    JD.fail <| "tag " ++ tag ++ "did not match"
+    ----
+    ----                Just dec ->
+    ----                    JD.field "args" dec
+    ----        )
+    --}
+    Codec
+        { encoder = am.match |> JE.buildUnion
+        , decoder = JD.oneOf am.decoder
+        }
+
+
+
 -- INCONSISTENT STRUCTURE
 
 
