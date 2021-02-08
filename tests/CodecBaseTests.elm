@@ -17,8 +17,8 @@ suite =
     describe "Testing roundtrips"
         [ describe "Basic" basicTests
         , describe "Containers" containersTests
+        , describe "Object" objectTests
 
-        --, describe "Object" objectTests
         --, describe "Custom" customTests
         , describe "bimap" bimapTests
         , describe "maybe" maybeTests
@@ -123,87 +123,86 @@ containersTests =
     ]
 
 
+objectTests : List Test
+objectTests =
+    [ describe "with 0 fields"
+        [ roundtripsWithDifferentAnnotations (Fuzz.constant {})
+            (Codec.object {}
+                |> Codec.buildObject
+            )
+        ]
+    , describe "with 1 field"
+        [ roundtrips (Fuzz.map (\i -> { fname = i }) Fuzz.int)
+            (Codec.object (\i -> { fname = i })
+                |> Codec.field "fname" .fname Codec.int
+                |> Codec.buildObject
+            )
+        ]
+    , describe "with 2 fields"
+        [ roundtrips
+            (Fuzz.map2
+                (\a b ->
+                    { a = a
+                    , b = b
+                    }
+                )
+                Fuzz.int
+                Fuzz.int
+            )
+            (Codec.object
+                (\a b ->
+                    { a = a
+                    , b = b
+                    }
+                )
+                |> Codec.field "a" .a Codec.int
+                |> Codec.field "b" .b Codec.int
+                |> Codec.buildObject
+            )
+        ]
+    , describe "nullableField vs maybeField" <|
+        let
+            nullableCodec =
+                Codec.object
+                    (\f -> { f = f })
+                    |> Codec.nullableField "f" .f Codec.int
+                    |> Codec.buildObject
 
---objectTests : List Test
---objectTests =
---    [ describe "with 0 fields"
---        [ roundtrips (Fuzz.constant {})
---            (Codec.object {}
---                |> Codec.buildObject
---            )
---        ]
---    , describe "with 1 field"
---        [ roundtrips (Fuzz.map (\i -> { fname = i }) Fuzz.int)
---            (Codec.object (\i -> { fname = i })
---                |> Codec.field "fname" .fname Codec.int
---                |> Codec.buildObject
---            )
---        ]
---    , describe "with 2 fields"
---        [ roundtrips
---            (Fuzz.map2
---                (\a b ->
---                    { a = a
---                    , b = b
---                    }
---                )
---                Fuzz.int
---                Fuzz.int
---            )
---            (Codec.object
---                (\a b ->
---                    { a = a
---                    , b = b
---                    }
---                )
---                |> Codec.field "a" .a Codec.int
---                |> Codec.field "b" .b Codec.int
---                |> Codec.buildObject
---            )
---        ]
---    , describe "nullableField vs maybeField" <|
---        let
---            nullableCodec =
---                Codec.object
---                    (\f -> { f = f })
---                    |> Codec.nullableField "f" .f Codec.int
---                    |> Codec.buildObject
---
---            maybeCodec =
---                Codec.object
---                    (\f -> { f = f })
---                    |> Codec.maybeField "f" .f Codec.int
---                    |> Codec.buildObject
---        in
---        [ test "a nullableField is required" <|
---            \_ ->
---                "{}"
---                    |> Codec.decodeString nullableCodec
---                    |> (\r ->
---                            case r of
---                                Ok _ ->
---                                    Expect.fail "Should have failed"
---
---                                Err _ ->
---                                    Expect.pass
---                       )
---        , test "a nullableField produces a field with a null value on encoding Nothing" <|
---            \_ ->
---                { f = Nothing }
---                    |> Codec.encodeToString 0 nullableCodec
---                    |> Expect.equal "{\"f\":null}"
---        , test "a maybeField is optional" <|
---            \_ ->
---                "{}"
---                    |> Codec.decodeString maybeCodec
---                    |> Expect.equal (Ok { f = Nothing })
---        , test "a maybeField doesn't produce a field on encoding Nothing" <|
---            \_ ->
---                { f = Nothing }
---                    |> Codec.encodeToString 0 maybeCodec
---                    |> Expect.equal "{}"
---        ]
---    ]
+            maybeCodec =
+                Codec.object
+                    (\f -> { f = f })
+                    |> Codec.maybeField "f" .f Codec.int
+                    |> Codec.buildObject
+        in
+        [ test "a nullableField is required" <|
+            \_ ->
+                "{}"
+                    |> Codec.decodeString nullableCodec
+                    |> (\r ->
+                            case r of
+                                Ok _ ->
+                                    Expect.fail "Should have failed"
+
+                                Err _ ->
+                                    Expect.pass
+                       )
+        , test "a nullableField produces a field with a null value on encoding Nothing" <|
+            \_ ->
+                { f = Nothing }
+                    |> Codec.encodeToString 0 nullableCodec
+                    |> Expect.equal "{\"f\":null}"
+        , test "a maybeField is optional" <|
+            \_ ->
+                "{}"
+                    |> Codec.decodeString maybeCodec
+                    |> Expect.equal (Ok { f = Nothing })
+        , test "a maybeField doesn't produce a field on encoding Nothing" <|
+            \_ ->
+                { f = Nothing }
+                    |> Codec.encodeToString 0 maybeCodec
+                    |> Expect.equal "{}"
+        ]
+    ]
 
 
 type Newtype a

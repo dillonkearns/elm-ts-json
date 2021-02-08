@@ -4,7 +4,7 @@ module TsJson.Codec exposing
     , encoder, encodeToString, encodeToValue
     , string, bool, int, float
     , maybe, list, array, dict, set, tuple, triple
-    , ObjectCodec, object
+    , ObjectCodec, object, field, maybeField, nullableField, buildObject
     , CustomCodec, custom
     , oneOf
     , map
@@ -72,7 +72,7 @@ import Json.Decode
 import Json.Encode
 import Set exposing (Set)
 import TsJson.Decode as JD
-import TsJson.Encode as JE
+import TsJson.Encode as JE exposing (Property)
 
 
 
@@ -320,7 +320,7 @@ triple m1 m2 m3 =
 -}
 type ObjectCodec a b
     = ObjectCodec
-        { encoder : a -> List ( String, Value )
+        { encoder : List (Property a)
         , decoder : Decoder b
         }
 
@@ -355,73 +355,75 @@ Example without constructor:
 object : b -> ObjectCodec a b
 object ctor =
     ObjectCodec
-        { encoder = \_ -> []
+        { encoder = []
         , decoder = JD.succeed ctor
         }
 
 
+{-| Specify the name, getter and `Codec` for a field.
 
---{-| Specify the name, getter and `Codec` for a field.
---
---The name is only used as the field name in the resulting JSON, and has no impact on the Elm side.
---
----}
---field : String -> (a -> f) -> Codec f -> ObjectCodec a (f -> b) -> ObjectCodec a b
---field name getter codec (ObjectCodec ocodec) =
---    ObjectCodec
---        { encoder = \v -> ( name, encoder codec <| getter v ) :: ocodec.encoder v
---        , decoder = JD.map2 (\f x -> f x) ocodec.decoder (JD.field name (decoder codec))
---        }
---
---
---{-| Specify the name getter and `Codec` for an optional field.
---
---This is particularly useful for evolving your `Codec`s.
---
---If the field is not present in the input then it gets decoded to `Nothing`.
---If the optional field's value is `Nothing` then the resulting object will not contain that field.
---
----}
---maybeField : String -> (a -> Maybe f) -> Codec f -> ObjectCodec a (Maybe f -> b) -> ObjectCodec a b
---maybeField name getter codec (ObjectCodec ocodec) =
---    ObjectCodec
---        { encoder =
---            \v ->
---                case getter v of
---                    Just present ->
---                        ( name, encoder codec present ) :: ocodec.encoder v
---
---                    Nothing ->
---                        ocodec.encoder v
---        , decoder =
---            decoder codec
---                |> JD.field name
---                |> JD.maybe
---                |> JD.map2 (\f x -> f x) ocodec.decoder
---        }
---
---
---{-| Specify the name getter and `Codec` for a required field, whose value can be `null`.
---
---If the field is not present in the input then _the decoding fails_.
---If the field's value is `Nothing` then the resulting object will contain the field with a `null` value.
---
---This is a shorthand for a field having a codec built using `Codec.maybe`.
---
----}
---nullableField : String -> (a -> Maybe f) -> Codec f -> ObjectCodec a (Maybe f -> b) -> ObjectCodec a b
---nullableField name getter codec ocodec =
---    field name getter (maybe codec) ocodec
---
---
---{-| Create a `Codec` from a fully specified `ObjectCodec`.
----}
---buildObject : ObjectCodec a a -> Codec a
---buildObject (ObjectCodec om) =
---    Codec
---        { encoder = \v -> JE.object <| List.reverse <| om.encoder v
---        , decoder = om.decoder
---        }
+The name is only used as the field name in the resulting JSON, and has no impact on the Elm side.
+
+-}
+field : String -> (a -> f) -> Codec f -> ObjectCodec a (f -> b) -> ObjectCodec a b
+field name getter codec (ObjectCodec ocodec) =
+    ObjectCodec
+        { encoder =
+            JE.required name getter (encoder codec)
+                :: ocodec.encoder
+        , decoder = JD.map2 (\f x -> f x) ocodec.decoder (JD.field name (decoder codec))
+        }
+
+
+{-| Specify the name getter and `Codec` for an optional field.
+
+This is particularly useful for evolving your `Codec`s.
+
+If the field is not present in the input then it gets decoded to `Nothing`.
+If the optional field's value is `Nothing` then the resulting object will not contain that field.
+
+-}
+maybeField : String -> (a -> Maybe f) -> Codec f -> ObjectCodec a (Maybe f -> b) -> ObjectCodec a b
+maybeField name getter codec (ObjectCodec ocodec) =
+    ObjectCodec
+        { encoder =
+            JE.optional name getter (encoder codec)
+                :: ocodec.encoder
+        , decoder =
+            decoder codec
+                |> JD.field name
+                |> JD.maybe
+                |> JD.map2 (\f x -> f x) ocodec.decoder
+        }
+
+
+{-| Specify the name getter and `Codec` for a required field, whose value can be `null`.
+
+If the field is not present in the input then _the decoding fails_.
+If the field's value is `Nothing` then the resulting object will contain the field with a `null` value.
+
+This is a shorthand for a field having a codec built using `Codec.maybe`.
+
+-}
+nullableField : String -> (a -> Maybe f) -> Codec f -> ObjectCodec a (Maybe f -> b) -> ObjectCodec a b
+nullableField name getter codec ocodec =
+    field name getter (maybe codec) ocodec
+
+
+{-| Create a `Codec` from a fully specified `ObjectCodec`.
+-}
+buildObject : ObjectCodec a a -> Codec a
+buildObject (ObjectCodec om) =
+    Codec
+        { encoder =
+            om.encoder
+                |> List.reverse
+                |> JE.object
+        , decoder = om.decoder
+        }
+
+
+
 -- CUSTOM
 
 
