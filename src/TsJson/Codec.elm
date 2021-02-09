@@ -535,7 +535,7 @@ variant1 name ctor codec (CustomCodec am) =
             am.match
                 |> JE.variant
                     (JE.object
-                        [ JE.required "tag" (\_ -> name) JE.string
+                        [ JE.required "tag" (\_ -> name) (JE.literal (Json.Encode.string name))
                         , JE.required "args" identity (encoder codec)
                         ]
                     )

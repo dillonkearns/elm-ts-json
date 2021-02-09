@@ -224,7 +224,7 @@ customTests =
             )
         ]
     , describe "with 1 ctor, 1 arg"
-        [ roundtripsWithDifferentAnnotations (Fuzz.map Newtype Fuzz.int)
+        [ roundtrips (Fuzz.map Newtype Fuzz.int)
             (Codec.custom
                 (\f v ->
                     case v of
