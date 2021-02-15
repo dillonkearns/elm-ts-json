@@ -47,7 +47,7 @@ types (which show up in the TypeScript Declaration file that `elm-ts-interop` ge
   - The initial `Decoder`, `TsJson.Decode.int`, has the Elm type `TsJson.Decode.Decoder Int`. So Elm knows
     this `Decoder` will either fail, or give us an `Int`.
   - When we call `TsJson.Decode.map String.fromInt`, the Elm type information changes. We're mapping with
-    `String.fromInt : String -> Int`. So that means we'll now decode into an Elm `String` instead of an `Int`. And that's
+    `String.fromInt : Int -> String`. So that means we'll now decode into an Elm `String` instead of an `Int`. And that's
     the final Elm type we'll end up with.
 
 
