@@ -797,7 +797,7 @@ string =
     --> , tsType = "number"
     --> }
 
-    Floating point values will cause a decoding error.
+Floating point values will cause a decoding error.
 
     int
         |> runExample "1.23"
