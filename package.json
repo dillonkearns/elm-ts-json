@@ -1,6 +1,6 @@
 {
   "name": "elm-ts-json",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Build up JSON Encoders/Decoders that have TypeScript type declarations.",
   "devDependencies": {
     "elm-review": "^2.3.3",
