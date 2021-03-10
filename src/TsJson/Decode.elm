@@ -47,7 +47,7 @@ types (which show up in the TypeScript Declaration file that `elm-ts-interop` ge
   - The initial `Decoder`, `TsJson.Decode.int`, has the Elm type `TsJson.Decode.Decoder Int`. So Elm knows
     this `Decoder` will either fail, or give us an `Int`.
   - When we call `TsJson.Decode.map String.fromInt`, the Elm type information changes. We're mapping with
-    `String.fromInt : String -> Int`. So that means we'll now decode into an Elm `String` instead of an `Int`. And that's
+    `String.fromInt : Int -> String`. So that means we'll now decode into an Elm `String` instead of an `Int`. And that's
     the final Elm type we'll end up with.
 
 
@@ -195,7 +195,7 @@ See <https://github.com/elm-community/json-extra/blob/2.0.0/docs/andMap.md>.
         |> andMap (field "population" (int |> map (\totalPopulation -> floor (toFloat totalPopulation / 1000000.0))))
         |> runExample """ {"name": "Norway", "population":5328000} """
     --> { decoded = Ok { name = "Norway", populationInMillions = 5 }
-    --> , tsType = "{ population : number; name : string }"
+    --> , tsType = "{ name : string; population : number }"
     --> }
 
 -}
@@ -797,7 +797,7 @@ string =
     --> , tsType = "number"
     --> }
 
-    Floating point values will cause a decoding error.
+Floating point values will cause a decoding error.
 
     int
         |> runExample "1.23"
@@ -1004,7 +1004,7 @@ element (Decoder innerDecoder1 innerType1) (TupleBuilder pipelineDecoder pipelin
     oneOrMore (::) testCaseDecoder
         |> runExample """[ { "tag": "pass" } ]"""
     --> { decoded = Ok [ Pass ]
-    --> , tsType = """[ { tag : "pass" } | { tag : "fail"; message : string }, ...({ tag : "pass" } | { tag : "fail"; message : string })[] ]"""
+    --> , tsType = """[ { tag : "pass" } | { message : string; tag : "fail" }, ...({ tag : "pass" } | { message : string; tag : "fail" })[] ]"""
     --> }
 
 -}

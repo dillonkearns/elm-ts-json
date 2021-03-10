@@ -206,6 +206,7 @@ toString tsType_ =
         TypeObject keyTypes ->
             "{ "
                 ++ (keyTypes
+                        |> List.sortBy (\( _, fieldName, _ ) -> fieldName)
                         |> List.map
                             (\( optionality, key, tsType__ ) ->
                                 (case optionality of

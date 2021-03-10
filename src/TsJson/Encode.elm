@@ -3,7 +3,7 @@ module TsJson.Encode exposing
     , string, int, float, literal, bool, null
     , map
     , object, Property, optional, required
-    , UnionBuilder, union, variant, variant0, variantObject, variantLiteral, buildUnion
+    , UnionBuilder, union, variant, variant0, variantObject, variantLiteral, variantTagged, buildUnion
     , UnionEncodeValue
     , list, dict, tuple, triple, maybe
     , value
@@ -70,7 +70,7 @@ TypeScript Declaration file for your compiled Elm code.
     --> , tsType = """{ tag : "Alert"; message : string } | { tag : "SendPresenceHeartbeat" }"""
     --> }
 
-@docs UnionBuilder, union, variant, variant0, variantObject, variantLiteral, buildUnion
+@docs UnionBuilder, union, variant, variant0, variantObject, variantLiteral, variantTagged, buildUnion
 
 @docs UnionEncodeValue
 
@@ -288,7 +288,7 @@ required name getter (Encoder encodeFn tsType_) =
     { first = "James", middle = Just "Tiberius", last = "Kirk" }
             |> runExample fullNameEncoder
     --> { output = """{"first":"James","middle":"Tiberius","last":"Kirk"}"""
-    --> , tsType = "{ first : string; middle? : string; last : string }"
+    --> , tsType = "{ first : string; last : string; middle? : string }"
     --> }
 
 -}
@@ -715,6 +715,48 @@ variant (Encoder encoder_ tsType_) (UnionBuilder builder tsTypes_) =
     UnionBuilder
         (builder (encoder_ >> UnionEncodeValue))
         (tsType_ :: tsTypes_)
+
+
+{-| Takes any Encoder and includes that data under an Object property "data".
+
+For example, here's an encoded payload for a log event.
+
+    import TsJson.Encode as TsEncode
+    import Json.Encode
+
+    type alias Event = { level : String, message : String }
+    type FromElm = LogEvent Event
+
+    eventEncoder : Encoder Event
+    eventEncoder =
+        TsEncode.object
+            [ TsEncode.required "level" .level TsEncode.string
+            , TsEncode.required "message" .message TsEncode.string
+            ]
+
+
+    fromElm : TsEncode.Encoder FromElm
+    fromElm =
+        TsEncode.union
+            (\vLogEvent value ->
+                case value of
+                    LogEvent event ->
+                        vLogEvent event
+            )
+            |> TsEncode.variantTagged "LogEvent" eventEncoder
+            |> TsEncode.buildUnion
+
+    (TsEncode.encoder fromElm) (LogEvent { level = "info", message = "Hello" }) |> Json.Encode.encode 0
+    --> """{"tag":"LogEvent","data":{"level":"info","message":"Hello"}}"""
+
+-}
+variantTagged :
+    String
+    -> Encoder input
+    -> UnionBuilder ((input -> UnionEncodeValue) -> match)
+    -> UnionBuilder match
+variantTagged tagName dataEncoder builder =
+    variantObject tagName [ required "data" identity dataEncoder ] builder
 
 
 {-| -}

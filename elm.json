@@ -3,7 +3,7 @@
     "name": "dillonkearns/elm-ts-json",
     "summary": "JSON Encoders and Decoders with TypeScript type information.",
     "license": "BSD-3-Clause",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "exposed-modules": [
         "TsJson.Encode",
         "TsJson.Decode",
@@ -12,7 +12,8 @@
     "elm-version": "0.19.0 <= v < 0.20.0",
     "dependencies": {
         "elm/core": "1.0.2 <= v < 2.0.0",
-        "elm/json": "1.1.1 <= v < 2.0.0"
+        "elm/json": "1.1.1 <= v < 2.0.0",
+        "elm-community/dict-extra": "2.4.0 <= v < 3.0.0"
     },
     "test-dependencies": {
         "elm/html": "1.0.0 <= v < 2.0.0",

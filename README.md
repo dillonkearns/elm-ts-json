@@ -98,6 +98,6 @@ Guest
 
 userDecoder |> Decode.runExample """{"kind":"guest"}"""
 --> { decoded = Ok Guest
---> , tsType = """{ name : string; kind : "regular" } | {"kind":"guest"}"""
+--> , tsType = """{ kind : "regular"; name : string } | {"kind":"guest"}"""
 --> }
 ```

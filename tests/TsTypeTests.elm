@@ -4,7 +4,6 @@ import Expect
 import Internal.TsJsonType exposing (..)
 import Internal.TypeReducer as TypeReducer
 import Internal.TypeToString as TypeToString
-import Json.Decode
 import Json.Encode
 import Test exposing (..)
 
@@ -58,11 +57,34 @@ suite =
                         (TypeObject [ ( Required, "author", String ) ])
                         |> Expect.equal
                             (TypeObject
-                                [ ( Required, "version", Number )
-                                , ( Required, "author", String )
+                                [ ( Required, "author", String )
+                                , ( Required, "version", Number )
                                 ]
                             )
             , test "all objects in intersection are merged" <|
+                \() ->
+                    TypeObject [ ( Required, "foo", String ) ]
+                        |> TypeReducer.intersect
+                            (TypeObject [ ( Required, "foo", String ) ])
+                        |> Expect.equal
+                            (TypeObject
+                                [ ( Required, "foo", String )
+                                ]
+                            )
+            , test "types are intersected" <|
+                \() ->
+                    TypeObject [ ( Required, "foo", Literal (Json.Encode.string "hello") ) ]
+                        |> TypeReducer.intersect
+                            (TypeObject [ ( Required, "foo", String ) ])
+                        |> Expect.equal
+                            (TypeObject
+                                [ ( Required
+                                  , "foo"
+                                  , Intersection [ String, Literal (Json.Encode.string "hello") ]
+                                  )
+                                ]
+                            )
+            , test "duplicate fields are combined" <|
                 \() ->
                     TypeObject [ ( Required, "author", String ) ]
                         |> TypeReducer.intersect
@@ -71,9 +93,29 @@ suite =
                             (TypeObject [ ( Required, "license", String ) ])
                         |> Expect.equal
                             (TypeObject
-                                [ ( Required, "license", String )
+                                [ ( Required, "author", String )
+                                , ( Required, "license", String )
                                 , ( Required, "version", Number )
-                                , ( Required, "author", String )
+                                ]
+                            )
+            , test "duplicate fields with different optionality" <|
+                \() ->
+                    TypeObject [ ( Required, "foo", String ) ]
+                        |> TypeReducer.intersect
+                            (TypeObject [ ( Optional, "foo", String ) ])
+                        |> Expect.equal
+                            (TypeObject
+                                [ ( Required, "foo", String )
+                                ]
+                            )
+            , test "duplicate fields with different types" <|
+                \() ->
+                    TypeObject [ ( Required, "foo", Unknown ) ]
+                        |> TypeReducer.intersect
+                            (TypeObject [ ( Required, "foo", String ) ])
+                        |> Expect.equal
+                            (TypeObject
+                                [ ( Required, "foo", String )
                                 ]
                             )
             , test "intersections are merged" <|
@@ -96,7 +138,7 @@ suite =
                             ]
                         )
                         |> expectEqualTypes
-                            "({ version : number; author : string } & { data : { payload : string } } | { payload : string })"
+                            "({ author : string; version : number } & { data : { payload : string } } | { payload : string })"
             , test "contradictory scalars" <|
                 \() ->
                     combinesToNever String Number
