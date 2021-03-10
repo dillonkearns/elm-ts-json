@@ -286,7 +286,7 @@ required name getter (Encoder encodeFn tsType_) =
     { first = "James", middle = Just "Tiberius", last = "Kirk" }
             |> runExample fullNameEncoder
     --> { output = """{"first":"James","middle":"Tiberius","last":"Kirk"}"""
-    --> , tsType = "{ first : string; middle? : string; last : string }"
+    --> , tsType = "{ first : string; last : string; middle? : string }"
     --> }
 
 -}

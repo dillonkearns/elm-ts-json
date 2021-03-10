@@ -195,7 +195,7 @@ See <https://github.com/elm-community/json-extra/blob/2.0.0/docs/andMap.md>.
         |> andMap (field "population" (int |> map (\totalPopulation -> floor (toFloat totalPopulation / 1000000.0))))
         |> runExample """ {"name": "Norway", "population":5328000} """
     --> { decoded = Ok { name = "Norway", populationInMillions = 5 }
-    --> , tsType = "{ population : number; name : string }"
+    --> , tsType = "{ name : string; population : number }"
     --> }
 
 -}
@@ -1004,7 +1004,7 @@ element (Decoder innerDecoder1 innerType1) (TupleBuilder pipelineDecoder pipelin
     oneOrMore (::) testCaseDecoder
         |> runExample """[ { "tag": "pass" } ]"""
     --> { decoded = Ok [ Pass ]
-    --> , tsType = """[ { tag : "pass" } | { tag : "fail"; message : string }, ...({ tag : "pass" } | { tag : "fail"; message : string })[] ]"""
+    --> , tsType = """[ { tag : "pass" } | { message : string; tag : "fail" }, ...({ tag : "pass" } | { message : string; tag : "fail" })[] ]"""
     --> }
 
 -}

@@ -32,7 +32,7 @@ suite =
                     |> expectEncodes
                         { input = { first = "Nyota", middle = Nothing, last = "Uhura" }
                         , output = """{"first":"Nyota","last":"Uhura"}"""
-                        , typeDef = "{ first : string; middle? : string; last : string }"
+                        , typeDef = "{ first : string; last : string; middle? : string }"
                         }
         , test "standalone string" <|
             \() ->
@@ -165,7 +165,7 @@ suite =
                     |> expectEncodes
                         { input = Alert "Hello!"
                         , output = """{"tag":"Alert","message":"Hello!"}"""
-                        , typeDef = """{ tag : "Alert"; message : string } | { tag : "SendPresenceHeartbeat" }"""
+                        , typeDef = """{ message : string; tag : "Alert" } | { tag : "SendPresenceHeartbeat" }"""
                         }
         , test "variant with encoders" <|
             \() ->
@@ -197,7 +197,7 @@ suite =
                     |> expectEncodes
                         { input = Admin "Dillon" 123
                         , output = """{"name":"Dillon","id":123}"""
-                        , typeDef = """{  } | { name : string } | { name : string; id : number }"""
+                        , typeDef = """{  } | { name : string } | { id : number; name : string }"""
                         }
         , test "merge object to variant" <|
             \() ->
@@ -216,7 +216,7 @@ suite =
                     |> expectEncodes
                         { input = Alert "Hello!"
                         , output = """{"tag":"Alert","message":"Hello!"}"""
-                        , typeDef = """{ tag : "Alert"; message : string } | { tag : "SendPresenceHeartbeat" }"""
+                        , typeDef = """{ message : string; tag : "Alert" } | { tag : "SendPresenceHeartbeat" }"""
                         }
         , describe "unions"
             [ test "string literal" <|
