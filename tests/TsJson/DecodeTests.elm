@@ -163,7 +163,7 @@ suite =
                         |> andMap (field "name" string)
                         |> expectDecodes
                             { input = """{"kind": "regular", "name": "Leonard"}"""
-                            , typeDef = """{ name : string; kind : "regular" }"""
+                            , typeDef = """{ kind : "regular"; name : string }"""
                             , output = { name = "Leonard" }
                             }
             ]

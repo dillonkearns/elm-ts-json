@@ -4,6 +4,7 @@ module Internal.TypeReducer exposing
     )
 
 import Dict
+import Dict.Extra
 import Internal.JsonSchema
 import Internal.TsJsonType exposing (..)
 import Internal.TypeToString as TypeToString
@@ -48,7 +49,17 @@ mergeFields :
     -> List ( PropertyOptionality, String, TsType )
     -> List ( PropertyOptionality, String, TsType )
 mergeFields fields1 fields2 =
-    fields1 ++ fields2
+    Dict.Extra.fromListDedupeBy
+        (\( optionality1, fieldName1, fieldType1 ) ( optionality2, fieldName2, fieldType2 ) ->
+            if optionality1 == Required || optionality2 == Required then
+                ( Required, fieldName1, intersect fieldType1 fieldType2 )
+
+            else
+                ( Optional, fieldName1, fieldType1 )
+        )
+        (\( _, fieldName, _ ) -> fieldName)
+        (fields1 ++ fields2)
+        |> Dict.values
 
 
 simplifyIntersection : List TsType -> TsType
@@ -56,6 +67,9 @@ simplifyIntersection types =
     let
         thing =
             case types |> deduplicateBy TypeToString.toString of
+                [ single ] ->
+                    single
+
                 first :: rest ->
                     case first of
                         TypeObject fields ->
@@ -96,6 +110,9 @@ intersect type1 type2 =
     if isContradictory ( type1, type2 ) then
         TsNever
 
+    else if type1 == type2 then
+        type1
+
     else
         case ( type1, type2 ) of
             ( Unknown, known ) ->
@@ -123,7 +140,11 @@ intersect type1 type2 =
                 TsNever
 
             _ ->
-                Intersection [ type1, type2 ]
+                if type1 == type2 then
+                    Intersection [ type1, type2 ]
+
+                else
+                    Intersection [ type1, type2 ]
 
 
 either : (TsType -> Bool) -> ( TsType, TsType ) -> Bool
