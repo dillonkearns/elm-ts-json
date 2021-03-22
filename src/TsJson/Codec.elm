@@ -37,7 +37,9 @@ module TsJson.Codec exposing
 
 # Data Structures
 
-@docs maybe, list, array, dict, set, tuple, triple, result
+-- @ docs maybe, list, array, dict, set, tuple, triple, result
+
+@docs maybe, list, array, dict, set, tuple, triple
 
 
 # Object Primitives
@@ -47,7 +49,9 @@ module TsJson.Codec exposing
 
 # Custom Types
 
-@docs CustomCodec, custom, variant0, variant1, variant2, variant3, variant4, variant5, variant6, variant7, variant8, buildCustom
+-- @ docs CustomCodec, custom, variant0, variant1, variant2, variant3, variant4, variant5, variant6, variant7, variant8, buildCustom
+
+@docs CustomCodec, custom, variant0, variant1, buildCustom
 
 
 # Inconsistent structure
@@ -62,7 +66,9 @@ module TsJson.Codec exposing
 
 # Fancy Codecs
 
-@docs succeed, recursive, fail, andThen, lazy, value, build, constant
+-- @ docs succeed, recursive, fail, andThen, lazy, value, build
+
+@docs succeed, fail, value, build
 
 -}
 
