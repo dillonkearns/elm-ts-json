@@ -5,11 +5,10 @@ module TsJson.Encode exposing
     , object, Property, optional, required
     , UnionBuilder, union, variant, variant0, variantObject, variantLiteral, variantTagged, buildUnion
     , UnionEncodeValue
-    , list, dict, tuple, triple, maybe
+    , list, dict, tuple, triple, maybe, array
     , value
     , encoder, tsType
     , runExample
-    , array
     )
 
 {-| The `TsJson.Encode` module is what you use for
@@ -77,7 +76,7 @@ TypeScript Declaration file for your compiled Elm code.
 
 ## Collections
 
-@docs list, dict, tuple, triple, maybe
+@docs list, dict, tuple, triple, maybe, array
 
 
 ## In-Depth Example
