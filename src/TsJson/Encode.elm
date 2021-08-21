@@ -9,7 +9,7 @@ module TsJson.Encode exposing
     , value
     , encoder, tsType
     , runExample
-    )
+    , intersectTypes)
 
 {-| The `TsJson.Encode` module is what you use for
 
@@ -232,6 +232,10 @@ tsType : Encoder input -> TsType
 tsType (Encoder _ tsType_) =
     tsType_
 
+
+intersectTypes : Encoder input -> TsType -> Encoder input
+intersectTypes (Encoder encoder_ tsType1) tsType2 =
+    Encoder encoder_ (TypeReducer.intersect tsType1 tsType2)
 
 {-| -}
 type Property input

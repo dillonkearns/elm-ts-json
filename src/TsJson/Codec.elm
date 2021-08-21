@@ -9,7 +9,8 @@ module TsJson.Codec exposing
     , oneOf
     , map
     , succeed, fail, value, build
-    --recursive, andThen, lazy,
+    , andThen
+    --recursive, lazy,
     )
 
 {-| A `Codec a` contain a JSON `Decoder a` and the corresponding `a -> Value` encoder.
@@ -838,15 +839,17 @@ fail msg =
         }
 
 
+{-| Create codecs that depend on previous results.
+-}
+andThen : JD.AndThenContinuation (JD.Decoder decodesTo -> value -> JD.Decoder decodesTo) -> Codec decodesTo -> Codec value -> Codec decodesTo
+andThen andThenContinuation (Codec decodesToCodec) (Codec valueCodec) =
+    Codec
+        { decoder = JD.andThen (JD.andThenDecoder decodesToCodec.decoder andThenContinuation) valueCodec.decoder
+        , encoder = JE.intersectTypes decodesToCodec.encoder (JE.tsType valueCodec.encoder)
+        }
 
---{-| Create codecs that depend on previous results.
----}
---andThen : (a -> Codec b) -> (b -> a) -> Codec a -> Codec b
---andThen dec enc c =
---    Codec
---        { decoder = decoder c |> JD.andThen (dec >> decoder)
---        , encoder = encoder c << enc
---        }
+
+
 --{-| Create a `Codec` for a recursive data structure.
 --The argument to the function you need to pass is the fully formed `Codec`.
 ---}
