@@ -76,6 +76,7 @@ module TsJson.Codec exposing
 
 import Array exposing (Array)
 import Dict exposing (Dict)
+import Internal.TsJsonType as TsType exposing (TsType)
 import Json.Decode
 import Json.Encode
 import Set exposing (Set)
@@ -738,6 +739,9 @@ variant2 name ctor m1 m2 (CustomCodec am) =
         --        ]
         --)
         --(Debug.todo "")
+        [ m1 |> encoder |> JE.tsType
+        , m2 |> encoder |> JE.tsType
+        ]
         nextThingy2
         variantDecoder
         (CustomCodec am)
@@ -752,11 +756,12 @@ variant2 name ctor m1 m2 (CustomCodec am) =
 
 variant_ :
     String
+    -> List TsType
     -> ((List Value -> Value) -> a)
     -> Decoder v
     -> CustomCodec (a -> b) v
     -> CustomCodec b v
-variant_ name matchPiece decoderPiece (CustomCodec am) =
+variant_ name argTypes matchPiece decoderPiece (CustomCodec am) =
     let
         thing =
             JE.object
@@ -774,8 +779,18 @@ variant_ name matchPiece decoderPiece (CustomCodec am) =
         { match =
             case am.match of
                 JE.UnionBuilder matcher types ->
+                    let
+                        thisType =
+                            TsType.TypeObject
+                                [ ( TsType.Required, "tag", TsType.Literal (Json.Encode.string name) )
+                                , ( TsType.Required, "args", TsType.Tuple argTypes Nothing )
+                                ]
+                    in
                     JE.UnionBuilder (matcher (matchPiece enc))
-                        (JE.tsType thing :: types)
+                        --JE.tsType thing
+                        (thisType
+                            :: types
+                        )
 
         --, decoder = Dict.insert name decoderPiece am.decoder
         , decoder = decoderPiece :: am.decoder
