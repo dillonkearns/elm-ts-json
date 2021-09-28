@@ -758,20 +758,24 @@ variant_ :
     -> CustomCodec b v
 variant_ name matchPiece decoderPiece (CustomCodec am) =
     let
-        enc =
+        thing =
             JE.object
                 [ --( "tag", JE.string name )
                   JE.required "tag" identity (JE.literal (Json.Encode.string name))
                 , JE.required "args" identity (JE.list JE.value)
+
+                --, JE.required "args" Tuple.pair JE.tuple
                 ]
-                |> JE.encoder
+
+        enc =
+            thing |> JE.encoder
     in
     CustomCodec
         { match =
             case am.match of
                 JE.UnionBuilder matcher types ->
                     JE.UnionBuilder (matcher (matchPiece enc))
-                        types
+                        (JE.tsType thing :: types)
 
         --, decoder = Dict.insert name decoderPiece am.decoder
         , decoder = decoderPiece :: am.decoder
