@@ -569,15 +569,6 @@ variant2 :
     -> CustomCodec c v
 variant2 name ctor m1 m2 (CustomCodec am) =
     let
-        variantDecoder : JD.Decoder v
-        variantDecoder =
-            JD.map3 (\() -> ctor)
-                (JD.field "tag"
-                    (JD.literal () (Json.Encode.string name))
-                )
-                (JD.field "args" (decoder m1 |> JD.index 0))
-                (JD.field "args" (decoder m2 |> JD.index 1))
-
         decoderOnly : Json.Decode.Decoder v
         decoderOnly =
             Json.Decode.map3 (\() -> ctor)
