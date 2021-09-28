@@ -4,6 +4,7 @@ import Dict
 import Expect
 import Fuzz exposing (Fuzzer)
 import Json.Decode as JD
+import Json.Encode
 import Set
 import Test exposing (Test, describe, fuzz, test)
 import TsJson.Codec as Codec exposing (Codec)
@@ -43,9 +44,17 @@ roundtrips : Fuzzer a -> Codec a -> Test
 roundtrips fuzzer codec =
     fuzz fuzzer "is a roundtrip" <|
         \value ->
-            value
-                |> TsJson.Encode.encoder (Codec.encoder codec)
+            let
+                encoded =
+                    value
+                        |> TsJson.Encode.encoder (Codec.encoder codec)
+            in
+            encoded
                 |> Codec.decodeValue codec
+                --|> Result.mapError
+                --    (\_ ->
+                --        Json.Encode.encode 0 encoded
+                --    )
                 |> Result.mapError JD.errorToString
                 |> Expect.all
                     [ Expect.equal (Ok value)
@@ -235,34 +244,60 @@ customTests =
                 |> Codec.buildCustom
             )
         ]
+    , describe "with 2 ctors, 0,1 args" <|
+        let
+            match fnothing fjust value =
+                case value of
+                    Nothing ->
+                        fnothing
 
-    --, describe "with 2 ctors, 0,1 args" <|
-    --    let
-    --        match fnothing fjust value =
-    --            case value of
-    --                Nothing ->
-    --                    fnothing
-    --
-    --                Just v ->
-    --                    fjust v
-    --
-    --        codec =
-    --            Codec.custom match
-    --                |> Codec.variant0 "Nothing" Nothing
-    --                |> Codec.variant1 "Just" Just Codec.int
-    --                |> Codec.buildCustom
-    --
-    --        fuzzers =
-    --            [ ( "1st ctor", Fuzz.constant Nothing )
-    --            , ( "2nd ctor", Fuzz.map Just Fuzz.int )
-    --            ]
-    --    in
-    --    fuzzers
-    --        |> List.map
-    --            (\( name, fuzz ) ->
-    --                describe name
-    --                    [ roundtrips fuzz codec ]
-    --            )
+                    Just v ->
+                        fjust v
+
+            codec =
+                Codec.custom match
+                    |> Codec.variant0 "Nothing" Nothing
+                    |> Codec.variant1 "Just" Just Codec.int
+                    |> Codec.buildCustom
+
+            fuzzers =
+                [ ( "1st ctor", Fuzz.constant Nothing )
+                , ( "2nd ctor", Fuzz.map Just Fuzz.int )
+                ]
+        in
+        fuzzers
+            |> List.map
+                (\( name, fuzz ) ->
+                    describe name
+                        [ roundtrips fuzz codec ]
+                )
+    , describe "with 2 ctors, 0,2 args" <|
+        let
+            match fnothing fjust value =
+                case value of
+                    Nothing ->
+                        fnothing
+
+                    Just ( v1, v2 ) ->
+                        fjust v1 v2
+
+            codec =
+                Codec.custom match
+                    |> Codec.variant0 "Nothing" Nothing
+                    |> Codec.variant2 "Just" (\first second -> Just ( first, second )) Codec.int Codec.int
+                    |> Codec.buildCustom
+
+            fuzzers =
+                [ ( "1st ctor", Fuzz.constant Nothing )
+                , ( "2nd ctor", Fuzz.map2 (\a b -> Just ( a, b )) Fuzz.int Fuzz.int )
+                ]
+        in
+        fuzzers
+            |> List.map
+                (\( name, fuzz ) ->
+                    describe name
+                        [ roundtrips fuzz codec ]
+                )
     ]
 
 

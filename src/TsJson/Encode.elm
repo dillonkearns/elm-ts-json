@@ -3,8 +3,8 @@ module TsJson.Encode exposing
     , string, int, float, literal, bool, null
     , map
     , object, Property, optional, required
-    , UnionBuilder, union, variant, variant0, variantObject, variantLiteral, variantTagged, buildUnion
-    , UnionEncodeValue
+    , UnionBuilder(..), union, variant, variant0, variantObject, variantLiteral, variantTagged, buildUnion
+    , UnionEncodeValue(..)
     , list, dict, tuple, triple, maybe, array
     , value
     , encoder, tsType
@@ -714,6 +714,29 @@ variant (Encoder encoder_ tsType_) (UnionBuilder builder tsTypes_) =
     UnionBuilder
         (builder (encoder_ >> UnionEncodeValue))
         (tsType_ :: tsTypes_)
+
+
+{-| -}
+variant_ :
+    Encoder input
+    -> UnionBuilder ((input -> UnionEncodeValue) -> match)
+    -> UnionBuilder match
+variant_ (Encoder encoder_ tsType_) (UnionBuilder builder tsTypes_) =
+    UnionBuilder
+        (builder (encoder_ >> UnionEncodeValue))
+        (tsType_ :: tsTypes_)
+
+
+
+--{-| -}
+--variantNew :
+--    Encoder input
+--    -> UnionBuilder ((input -> UnionEncodeValue) -> match)
+--    -> UnionBuilder match
+--variantNew (Encoder encoder_ tsType_) (UnionBuilder builder tsTypes_) =
+--    UnionBuilder
+--        (builder (encoder_ >> UnionEncodeValue))
+--        (tsType_ :: tsTypes_)
 
 
 {-| Takes any Encoder and includes that data under an Object property "data".

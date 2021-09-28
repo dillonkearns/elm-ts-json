@@ -9,7 +9,9 @@ module TsJson.Codec exposing
     , oneOf
     , map
     , succeed, fail, value, build
-    --recursive, andThen, lazy,
+    ,  variant2
+       --recursive, andThen, lazy,
+
     )
 
 {-| A `Codec a` contain a JSON `Decoder a` and the corresponding `a -> Value` encoder.
@@ -78,7 +80,7 @@ import Json.Decode
 import Json.Encode
 import Set exposing (Set)
 import TsJson.Decode as JD
-import TsJson.Encode as JE exposing (Property)
+import TsJson.Encode as JE exposing (Encoder, Property)
 
 
 
@@ -552,7 +554,242 @@ variant1 name ctor codec (CustomCodec am) =
         }
 
 
+{-| Define a variant with 2 parameters for a custom type.
+-}
+variant2 :
+    String
+    -> (a -> b -> v)
+    -> Codec a
+    -> Codec b
+    -> CustomCodec ((a -> b -> JE.UnionEncodeValue) -> c) v
+    -> CustomCodec c v
+variant2 name ctor m1 m2 (CustomCodec am) =
+    let
+        variantDecoder : JD.Decoder v
+        variantDecoder =
+            JD.map3 (\() -> ctor)
+                (JD.field "tag"
+                    (JD.literal () (Json.Encode.string name))
+                )
+                (JD.field "args" (decoder m1 |> JD.index 0))
+                (JD.field "args" (decoder m2 |> JD.index 1))
 
+        --
+        --    --encoderThing : JE.UnionBuilder (c -> JE.UnionEncodeValue)
+        --    encoderThing =
+        --        JE.variant
+        --            (JE.object
+        --                [--JE.required "tag" (\_ _ -> name) (JE.literal (Json.Encode.string name))
+        --                 --, JE.required "args" ctor (encoder m1) (encoder m2)
+        --                ]
+        --            )
+        --            am.match
+        --nextThingy : (List Value -> Value) -> (a -> b -> JE.UnionEncodeValue)
+        --nextThingy listThing =
+        --    --Debug.todo ""
+        --    --JE.variant
+        --    let
+        --        foo1 : Encoder a
+        --        foo1 =
+        --            encoder m1
+        --
+        --        foo2 : Encoder b
+        --        foo2 =
+        --            encoder m2
+        --
+        --        foo3 first second =
+        --            [ first |> JE.encoder foo1
+        --            , second |> JE.encoder foo2
+        --
+        --            --, foo2 second
+        --            ]
+        --    in
+        --    \a b ->
+        --        --listThing [ a, b ]
+        --        a
+        --            |> (JE.object
+        --                    [ JE.required "tag" (\_ _ -> name) (JE.literal (Json.Encode.string name))
+        --
+        --                    --, JE.required "args" ctor (encoder m1) (encoder m2)
+        --                    --, JE.required "args" ctor (listThing [ foo1 a, foo2 b ])
+        --                    , JE.required "args"
+        --                        ctor
+        --                        (JE.list (foo3 a b)
+        --                         --Debug.todo ""
+        --                         --(\_ _ ->
+        --                         --    [--foo1 a
+        --                         --     --, foo2 b
+        --                         --    ]
+        --                         --)
+        --                        )
+        --                    ]
+        --                    |> JE.encoder
+        --               )
+        --            |> JE.UnionEncodeValue
+        nextThingy2 : (List Value -> Value) -> (a -> b -> JE.UnionEncodeValue)
+        nextThingy2 listThing =
+            --Debug.todo ""
+            --JE.variant
+            let
+                foo1 : Encoder a
+                foo1 =
+                    encoder m1
+
+                foo2 : Encoder b
+                foo2 =
+                    encoder m2
+
+                foo3 : a -> b -> Value
+                foo3 first second =
+                    listThing
+                        [ first |> JE.encoder foo1
+                        , second |> JE.encoder foo2
+
+                        --, foo2 second
+                        ]
+
+                --argsEncoder : JE.Encoder (b -> v)
+                --argsEncoder =
+                --    Debug.todo ""
+            in
+            --\a b ->
+            --    --foo3 a b
+            --    [ a |> JE.encoder foo1
+            --    , b |> JE.encoder foo2
+            --
+            --    --, foo2 second
+            --    ]
+            --        |> (JE.object
+            --                [ JE.required "tag" (\_ _ -> name) (JE.literal (Json.Encode.string name))
+            --                , --JE.required "args"
+            --                  --  ctor
+            --                  --  --foo3
+            --                  --  --(|>)
+            --                  --  --listThing
+            --                  --  --argsEncoder
+            --                  --  --(JE.list identity)
+            --                  --  --listThing
+            --                  --  --JE.value
+            --                  --  --identity
+            --                  --  JE.value
+            --                  --(JE.list
+            --                  --    --foo3
+            --                  --    (Debug.todo "")
+            --                  -- --Debug.todo ""
+            --                  -- --(\_ _ ->
+            --                  -- --    [--foo1 a
+            --                  -- --     --, foo2 b
+            --                  -- --    ]
+            --                  -- --)
+            --                  --)
+            --                  JE.required "args" identity (JE.list JE.value)
+            --                ]
+            --                |> JE.encoder
+            --           )
+            --        |> JE.UnionEncodeValue
+            \a b ->
+                --foo3 a b
+                [ a |> JE.encoder foo1
+                , b |> JE.encoder foo2
+
+                --, foo2 second
+                ]
+                    |> listThing
+                    --|> (JE.object
+                    --        [ JE.required "tag" (\_ _ -> name) (JE.literal (Json.Encode.string name))
+                    --        , --JE.required "args"
+                    --          --  ctor
+                    --          --  --foo3
+                    --          --  --(|>)
+                    --          --  --listThing
+                    --          --  --argsEncoder
+                    --          --  --(JE.list identity)
+                    --          --  --listThing
+                    --          --  --JE.value
+                    --          --  --identity
+                    --          --  JE.value
+                    --          --(JE.list
+                    --          --    --foo3
+                    --          --    (Debug.todo "")
+                    --          -- --Debug.todo ""
+                    --          -- --(\_ _ ->
+                    --          -- --    [--foo1 a
+                    --          -- --     --, foo2 b
+                    --          -- --    ]
+                    --          -- --)
+                    --          --)
+                    --          JE.required "args" identity (JE.list JE.value)
+                    --        ]
+                    --        |> JE.encoder
+                    --   )
+                    |> JE.UnionEncodeValue
+
+        --am.match
+    in
+    --CustomCodec
+    --    { match = encoderThing
+    --    , decoder = variantDecoder :: am.decoder
+    --    }
+    variant_ name
+        --(\c v1 v2 ->
+        --    c
+        --        [ encoder m1 v1
+        --        , encoder m2 v2
+        --        ]
+        --)
+        --(Debug.todo "")
+        nextThingy2
+        variantDecoder
+        (CustomCodec am)
+
+
+
+--(JD.map2 ctor
+--    (JD.index 0 <| decoder m1)
+--    (JD.index 1 <| decoder m2)
+--)
+
+
+variant_ :
+    String
+    -> ((List Value -> Value) -> a)
+    -> Decoder v
+    -> CustomCodec (a -> b) v
+    -> CustomCodec b v
+variant_ name matchPiece decoderPiece (CustomCodec am) =
+    let
+        enc =
+            JE.object
+                [ --( "tag", JE.string name )
+                  JE.required "tag" identity (JE.literal (Json.Encode.string name))
+                , JE.required "args" identity (JE.list JE.value)
+                ]
+                |> JE.encoder
+    in
+    CustomCodec
+        { match =
+            case am.match of
+                JE.UnionBuilder matcher types ->
+                    JE.UnionBuilder (matcher (matchPiece enc))
+                        types
+
+        --, decoder = Dict.insert name decoderPiece am.decoder
+        , decoder = decoderPiece :: am.decoder
+        }
+
+
+
+--variant name
+--    (\c v1 v2 ->
+--        c
+--            [ encoder m1 v1
+--            , encoder m2 v2
+--            ]
+--    )
+--    (JD.map2 ctor
+--        (JD.index 0 <| decoder m1)
+--        (JD.index 1 <| decoder m2)
+--    )
 --{-| Define a variant with 2 parameters for a custom type.
 ---}
 --variant2 :
