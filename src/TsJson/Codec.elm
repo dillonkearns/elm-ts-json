@@ -575,6 +575,25 @@ variant2 name ctor m1 m2 (CustomCodec am) =
                 (JD.field "args" (decoder m1 |> JD.index 0))
                 (JD.field "args" (decoder m2 |> JD.index 1))
 
+        decoderOnly : Json.Decode.Decoder v
+        decoderOnly =
+            Json.Decode.map3 (\() -> ctor)
+                (Json.Decode.field "tag"
+                    --(JD.literal () (Json.Encode.string name))
+                    (Json.Decode.string
+                        |> Json.Decode.andThen
+                            (\dV ->
+                                if name == dV then
+                                    Json.Decode.succeed ()
+
+                                else
+                                    Json.Decode.fail ("Expected the following tag: " ++ name)
+                            )
+                    )
+                )
+                (Json.Decode.field "args" (decoder m1 |> JD.decoder |> Json.Decode.index 0))
+                (Json.Decode.field "args" (decoder m2 |> JD.decoder |> Json.Decode.index 1))
+
         --
         --    --encoderThing : JE.UnionBuilder (c -> JE.UnionEncodeValue)
         --    encoderThing =
@@ -743,7 +762,7 @@ variant2 name ctor m1 m2 (CustomCodec am) =
         , m2 |> encoder |> JE.tsType
         ]
         nextThingy2
-        variantDecoder
+        decoderOnly
         (CustomCodec am)
 
 
@@ -758,7 +777,7 @@ variant_ :
     String
     -> List TsType
     -> ((List Value -> Value) -> a)
-    -> Decoder v
+    -> Json.Decode.Decoder v
     -> CustomCodec (a -> b) v
     -> CustomCodec b v
 variant_ name argTypes matchPiece decoderPiece (CustomCodec am) =
@@ -774,26 +793,25 @@ variant_ name argTypes matchPiece decoderPiece (CustomCodec am) =
 
         enc =
             thing |> JE.encoder
+
+        thisType =
+            TsType.TypeObject
+                [ ( TsType.Required, "tag", TsType.Literal (Json.Encode.string name) )
+                , ( TsType.Required, "args", TsType.Tuple argTypes Nothing )
+                ]
     in
     CustomCodec
         { match =
             case am.match of
                 JE.UnionBuilder matcher types ->
-                    let
-                        thisType =
-                            TsType.TypeObject
-                                [ ( TsType.Required, "tag", TsType.Literal (Json.Encode.string name) )
-                                , ( TsType.Required, "args", TsType.Tuple argTypes Nothing )
-                                ]
-                    in
                     JE.UnionBuilder (matcher (matchPiece enc))
                         --JE.tsType thing
-                        (thisType
-                            :: types
-                        )
+                        (thisType :: types)
 
         --, decoder = Dict.insert name decoderPiece am.decoder
-        , decoder = decoderPiece :: am.decoder
+        , decoder =
+            JD.Decoder decoderPiece thisType
+                :: am.decoder
         }
 
 
