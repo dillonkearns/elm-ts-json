@@ -11,6 +11,7 @@ import TsJson.Codec as Codec exposing (Codec)
 import TsJson.Decode
 import TsJson.Encode
 import TsJson.Type
+import TsType
 
 
 suite : Test
@@ -292,12 +293,21 @@ customTests =
                 , ( "2nd ctor", Fuzz.map2 (\a b -> Just ( a, b )) Fuzz.int Fuzz.int )
                 ]
         in
-        fuzzers
-            |> List.map
-                (\( name, fuzz ) ->
-                    describe name
-                        [ roundtrips fuzz codec ]
-                )
+        (test "codec type" <|
+            \() ->
+                codec
+                    |> Codec.tsType
+                    |> TsType.toString
+                    |> Expect.equal
+                        """{ args : [ number, number ]; tag : "Just" } | { tag : "Nothing" }"""
+        )
+            :: (fuzzers
+                    |> List.map
+                        (\( name, fuzz ) ->
+                            describe name
+                                [ roundtrips fuzz codec ]
+                        )
+               )
     ]
 
 

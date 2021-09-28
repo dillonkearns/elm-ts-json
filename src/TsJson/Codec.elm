@@ -9,6 +9,7 @@ module TsJson.Codec exposing
     , oneOf
     , map
     , succeed, fail, value, build
+    , tsType
     ,  variant2
        --recursive, andThen, lazy,
 
@@ -71,6 +72,8 @@ module TsJson.Codec exposing
 -- @ docs succeed, recursive, fail, andThen, lazy, value, build
 
 @docs succeed, fail, value, build
+
+@docs tsType
 
 -}
 
@@ -1159,3 +1162,9 @@ value =
         { encoder = JE.value
         , decoder = JD.value
         }
+
+
+{-| -}
+tsType : Codec value -> TsType
+tsType (Codec thing) =
+    JD.tsType thing.decoder
