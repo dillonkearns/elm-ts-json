@@ -572,11 +572,10 @@ variant2 name ctor m1 m2 codec =
                 |> encodeCustomTypeArgs
                 |> JE.UnionEncodeValue
         )
-        (decodeHelp name
-            (Json.Decode.map2 ctor
-                (decoder m1 |> JD.decoder |> Json.Decode.index 0)
-                (decoder m2 |> JD.decoder |> Json.Decode.index 1)
-            )
+        (Json.Decode.map2 ctor
+            (variantArgDecoder 0 m1)
+            (variantArgDecoder 1 m2)
+            |> variantArgsDecoder name
         )
         codec
 
@@ -585,38 +584,42 @@ variant2 name ctor m1 m2 codec =
 -}
 variant3 :
     String
-    -> (a -> b -> c -> v)
-    -> Codec a
-    -> Codec b
-    -> Codec c
-    -> CustomCodec ((a -> b -> c -> JE.UnionEncodeValue) -> partial) v
+    -> (arg1 -> arg2 -> arg3 -> v)
+    -> Codec arg1
+    -> Codec arg2
+    -> Codec arg3
+    -> CustomCodec ((arg1 -> arg2 -> arg3 -> JE.UnionEncodeValue) -> partial) v
     -> CustomCodec partial v
-variant3 name ctor m1 m2 m3 codec =
+variant3 name ctor codec1 codec2 codec3 codec =
     variant_ name
-        [ m1 |> encoder |> JE.tsType
-        , m2 |> encoder |> JE.tsType
-        , m3 |> encoder |> JE.tsType
+        [ tsType codec1
+        , tsType codec2
+        , tsType codec3
         ]
-        (\encodeCustomTypeArgs a b c ->
-            [ a |> JE.encoder (encoder m1)
-            , b |> JE.encoder (encoder m2)
-            , c |> JE.encoder (encoder m3)
+        (\encodeCustomTypeArgs arg1 arg2 arg3 ->
+            [ JE.encoder (encoder codec1) arg1
+            , JE.encoder (encoder codec2) arg2
+            , JE.encoder (encoder codec3) arg3
             ]
                 |> encodeCustomTypeArgs
                 |> JE.UnionEncodeValue
         )
-        (decodeHelp name
-            (Json.Decode.map3 ctor
-                (decoder m1 |> JD.decoder |> Json.Decode.index 0)
-                (decoder m2 |> JD.decoder |> Json.Decode.index 1)
-                (decoder m3 |> JD.decoder |> Json.Decode.index 2)
-            )
+        (Json.Decode.map3 ctor
+            (variantArgDecoder 0 codec1)
+            (variantArgDecoder 1 codec2)
+            (variantArgDecoder 2 codec3)
+            |> variantArgsDecoder name
         )
         codec
 
 
-decodeHelp : String -> Json.Decode.Decoder a -> Json.Decode.Decoder a
-decodeHelp expectedTagName argsDecoder =
+variantArgDecoder : Int -> Codec a -> Json.Decode.Decoder a
+variantArgDecoder index codec =
+    decoder codec |> JD.decoder |> Json.Decode.index index
+
+
+variantArgsDecoder : String -> Json.Decode.Decoder a -> Json.Decode.Decoder a
+variantArgsDecoder expectedTagName argsDecoder =
     Json.Decode.map2 (\() v -> v)
         (Json.Decode.string
             |> Json.Decode.andThen
