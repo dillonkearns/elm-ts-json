@@ -301,7 +301,7 @@ customTests =
 roundtripsTest :
     String
     -> Codec value
-    -> c
+    -> String
     -> List ( String, Fuzzer value )
     -> List Test
 roundtripsTest testName codec expectedTsType fuzzers =
@@ -310,8 +310,7 @@ roundtripsTest testName codec expectedTsType fuzzers =
             codec
                 |> Codec.tsType
                 |> TsType.toString
-                |> Expect.equal
-                    """{ args : [ number, number ]; tag : "Just" } | { tag : "Nothing" }"""
+                |> Expect.equal expectedTsType
     )
         :: (fuzzers
                 |> List.map
