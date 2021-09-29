@@ -38,9 +38,7 @@ module TsJson.Codec exposing
 
 # Data Structures
 
--- @ docs maybe, list, array, dict, set, tuple, triple, result
-
-@docs maybe, list, array, dict, set, tuple, triple
+@docs maybe, list, array, dict, set, tuple, triple, result
 
 
 # Object Primitives
@@ -302,6 +300,24 @@ triple m1 m2 m3 =
                 (decoder m2)
                 (decoder m3)
         }
+
+
+{-| `Codec` for `Result` values.
+-}
+result : Codec error -> Codec value -> Codec (Result error value)
+result errorCodec valueCodec =
+    custom
+        (\ferr fok v ->
+            case v of
+                Err err ->
+                    ferr err
+
+                Ok ok ->
+                    fok ok
+        )
+        |> variant1 "Err" Err errorCodec
+        |> variant1 "Ok" Ok valueCodec
+        |> buildCustom
 
 
 
