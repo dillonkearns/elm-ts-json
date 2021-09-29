@@ -586,21 +586,18 @@ variant2 name ctor m1 m2 (CustomCodec am) =
                 )
                 (Json.Decode.field "args" (decoder m1 |> JD.decoder |> Json.Decode.index 0))
                 (Json.Decode.field "args" (decoder m2 |> JD.decoder |> Json.Decode.index 1))
-
-        encodeCustom : (List Value -> Value) -> (a -> b -> JE.UnionEncodeValue)
-        encodeCustom =
-            \encodeCustomTypeArgs a b ->
-                [ a |> JE.encoder (encoder m1)
-                , b |> JE.encoder (encoder m2)
-                ]
-                    |> encodeCustomTypeArgs
-                    |> JE.UnionEncodeValue
     in
     variant_ name
         [ m1 |> encoder |> JE.tsType
         , m2 |> encoder |> JE.tsType
         ]
-        encodeCustom
+        (\encodeCustomTypeArgs a b ->
+            [ a |> JE.encoder (encoder m1)
+            , b |> JE.encoder (encoder m2)
+            ]
+                |> encodeCustomTypeArgs
+                |> JE.UnionEncodeValue
+        )
         decoderOnly
         (CustomCodec am)
 
