@@ -569,14 +569,6 @@ variant2 :
     -> CustomCodec ((a -> b -> JE.UnionEncodeValue) -> c) v
     -> CustomCodec c v
 variant2 name ctor m1 m2 codec =
-    let
-        decoderOnly : Json.Decode.Decoder v
-        decoderOnly =
-            Json.Decode.map3 (\() -> ctor)
-                (tagDecoder name)
-                (Json.Decode.field "args" (decoder m1 |> JD.decoder |> Json.Decode.index 0))
-                (Json.Decode.field "args" (decoder m2 |> JD.decoder |> Json.Decode.index 1))
-    in
     variant_ name
         [ m1 |> encoder |> JE.tsType
         , m2 |> encoder |> JE.tsType
@@ -588,7 +580,11 @@ variant2 name ctor m1 m2 codec =
                 |> encodeCustomTypeArgs
                 |> JE.UnionEncodeValue
         )
-        decoderOnly
+        (Json.Decode.map3 (\() -> ctor)
+            (tagDecoder name)
+            (Json.Decode.field "args" (decoder m1 |> JD.decoder |> Json.Decode.index 0))
+            (Json.Decode.field "args" (decoder m2 |> JD.decoder |> Json.Decode.index 1))
+        )
         codec
 
 
@@ -603,15 +599,6 @@ variant3 :
     -> CustomCodec ((a -> b -> c -> JE.UnionEncodeValue) -> partial) v
     -> CustomCodec partial v
 variant3 name ctor m1 m2 m3 codec =
-    let
-        decoderOnly : Json.Decode.Decoder v
-        decoderOnly =
-            Json.Decode.map4 (\() -> ctor)
-                (tagDecoder name)
-                (Json.Decode.field "args" (decoder m1 |> JD.decoder |> Json.Decode.index 0))
-                (Json.Decode.field "args" (decoder m2 |> JD.decoder |> Json.Decode.index 1))
-                (Json.Decode.field "args" (decoder m3 |> JD.decoder |> Json.Decode.index 2))
-    in
     variant_ name
         [ m1 |> encoder |> JE.tsType
         , m2 |> encoder |> JE.tsType
@@ -625,7 +612,12 @@ variant3 name ctor m1 m2 m3 codec =
                 |> encodeCustomTypeArgs
                 |> JE.UnionEncodeValue
         )
-        decoderOnly
+        (Json.Decode.map4 (\() -> ctor)
+            (tagDecoder name)
+            (Json.Decode.field "args" (decoder m1 |> JD.decoder |> Json.Decode.index 0))
+            (Json.Decode.field "args" (decoder m2 |> JD.decoder |> Json.Decode.index 1))
+            (Json.Decode.field "args" (decoder m3 |> JD.decoder |> Json.Decode.index 2))
+        )
         codec
 
 
