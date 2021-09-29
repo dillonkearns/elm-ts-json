@@ -4,12 +4,14 @@ import Dict
 import Expect
 import Fuzz exposing (Fuzzer)
 import Json.Decode as JD
+import Json.Encode
 import Set
 import Test exposing (Test, describe, fuzz, test)
 import TsJson.Codec as Codec exposing (Codec)
 import TsJson.Decode
 import TsJson.Encode
 import TsJson.Type
+import TsType
 
 
 suite : Test
@@ -29,8 +31,7 @@ suite =
                         |> Expect.equal (Ok 632)
                 )
             ]
-
-        --, describe "recursive" recursiveTests
+        , describe "recursive" recursiveTests
         , describe "map,andThen" mapAndThenTests
         ]
 
@@ -43,9 +44,17 @@ roundtrips : Fuzzer a -> Codec a -> Test
 roundtrips fuzzer codec =
     fuzz fuzzer "is a roundtrip" <|
         \value ->
-            value
-                |> TsJson.Encode.encoder (Codec.encoder codec)
+            let
+                encoded =
+                    value
+                        |> TsJson.Encode.encoder (Codec.encoder codec)
+            in
+            encoded
                 |> Codec.decodeValue codec
+                --|> Result.mapError
+                --    (\_ ->
+                --        Json.Encode.encode 0 encoded
+                --    )
                 |> Result.mapError JD.errorToString
                 |> Expect.all
                     [ Expect.equal (Ok value)
@@ -235,35 +244,109 @@ customTests =
                 |> Codec.buildCustom
             )
         ]
+    , describe "with 2 ctors, 0,1 args" <|
+        let
+            match fnothing fjust value =
+                case value of
+                    Nothing ->
+                        fnothing
 
-    --, describe "with 2 ctors, 0,1 args" <|
-    --    let
-    --        match fnothing fjust value =
-    --            case value of
-    --                Nothing ->
-    --                    fnothing
-    --
-    --                Just v ->
-    --                    fjust v
-    --
-    --        codec =
-    --            Codec.custom match
-    --                |> Codec.variant0 "Nothing" Nothing
-    --                |> Codec.variant1 "Just" Just Codec.int
-    --                |> Codec.buildCustom
-    --
-    --        fuzzers =
-    --            [ ( "1st ctor", Fuzz.constant Nothing )
-    --            , ( "2nd ctor", Fuzz.map Just Fuzz.int )
-    --            ]
-    --    in
-    --    fuzzers
-    --        |> List.map
-    --            (\( name, fuzz ) ->
-    --                describe name
-    --                    [ roundtrips fuzz codec ]
-    --            )
+                    Just v ->
+                        fjust v
+
+            codec =
+                Codec.custom match
+                    |> Codec.variant0 "Nothing" Nothing
+                    |> Codec.variant1 "Just" Just Codec.int
+                    |> Codec.buildCustom
+
+            fuzzers =
+                [ ( "1st ctor", Fuzz.constant Nothing )
+                , ( "2nd ctor", Fuzz.map Just Fuzz.int )
+                ]
+        in
+        fuzzers
+            |> List.map
+                (\( name, fuzz ) ->
+                    describe name
+                        [ roundtrips fuzz codec ]
+                )
+    , describe "with 2 ctors, 0,2 args" <|
+        let
+            match : TsJson.Encode.UnionEncodeValue -> (Int -> Int -> TsJson.Encode.UnionEncodeValue) -> Maybe ( Int, Int ) -> TsJson.Encode.UnionEncodeValue
+            match fnothing fjust value =
+                case value of
+                    Nothing ->
+                        fnothing
+
+                    Just ( v1, v2 ) ->
+                        fjust v1 v2
+
+            codec : Codec (Maybe ( Int, Int ))
+            codec =
+                Codec.custom match
+                    |> Codec.variant0 "Nothing" Nothing
+                    |> Codec.variant2 "Just" (\first second -> Just ( first, second )) Codec.int Codec.int
+                    |> Codec.buildCustom
+        in
+        [ ( "1st ctor", Fuzz.constant Nothing )
+        , ( "2nd ctor", Fuzz.map2 (\a b -> Just ( a, b )) Fuzz.int Fuzz.int )
+        ]
+            |> roundtripsTest "codec type"
+                codec
+                """{ args : [ number, number ]; tag : "Just" } | { args : [  ]; tag : "Nothing" }"""
+    , describe "with 3 ctors, 0,3 args" <|
+        let
+            codec : Codec MyCustomType
+            codec =
+                Codec.custom
+                    (\fSingle fTriple value ->
+                        case value of
+                            Single v1 ->
+                                fSingle v1
+
+                            Triple v1 v2 v3 ->
+                                fTriple v1 v2 v3
+                    )
+                    |> Codec.variant1 "Single" Single Codec.int
+                    |> Codec.variant3 "Triple" (\v1 v2 v3 -> Triple v1 v2 v3) Codec.int Codec.int Codec.int
+                    |> Codec.buildCustom
+        in
+        [ ( "1st ctor", Fuzz.map Single Fuzz.int )
+        , ( "2nd ctor", Fuzz.map3 Triple Fuzz.int Fuzz.int Fuzz.int )
+        ]
+            |> roundtripsTest "codec type"
+                codec
+                """{ args : [ number, number, number ]; tag : "Triple" } | { args : [ number ]; tag : "Single" }"""
     ]
+
+
+type MyCustomType
+    = Single Int
+    | Triple Int Int Int
+
+
+roundtripsTest :
+    String
+    -> Codec value
+    -> String
+    -> List ( String, Fuzzer value )
+    -> List Test
+roundtripsTest testName codec expectedTsType fuzzers =
+    (test testName <|
+        \() ->
+            codec
+                |> Codec.tsType
+                |> TsType.toString
+                |> Expect.equal expectedTsType
+    )
+        :: (fuzzers
+                |> List.map
+                    (\( name, fuzz ) ->
+                        describe name
+                            [ roundtrips fuzz codec ]
+                    )
+           )
 
 
 bimapTests : List Test
@@ -307,28 +390,27 @@ maybeTests =
     ]
 
 
+recursiveTests : List Test
+recursiveTests =
+    [ ( "list", Fuzz.list Fuzz.int ) ]
+        |> roundtripsTest "recursive list"
+            (Codec.recursive
+                (\c ->
+                    Codec.custom
+                        (\fempty fcons value ->
+                            case value of
+                                [] ->
+                                    fempty
 
---recursiveTests : List Test
---recursiveTests =
---    [ describe "list"
---        [ roundtrips (Fuzz.list Fuzz.int) <|
---            Codec.recursive
---                (\c ->
---                    Codec.custom
---                        (\fempty fcons value ->
---                            case value of
---                                [] ->
---                                    fempty
---
---                                x :: xs ->
---                                    fcons x xs
---                        )
---                        |> Codec.variant0 "[]" []
---                        |> Codec.variant2 "(::)" (::) Codec.int c
---                        |> Codec.buildCustom
---                )
---        ]
---    ]
+                                x :: xs ->
+                                    fcons x xs
+                        )
+                        |> Codec.variant0 "[]" []
+                        |> Codec.variant2 "(::)" (::) Codec.int c
+                        |> Codec.buildCustom
+                )
+            )
+            """{ args : [ number, JsonValue ]; tag : "(::)" } | { args : [  ]; tag : "[]" }"""
 
 
 mapAndThenTests : List Test

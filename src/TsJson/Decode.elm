@@ -1,5 +1,5 @@
 module TsJson.Decode exposing
-    ( Decoder
+    ( Decoder(..)
     , succeed, fail
     , bool, float, int, string
     , field, at
