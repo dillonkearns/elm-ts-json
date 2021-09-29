@@ -555,26 +555,26 @@ variant1 name ctor codec (CustomCodec am) =
 -}
 variant2 :
     String
-    -> (a -> b -> v)
-    -> Codec a
-    -> Codec b
-    -> CustomCodec ((a -> b -> JE.UnionEncodeValue) -> c) v
+    -> (arg1 -> arg2 -> v)
+    -> Codec arg1
+    -> Codec arg2
+    -> CustomCodec ((arg1 -> arg2 -> JE.UnionEncodeValue) -> c) v
     -> CustomCodec c v
-variant2 name ctor m1 m2 codec =
+variant2 name constructor arg1Codec arg2Codec codec =
     variant_ name
-        [ m1 |> encoder |> JE.tsType
-        , m2 |> encoder |> JE.tsType
+        [ arg1Codec |> encoder |> JE.tsType
+        , arg2Codec |> encoder |> JE.tsType
         ]
         (\encodeCustomTypeArgs a b ->
-            [ a |> JE.encoder (encoder m1)
-            , b |> JE.encoder (encoder m2)
+            [ a |> JE.encoder (encoder arg1Codec)
+            , b |> JE.encoder (encoder arg2Codec)
             ]
                 |> encodeCustomTypeArgs
                 |> JE.UnionEncodeValue
         )
-        (Json.Decode.map2 ctor
-            (variantArgDecoder 0 m1)
-            (variantArgDecoder 1 m2)
+        (Json.Decode.map2 constructor
+            (variantArgDecoder 0 arg1Codec)
+            (variantArgDecoder 1 arg2Codec)
             |> variantArgsDecoder name
         )
         codec
@@ -590,24 +590,24 @@ variant3 :
     -> Codec arg3
     -> CustomCodec ((arg1 -> arg2 -> arg3 -> JE.UnionEncodeValue) -> partial) v
     -> CustomCodec partial v
-variant3 name ctor codec1 codec2 codec3 codec =
+variant3 name constructor arg1Codec arg2Codec arg3Codec codec =
     variant_ name
-        [ tsType codec1
-        , tsType codec2
-        , tsType codec3
+        [ tsType arg1Codec
+        , tsType arg2Codec
+        , tsType arg3Codec
         ]
         (\encodeCustomTypeArgs arg1 arg2 arg3 ->
-            [ JE.encoder (encoder codec1) arg1
-            , JE.encoder (encoder codec2) arg2
-            , JE.encoder (encoder codec3) arg3
+            [ JE.encoder (encoder arg1Codec) arg1
+            , JE.encoder (encoder arg2Codec) arg2
+            , JE.encoder (encoder arg3Codec) arg3
             ]
                 |> encodeCustomTypeArgs
                 |> JE.UnionEncodeValue
         )
-        (Json.Decode.map3 ctor
-            (variantArgDecoder 0 codec1)
-            (variantArgDecoder 1 codec2)
-            (variantArgDecoder 2 codec3)
+        (Json.Decode.map3 constructor
+            (variantArgDecoder 0 arg1Codec)
+            (variantArgDecoder 1 arg2Codec)
+            (variantArgDecoder 2 arg3Codec)
             |> variantArgsDecoder name
         )
         codec
