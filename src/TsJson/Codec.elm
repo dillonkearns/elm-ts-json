@@ -580,10 +580,11 @@ variant2 name ctor m1 m2 codec =
                 |> encodeCustomTypeArgs
                 |> JE.UnionEncodeValue
         )
-        (Json.Decode.map3 (\() -> ctor)
-            (tagDecoder name)
-            (Json.Decode.field "args" (decoder m1 |> JD.decoder |> Json.Decode.index 0))
-            (Json.Decode.field "args" (decoder m2 |> JD.decoder |> Json.Decode.index 1))
+        (decodeHelp name
+            (Json.Decode.map2 ctor
+                (decoder m1 |> JD.decoder |> Json.Decode.index 0)
+                (decoder m2 |> JD.decoder |> Json.Decode.index 1)
+            )
         )
         codec
 
@@ -612,27 +613,31 @@ variant3 name ctor m1 m2 m3 codec =
                 |> encodeCustomTypeArgs
                 |> JE.UnionEncodeValue
         )
-        (Json.Decode.map4 (\() -> ctor)
-            (tagDecoder name)
-            (Json.Decode.field "args" (decoder m1 |> JD.decoder |> Json.Decode.index 0))
-            (Json.Decode.field "args" (decoder m2 |> JD.decoder |> Json.Decode.index 1))
-            (Json.Decode.field "args" (decoder m3 |> JD.decoder |> Json.Decode.index 2))
+        (decodeHelp name
+            (Json.Decode.map3 ctor
+                (decoder m1 |> JD.decoder |> Json.Decode.index 0)
+                (decoder m2 |> JD.decoder |> Json.Decode.index 1)
+                (decoder m3 |> JD.decoder |> Json.Decode.index 2)
+            )
         )
         codec
 
 
-tagDecoder : String -> Json.Decode.Decoder ()
-tagDecoder expectedTagName =
-    Json.Decode.string
-        |> Json.Decode.andThen
-            (\tagName ->
-                if expectedTagName == tagName then
-                    Json.Decode.succeed ()
+decodeHelp : String -> Json.Decode.Decoder a -> Json.Decode.Decoder a
+decodeHelp expectedTagName argsDecoder =
+    Json.Decode.map2 (\() v -> v)
+        (Json.Decode.string
+            |> Json.Decode.andThen
+                (\tagName ->
+                    if expectedTagName == tagName then
+                        Json.Decode.succeed ()
 
-                else
-                    Json.Decode.fail ("Expected the following tag: " ++ expectedTagName)
-            )
-        |> Json.Decode.field "tag"
+                    else
+                        Json.Decode.fail ("Expected the following tag: " ++ expectedTagName)
+                )
+            |> Json.Decode.field "tag"
+        )
+        (Json.Decode.field "args" argsDecoder)
 
 
 variant_ :
