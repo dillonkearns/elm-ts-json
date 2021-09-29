@@ -298,6 +298,12 @@ customTests =
     ]
 
 
+roundtripsTest :
+    String
+    -> Codec value
+    -> c
+    -> List ( String, Fuzzer value )
+    -> List Test
 roundtripsTest testName codec expectedTsType fuzzers =
     (test testName <|
         \() ->
