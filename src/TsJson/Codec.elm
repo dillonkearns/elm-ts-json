@@ -10,7 +10,10 @@ module TsJson.Codec exposing
     , map
     , succeed, fail, value, build
     , tsType
-    --recursive, andThen, lazy,
+    ,  lazy
+      , recursive
+        --recursive, andThen, lazy,
+
     )
 
 {-| A `Codec a` contain a JSON `Decoder a` and the corresponding `a -> Value` encoder.
@@ -962,12 +965,14 @@ fail msg =
 --        { decoder = decoder c |> JD.andThen (dec >> decoder)
 --        , encoder = encoder c << enc
 --        }
---{-| Create a `Codec` for a recursive data structure.
---The argument to the function you need to pass is the fully formed `Codec`.
----}
---recursive : (Codec a -> Codec a) -> Codec a
---recursive f =
---    f <| lazy (\_ -> recursive f)
+
+
+{-| Create a `Codec` for a recursive data structure.
+The argument to the function you need to pass is the fully formed `Codec`.
+-}
+recursive : (Codec a -> Codec a) -> Codec a
+recursive f =
+    f <| lazy (\() -> recursive f)
 
 
 {-| Create a `Codec` that produces null as JSON and always decodes as the same value.
@@ -980,16 +985,27 @@ succeed default_ =
         }
 
 
-
---{-| This is useful for recursive structures that are not easily modeled with `recursive`.
---Have a look at the Json.Decode docs for examples.
----}
---lazy : (() -> Codec a) -> Codec a
---lazy f =
---    Codec
---        { decoder = JD.lazy (\_ -> decoder <| f ())
---        , encoder = \v -> encoder (f ()) v
---        }
+{-| This is useful for recursive structures that are not easily modeled with `recursive`.
+Have a look at the Json.Decode docs for examples.
+-}
+lazy : (() -> Codec a) -> Codec a
+lazy f =
+    Codec
+        { decoder =
+            JD.Decoder
+                (Json.Decode.lazy
+                    (\() ->
+                        decoder (f ())
+                            |> JD.decoder
+                    )
+                )
+                --(tsType (f ()))
+                TsType.Unknown
+        , encoder =
+            JE.Encoder
+                (\v -> (encoder (f ()) |> JE.encoder) v)
+                TsType.Unknown
+        }
 
 
 {-| Create a `Codec` that doesn't transform the JSON value, just brings it to and from Elm as a `Value`.

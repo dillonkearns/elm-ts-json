@@ -31,8 +31,7 @@ suite =
                         |> Expect.equal (Ok 632)
                 )
             ]
-
-        --, describe "recursive" recursiveTests
+        , describe "recursive" recursiveTests
         , describe "map,andThen" mapAndThenTests
         ]
 
@@ -391,28 +390,27 @@ maybeTests =
     ]
 
 
+recursiveTests : List Test
+recursiveTests =
+    [ describe "list"
+        [ roundtrips (Fuzz.list Fuzz.int) <|
+            Codec.recursive
+                (\c ->
+                    Codec.custom
+                        (\fempty fcons value ->
+                            case value of
+                                [] ->
+                                    fempty
 
---recursiveTests : List Test
---recursiveTests =
---    [ describe "list"
---        [ roundtrips (Fuzz.list Fuzz.int) <|
---            Codec.recursive
---                (\c ->
---                    Codec.custom
---                        (\fempty fcons value ->
---                            case value of
---                                [] ->
---                                    fempty
---
---                                x :: xs ->
---                                    fcons x xs
---                        )
---                        |> Codec.variant0 "[]" []
---                        |> Codec.variant2 "(::)" (::) Codec.int c
---                        |> Codec.buildCustom
---                )
---        ]
---    ]
+                                x :: xs ->
+                                    fcons x xs
+                        )
+                        |> Codec.variant0 "[]" []
+                        |> Codec.variant2 "(::)" (::) Codec.int c
+                        |> Codec.buildCustom
+                )
+        ]
+    ]
 
 
 mapAndThenTests : List Test

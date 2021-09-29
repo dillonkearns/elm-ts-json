@@ -1,5 +1,5 @@
 module TsJson.Encode exposing
-    ( Encoder
+    ( Encoder(..)
     , string, int, float, literal, bool, null
     , map
     , object, Property, optional, required
