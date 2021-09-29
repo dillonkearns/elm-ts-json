@@ -573,18 +573,7 @@ variant2 name ctor m1 m2 codec =
         decoderOnly : Json.Decode.Decoder v
         decoderOnly =
             Json.Decode.map3 (\() -> ctor)
-                (Json.Decode.field "tag"
-                    (Json.Decode.string
-                        |> Json.Decode.andThen
-                            (\dV ->
-                                if name == dV then
-                                    Json.Decode.succeed ()
-
-                                else
-                                    Json.Decode.fail ("Expected the following tag: " ++ name)
-                            )
-                    )
-                )
+                (tagDecoder name)
                 (Json.Decode.field "args" (decoder m1 |> JD.decoder |> Json.Decode.index 0))
                 (Json.Decode.field "args" (decoder m2 |> JD.decoder |> Json.Decode.index 1))
     in
@@ -618,18 +607,7 @@ variant3 name ctor m1 m2 m3 codec =
         decoderOnly : Json.Decode.Decoder v
         decoderOnly =
             Json.Decode.map4 (\() -> ctor)
-                (Json.Decode.field "tag"
-                    (Json.Decode.string
-                        |> Json.Decode.andThen
-                            (\dV ->
-                                if name == dV then
-                                    Json.Decode.succeed ()
-
-                                else
-                                    Json.Decode.fail ("Expected the following tag: " ++ name)
-                            )
-                    )
-                )
+                (tagDecoder name)
                 (Json.Decode.field "args" (decoder m1 |> JD.decoder |> Json.Decode.index 0))
                 (Json.Decode.field "args" (decoder m2 |> JD.decoder |> Json.Decode.index 1))
                 (Json.Decode.field "args" (decoder m3 |> JD.decoder |> Json.Decode.index 2))
@@ -649,6 +627,20 @@ variant3 name ctor m1 m2 m3 codec =
         )
         decoderOnly
         codec
+
+
+tagDecoder : String -> Json.Decode.Decoder ()
+tagDecoder expectedTagName =
+    Json.Decode.string
+        |> Json.Decode.andThen
+            (\tagName ->
+                if expectedTagName == tagName then
+                    Json.Decode.succeed ()
+
+                else
+                    Json.Decode.fail ("Expected the following tag: " ++ expectedTagName)
+            )
+        |> Json.Decode.field "tag"
 
 
 variant_ :
