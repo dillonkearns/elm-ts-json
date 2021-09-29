@@ -38,10 +38,12 @@ toString tsType_ =
             (firstType :: tsTypes)
                 |> List.map toString
                 |> String.join " | "
+                |> parenthesize
 
         TypeObject keyTypes ->
             "{ "
                 ++ (keyTypes
+                        |> List.sortBy (\( _, fieldName, _ ) -> fieldName)
                         |> List.map
                             (\( optionality, key, tsType__ ) ->
                                 (case optionality of
@@ -125,7 +127,15 @@ toString tsType_ =
 
 parenthesize : String -> String
 parenthesize string =
-    "(" ++ string ++ ")"
+    let
+        alreadyParenthesized =
+            (string |> String.startsWith "(") && (string |> String.endsWith ")")
+    in
+    if alreadyParenthesized then
+        string
+
+    else
+        "(" ++ string ++ ")"
 
 
 parenthesizeToString : TsType -> String
@@ -140,7 +150,7 @@ parenthesizeToString type_ =
                     False
     in
     if needsParens then
-        "(" ++ toString type_ ++ ")"
+        toString type_ |> parenthesize
 
     else
         toString type_

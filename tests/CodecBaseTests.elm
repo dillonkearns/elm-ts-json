@@ -33,6 +33,7 @@ suite =
             ]
         , describe "recursive" recursiveTests
         , describe "map,andThen" mapAndThenTests
+        , andThenTests
         ]
 
 
@@ -420,3 +421,51 @@ mapAndThenTests =
             Codec.map (\x -> x - 1) (\x -> x + 1) Codec.int
         ]
     ]
+
+
+andThenTests : Test
+andThenTests =
+    test "andThenExample" <|
+        \() ->
+            let
+                v1codec =
+                    TsJson.Decode.andThenDecoder (TsJson.Decode.field "payload" TsJson.Decode.string)
+
+                v2Codec =
+                    Codec.object identity |> Codec.field "data" identity Codec.string |> Codec.buildObject
+
+                example =
+                    TsJson.Decode.andThenInit
+                        (\v1Decoder v2PlusDecoder version ->
+                            case version of
+                                1 ->
+                                    v1Decoder
+
+                                _ ->
+                                    v2PlusDecoder
+                        )
+                        |> v1codec
+
+                versionCodec =
+                    Codec.object identity |> Codec.field "version" identity Codec.int |> Codec.buildObject
+
+                andThenCodec =
+                    versionCodec
+                        |> Codec.andThen example v2Codec
+            in
+            { encoded =
+                (andThenCodec
+                    |> Codec.encoder
+                    |> TsJson.Encode.encoder
+                )
+                    "test"
+                    |> Json.Encode.encode 0
+            , tsType =
+                andThenCodec
+                    |> Codec.tsType
+                    |> TsType.toString
+            }
+                |> Expect.equal
+                    { encoded = """{"data":"test"}"""
+                    , tsType = "({ version : number } & { data : string } | { payload : string })"
+                    }

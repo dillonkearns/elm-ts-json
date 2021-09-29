@@ -118,7 +118,7 @@ suite =
                     |> expectDecodes
                         { input = """{"version": 1, "payload": "Hello"}"""
                         , output = "Hello"
-                        , typeDef = "({ version : number } & { data : { payload : string } } | { payload : string })"
+                        , typeDef = "({ version : number } & ({ data : { payload : string } } | { payload : string }))"
                         }
         , test "succeed" <|
             \() ->
