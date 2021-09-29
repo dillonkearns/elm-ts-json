@@ -5,7 +5,7 @@ module TsJson.Codec exposing
     , string, bool, int, float
     , maybe, list, array, dict, set, tuple, triple
     , ObjectCodec, object, field, maybeField, nullableField, buildObject
-    , CustomCodec, custom, variant0, variant1, variant2, variant3, variant4, variant5, variant6, buildCustom
+    , CustomCodec, custom, variant0, variant1, variant2, variant3, variant4, variant5, variant6, variant7, variant8, buildCustom
     , oneOf
     , map
     , succeed, fail, value, build
@@ -50,9 +50,7 @@ module TsJson.Codec exposing
 
 # Custom Types
 
--- @ docs CustomCodec, custom, variant0, variant1, variant2, variant3, variant4, variant5, variant6, variant7, variant8, buildCustom
-
-@docs CustomCodec, custom, variant0, variant1, variant2, variant3, variant4, variant5, variant6, buildCustom
+@docs CustomCodec, custom, variant0, variant1, variant2, variant3, variant4, variant5, variant6, variant7, variant8, buildCustom
 
 
 # Inconsistent structure
@@ -728,6 +726,108 @@ variant6 name constructor arg1Codec arg2Codec arg3Codec arg4Codec arg5Codec arg6
             (variantArgDecoder 3 arg4Codec)
             (variantArgDecoder 4 arg5Codec)
             (variantArgDecoder 5 arg6Codec)
+            |> variantArgsDecoder name
+        )
+        codec
+
+
+{-| Define a variant with 3 parameters for a custom type.
+-}
+variant7 :
+    String
+    -> (arg1 -> arg2 -> arg3 -> arg4 -> arg5 -> arg6 -> arg7 -> v)
+    -> Codec arg1
+    -> Codec arg2
+    -> Codec arg3
+    -> Codec arg4
+    -> Codec arg5
+    -> Codec arg6
+    -> Codec arg7
+    -> CustomCodec ((arg1 -> arg2 -> arg3 -> arg4 -> arg5 -> arg6 -> arg7 -> JE.UnionEncodeValue) -> partial) v
+    -> CustomCodec partial v
+variant7 name constructor arg1Codec arg2Codec arg3Codec arg4Codec arg5Codec arg6Codec arg7Codec codec =
+    variant_ name
+        [ tsType arg1Codec
+        , tsType arg2Codec
+        , tsType arg3Codec
+        , tsType arg4Codec
+        , tsType arg5Codec
+        , tsType arg6Codec
+        , tsType arg7Codec
+        ]
+        (\encodeCustomTypeArgs arg1 arg2 arg3 arg4 arg5 arg6 arg7 ->
+            [ JE.encoder (encoder arg1Codec) arg1
+            , JE.encoder (encoder arg2Codec) arg2
+            , JE.encoder (encoder arg3Codec) arg3
+            , JE.encoder (encoder arg4Codec) arg4
+            , JE.encoder (encoder arg5Codec) arg5
+            , JE.encoder (encoder arg6Codec) arg6
+            , JE.encoder (encoder arg7Codec) arg7
+            ]
+                |> encodeCustomTypeArgs
+                |> JE.UnionEncodeValue
+        )
+        (Json.Decode.map7 constructor
+            (variantArgDecoder 0 arg1Codec)
+            (variantArgDecoder 1 arg2Codec)
+            (variantArgDecoder 2 arg3Codec)
+            (variantArgDecoder 3 arg4Codec)
+            (variantArgDecoder 4 arg5Codec)
+            (variantArgDecoder 5 arg6Codec)
+            (variantArgDecoder 6 arg7Codec)
+            |> variantArgsDecoder name
+        )
+        codec
+
+
+{-| Define a variant with 3 parameters for a custom type.
+-}
+variant8 :
+    String
+    -> (arg1 -> arg2 -> arg3 -> arg4 -> arg5 -> arg6 -> arg7 -> arg8 -> v)
+    -> Codec arg1
+    -> Codec arg2
+    -> Codec arg3
+    -> Codec arg4
+    -> Codec arg5
+    -> Codec arg6
+    -> Codec arg7
+    -> Codec arg8
+    -> CustomCodec ((arg1 -> arg2 -> arg3 -> arg4 -> arg5 -> arg6 -> arg7 -> arg8 -> JE.UnionEncodeValue) -> partial) v
+    -> CustomCodec partial v
+variant8 name constructor arg1Codec arg2Codec arg3Codec arg4Codec arg5Codec arg6Codec arg7Codec arg8Codec codec =
+    variant_ name
+        [ tsType arg1Codec
+        , tsType arg2Codec
+        , tsType arg3Codec
+        , tsType arg4Codec
+        , tsType arg5Codec
+        , tsType arg6Codec
+        , tsType arg7Codec
+        , tsType arg8Codec
+        ]
+        (\encodeCustomTypeArgs arg1 arg2 arg3 arg4 arg5 arg6 arg7 arg8 ->
+            [ JE.encoder (encoder arg1Codec) arg1
+            , JE.encoder (encoder arg2Codec) arg2
+            , JE.encoder (encoder arg3Codec) arg3
+            , JE.encoder (encoder arg4Codec) arg4
+            , JE.encoder (encoder arg5Codec) arg5
+            , JE.encoder (encoder arg6Codec) arg6
+            , JE.encoder (encoder arg7Codec) arg7
+            , JE.encoder (encoder arg8Codec) arg8
+            ]
+                |> encodeCustomTypeArgs
+                |> JE.UnionEncodeValue
+        )
+        (Json.Decode.map8 constructor
+            (variantArgDecoder 0 arg1Codec)
+            (variantArgDecoder 1 arg2Codec)
+            (variantArgDecoder 2 arg3Codec)
+            (variantArgDecoder 3 arg4Codec)
+            (variantArgDecoder 4 arg5Codec)
+            (variantArgDecoder 5 arg6Codec)
+            (variantArgDecoder 6 arg7Codec)
+            (variantArgDecoder 7 arg8Codec)
             |> variantArgsDecoder name
         )
         codec
