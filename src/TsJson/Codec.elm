@@ -519,34 +519,25 @@ variant0 name ctor (CustomCodec am) =
 -}
 variant1 :
     String
-    -> (a -> v)
-    -> Codec a
-    -> CustomCodec ((a -> JE.UnionEncodeValue) -> b) v
-    -> CustomCodec b v
-variant1 name ctor codec (CustomCodec am) =
-    let
-        --variantDecoder : JD.Decoder decodesTo
-        variantDecoder =
-            JD.map2 (\() -> ctor)
-                (JD.field "tag"
-                    (JD.literal () (Json.Encode.string name))
-                )
-                (decoder codec |> JD.field "args")
-
-        --encoderThing : JE.UnionBuilder (decodesTo -> JE.UnionEncodeValue)
-        encoderThing =
-            am.match
-                |> JE.variant
-                    (JE.object
-                        [ JE.required "tag" (\_ -> name) (JE.literal (Json.Encode.string name))
-                        , JE.required "args" identity (encoder codec)
-                        ]
-                    )
-    in
-    CustomCodec
-        { match = encoderThing
-        , decoder = variantDecoder :: am.decoder
-        }
+    -> (arg1 -> v)
+    -> Codec arg1
+    -> CustomCodec ((arg1 -> JE.UnionEncodeValue) -> c) v
+    -> CustomCodec c v
+variant1 name constructor arg1Codec codec =
+    variant_ name
+        [ tsType arg1Codec
+        ]
+        (\encodeCustomTypeArgs a ->
+            [ a |> JE.encoder (encoder arg1Codec)
+            ]
+                |> encodeCustomTypeArgs
+                |> JE.UnionEncodeValue
+        )
+        (Json.Decode.map constructor
+            (variantArgDecoder 0 arg1Codec)
+            |> variantArgsDecoder name
+        )
+        codec
 
 
 {-| Define a variant with 2 parameters for a custom type.
@@ -560,12 +551,12 @@ variant2 :
     -> CustomCodec c v
 variant2 name constructor arg1Codec arg2Codec codec =
     variant_ name
-        [ arg1Codec |> encoder |> JE.tsType
-        , arg2Codec |> encoder |> JE.tsType
+        [ tsType arg1Codec
+        , tsType arg2Codec
         ]
-        (\encodeCustomTypeArgs a b ->
-            [ a |> JE.encoder (encoder arg1Codec)
-            , b |> JE.encoder (encoder arg2Codec)
+        (\encodeCustomTypeArgs arg1 arg2 ->
+            [ JE.encoder (encoder arg1Codec) arg1
+            , JE.encoder (encoder arg2Codec) arg2
             ]
                 |> encodeCustomTypeArgs
                 |> JE.UnionEncodeValue
