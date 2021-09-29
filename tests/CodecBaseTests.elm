@@ -392,9 +392,9 @@ maybeTests =
 
 recursiveTests : List Test
 recursiveTests =
-    [ describe "list"
-        [ roundtrips (Fuzz.list Fuzz.int) <|
-            Codec.recursive
+    [ ( "list", Fuzz.list Fuzz.int ) ]
+        |> roundtripsTest "recursive list"
+            (Codec.recursive
                 (\c ->
                     Codec.custom
                         (\fempty fcons value ->
@@ -409,8 +409,8 @@ recursiveTests =
                         |> Codec.variant2 "(::)" (::) Codec.int c
                         |> Codec.buildCustom
                 )
-        ]
-    ]
+            )
+            """{ args : [ number, JsonValue ]; tag : "(::)" } | { args : [  ]; tag : "[]" }"""
 
 
 mapAndThenTests : List Test
