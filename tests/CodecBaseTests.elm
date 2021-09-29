@@ -274,6 +274,7 @@ customTests =
                 )
     , describe "with 2 ctors, 0,2 args" <|
         let
+            match : TsJson.Encode.UnionEncodeValue -> (Int -> Int -> TsJson.Encode.UnionEncodeValue) -> Maybe ( Int, Int ) -> TsJson.Encode.UnionEncodeValue
             match fnothing fjust value =
                 case value of
                     Nothing ->
@@ -295,7 +296,35 @@ customTests =
             |> roundtripsTest "codec type"
                 codec
                 """{ args : [ number, number ]; tag : "Just" } | { tag : "Nothing" }"""
+    , describe "with 3 ctors, 0,3 args" <|
+        let
+            codec : Codec MyCustomType
+            codec =
+                Codec.custom
+                    (\fSingle fTriple value ->
+                        case value of
+                            Single v1 ->
+                                fSingle v1
+
+                            Triple v1 v2 v3 ->
+                                fTriple v1 v2 v3
+                    )
+                    |> Codec.variant1 "Single" Single Codec.int
+                    |> Codec.variant3 "Triple" (\v1 v2 v3 -> Triple v1 v2 v3) Codec.int Codec.int Codec.int
+                    |> Codec.buildCustom
+        in
+        [ ( "1st ctor", Fuzz.map Single Fuzz.int )
+        , ( "2nd ctor", Fuzz.map3 Triple Fuzz.int Fuzz.int Fuzz.int )
+        ]
+            |> roundtripsTest "codec type"
+                codec
+                """{ args : [ number, number, number ]; tag : "Triple" } | { args : number; tag : "Single" }"""
     ]
+
+
+type MyCustomType
+    = Single Int
+    | Triple Int Int Int
 
 
 roundtripsTest :

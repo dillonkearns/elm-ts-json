@@ -521,21 +521,13 @@ variant0 name ctor (CustomCodec am) =
 -}
 variant1 :
     String
-    -> (input -> decodesTo)
-    -> Codec input
-    ->
-        CustomCodec
-            ((input
-              -> JE.UnionEncodeValue
-             )
-             -> decodesTo
-             -> JE.UnionEncodeValue
-            )
-            decodesTo
-    -> CustomCodec (decodesTo -> JE.UnionEncodeValue) decodesTo
+    -> (a -> v)
+    -> Codec a
+    -> CustomCodec ((a -> JE.UnionEncodeValue) -> b) v
+    -> CustomCodec b v
 variant1 name ctor codec (CustomCodec am) =
     let
-        variantDecoder : JD.Decoder decodesTo
+        --variantDecoder : JD.Decoder decodesTo
         variantDecoder =
             JD.map2 (\() -> ctor)
                 (JD.field "tag"
@@ -543,7 +535,7 @@ variant1 name ctor codec (CustomCodec am) =
                 )
                 (decoder codec |> JD.field "args")
 
-        encoderThing : JE.UnionBuilder (decodesTo -> JE.UnionEncodeValue)
+        --encoderThing : JE.UnionBuilder (decodesTo -> JE.UnionEncodeValue)
         encoderThing =
             am.match
                 |> JE.variant
