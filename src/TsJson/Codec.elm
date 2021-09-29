@@ -504,15 +504,18 @@ variant0 :
     -> decodesTo
     -> CustomCodec (JE.UnionEncodeValue -> input) decodesTo
     -> CustomCodec input decodesTo
-variant0 name ctor (CustomCodec am) =
-    CustomCodec
-        { match =
-            am.match
-                |> JE.variant0 name
-        , decoder =
-            JD.field "tag" (JD.literal ctor (Json.Encode.string name))
-                :: am.decoder
-        }
+variant0 name constructor codec =
+    variant_ name
+        []
+        (\encodeCustomTypeArgs ->
+            []
+                |> encodeCustomTypeArgs
+                |> JE.UnionEncodeValue
+        )
+        (Json.Decode.succeed constructor
+            |> variantArgsDecoder name
+        )
+        codec
 
 
 {-| Define a variant with 0 parameters for a custom type.

@@ -295,7 +295,7 @@ customTests =
         ]
             |> roundtripsTest "codec type"
                 codec
-                """{ args : [ number, number ]; tag : "Just" } | { tag : "Nothing" }"""
+                """{ args : [ number, number ]; tag : "Just" } | { args : [  ]; tag : "Nothing" }"""
     , describe "with 3 ctors, 0,3 args" <|
         let
             codec : Codec MyCustomType
@@ -318,7 +318,7 @@ customTests =
         ]
             |> roundtripsTest "codec type"
                 codec
-                """{ args : [ number, number, number ]; tag : "Triple" } | { args : number; tag : "Single" }"""
+                """{ args : [ number, number, number ]; tag : "Triple" } | { args : [ number ]; tag : "Single" }"""
     ]
 
 
