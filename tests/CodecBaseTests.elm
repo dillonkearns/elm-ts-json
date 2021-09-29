@@ -282,33 +282,38 @@ customTests =
                     Just ( v1, v2 ) ->
                         fjust v1 v2
 
+            codec : Codec (Maybe ( Int, Int ))
             codec =
                 Codec.custom match
                     |> Codec.variant0 "Nothing" Nothing
                     |> Codec.variant2 "Just" (\first second -> Just ( first, second )) Codec.int Codec.int
                     |> Codec.buildCustom
-
-            fuzzers =
-                [ ( "1st ctor", Fuzz.constant Nothing )
-                , ( "2nd ctor", Fuzz.map2 (\a b -> Just ( a, b )) Fuzz.int Fuzz.int )
-                ]
         in
-        (test "codec type" <|
-            \() ->
+        [ ( "1st ctor", Fuzz.constant Nothing )
+        , ( "2nd ctor", Fuzz.map2 (\a b -> Just ( a, b )) Fuzz.int Fuzz.int )
+        ]
+            |> roundtripsTest "codec type"
                 codec
-                    |> Codec.tsType
-                    |> TsType.toString
-                    |> Expect.equal
-                        """{ args : [ number, number ]; tag : "Just" } | { tag : "Nothing" }"""
-        )
-            :: (fuzzers
-                    |> List.map
-                        (\( name, fuzz ) ->
-                            describe name
-                                [ roundtrips fuzz codec ]
-                        )
-               )
+                """{ args : [ number, number ]; tag : "Just" } | { tag : "Nothing" }"""
     ]
+
+
+roundtripsTest testName codec expectedTsType fuzzers =
+    (test testName <|
+        \() ->
+            codec
+                |> Codec.tsType
+                |> TsType.toString
+                |> Expect.equal
+                    """{ args : [ number, number ]; tag : "Just" } | { tag : "Nothing" }"""
+    )
+        :: (fuzzers
+                |> List.map
+                    (\( name, fuzz ) ->
+                        describe name
+                            [ roundtrips fuzz codec ]
+                    )
+           )
 
 
 bimapTests : List Test
