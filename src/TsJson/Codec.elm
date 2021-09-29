@@ -12,6 +12,7 @@ module TsJson.Codec exposing
     , tsType
     ,  variant2
        --recursive, andThen, lazy,
+      , variant3
 
     )
 
@@ -567,7 +568,7 @@ variant2 :
     -> Codec b
     -> CustomCodec ((a -> b -> JE.UnionEncodeValue) -> c) v
     -> CustomCodec c v
-variant2 name ctor m1 m2 (CustomCodec am) =
+variant2 name ctor m1 m2 codec =
     let
         decoderOnly : Json.Decode.Decoder v
         decoderOnly =
@@ -599,7 +600,55 @@ variant2 name ctor m1 m2 (CustomCodec am) =
                 |> JE.UnionEncodeValue
         )
         decoderOnly
-        (CustomCodec am)
+        codec
+
+
+{-| Define a variant with 3 parameters for a custom type.
+-}
+variant3 :
+    String
+    -> (a -> b -> c -> v)
+    -> Codec a
+    -> Codec b
+    -> Codec c
+    -> CustomCodec ((a -> b -> c -> JE.UnionEncodeValue) -> partial) v
+    -> CustomCodec partial v
+variant3 name ctor m1 m2 m3 codec =
+    let
+        decoderOnly : Json.Decode.Decoder v
+        decoderOnly =
+            Json.Decode.map4 (\() -> ctor)
+                (Json.Decode.field "tag"
+                    (Json.Decode.string
+                        |> Json.Decode.andThen
+                            (\dV ->
+                                if name == dV then
+                                    Json.Decode.succeed ()
+
+                                else
+                                    Json.Decode.fail ("Expected the following tag: " ++ name)
+                            )
+                    )
+                )
+                (Json.Decode.field "args" (decoder m1 |> JD.decoder |> Json.Decode.index 0))
+                (Json.Decode.field "args" (decoder m2 |> JD.decoder |> Json.Decode.index 1))
+                (Json.Decode.field "args" (decoder m3 |> JD.decoder |> Json.Decode.index 2))
+    in
+    variant_ name
+        [ m1 |> encoder |> JE.tsType
+        , m2 |> encoder |> JE.tsType
+        , m3 |> encoder |> JE.tsType
+        ]
+        (\encodeCustomTypeArgs a b c ->
+            [ a |> JE.encoder (encoder m1)
+            , b |> JE.encoder (encoder m2)
+            , c |> JE.encoder (encoder m3)
+            ]
+                |> encodeCustomTypeArgs
+                |> JE.UnionEncodeValue
+        )
+        decoderOnly
+        codec
 
 
 variant_ :
