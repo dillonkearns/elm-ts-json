@@ -1,5 +1,5 @@
 module TsJson.Encode exposing
-    ( Encoder(..)
+    ( Encoder
     , string, int, float, literal, bool, null
     , map
     , object, Property, optional, required
@@ -9,7 +9,7 @@ module TsJson.Encode exposing
     , value
     , encoder, tsType
     , runExample
-    , intersectTypes)
+    )
 
 {-| The `TsJson.Encode` module is what you use for
 
@@ -176,6 +176,7 @@ import Dict exposing (Dict)
 import Internal.TsJsonType exposing (..)
 import Internal.TypeReducer as TypeReducer
 import Json.Encode as Encode
+import TsJson.Internal.Encode exposing (Encoder(..))
 import TsType
 
 
@@ -217,8 +218,8 @@ Let's compare the two with an example for encoding a first and last name.
     --> }
 
 -}
-type Encoder input
-    = Encoder (input -> Encode.Value) TsType
+type alias Encoder input =
+    TsJson.Internal.Encode.Encoder input
 
 
 {-| -}
@@ -232,10 +233,6 @@ tsType : Encoder input -> TsType
 tsType (Encoder _ tsType_) =
     tsType_
 
-
-intersectTypes : Encoder input -> TsType -> Encoder input
-intersectTypes (Encoder encoder_ tsType1) tsType2 =
-    Encoder encoder_ (TypeReducer.intersect tsType1 tsType2)
 
 {-| -}
 type Property input

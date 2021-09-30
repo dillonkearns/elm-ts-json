@@ -3,14 +3,13 @@ module TsJson.Codec exposing
     , Decoder, decoder, decodeString, decodeValue
     , encoder, encodeToString, encodeToValue
     , string, bool, int, float
-    , maybe, list, array, dict, set, tuple, triple
+    , maybe, list, array, dict, set, tuple, triple, result
     , ObjectCodec, object, field, maybeField, nullableField, buildObject
     , CustomCodec, custom, variant0, variant1, variant2, variant3, variant4, variant5, variant6, variant7, variant8, buildCustom
     , oneOf
     , map
-    , succeed, fail, value, build
+    , succeed, recursive, fail, andThen, lazy, value, build
     , tsType
-    , andThen, lazy, recursive
     )
 
 {-| A `Codec a` contain a JSON `Decoder a` and the corresponding `a -> Value` encoder.
@@ -63,9 +62,7 @@ module TsJson.Codec exposing
 
 # Fancy Codecs
 
--- @ docs succeed, recursive, fail, andThen, lazy, value, build
-
-@docs succeed, fail, value, build
+@docs succeed, recursive, fail, andThen, lazy, value, build
 
 @docs tsType
 
@@ -79,6 +76,7 @@ import Json.Encode
 import Set exposing (Set)
 import TsJson.Decode as JD
 import TsJson.Encode as JE exposing (Encoder, Property)
+import TsJson.Internal.Encode exposing (Encoder(..))
 
 
 
@@ -959,7 +957,7 @@ andThen : JD.AndThenContinuation (JD.Decoder decodesTo -> value -> JD.Decoder de
 andThen andThenContinuation (Codec decodesToCodec) (Codec valueCodec) =
     Codec
         { decoder = JD.andThen (JD.andThenDecoder decodesToCodec.decoder andThenContinuation) valueCodec.decoder
-        , encoder = JE.intersectTypes decodesToCodec.encoder (JE.tsType valueCodec.encoder)
+        , encoder = TsJson.Internal.Encode.intersectTypes decodesToCodec.encoder (JE.tsType valueCodec.encoder)
         }
 
 
@@ -999,7 +997,7 @@ lazy f =
                 --(tsType (f ()))
                 TsType.Unknown
         , encoder =
-            JE.Encoder
+            Encoder
                 (\v -> (encoder (f ()) |> JE.encoder) v)
                 TsType.Unknown
         }
