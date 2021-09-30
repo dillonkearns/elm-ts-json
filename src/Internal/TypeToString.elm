@@ -36,9 +36,8 @@ toString tsType_ =
 
         Union ( firstType, tsTypes ) ->
             (firstType :: tsTypes)
-                |> List.map toString
+                |> List.map parenthesizeToString
                 |> String.join " | "
-                |> parenthesize
 
         TypeObject keyTypes ->
             "{ "
@@ -88,7 +87,7 @@ toString tsType_ =
 
         Intersection types ->
             types
-                |> List.map toString
+                |> List.map parenthesizeToString
                 |> String.join " & "
                 |> parenthesize
 
@@ -127,15 +126,7 @@ toString tsType_ =
 
 parenthesize : String -> String
 parenthesize string =
-    let
-        alreadyParenthesized =
-            (string |> String.startsWith "(") && (string |> String.endsWith ")")
-    in
-    if alreadyParenthesized then
-        string
-
-    else
-        "(" ++ string ++ ")"
+    "(" ++ string ++ ")"
 
 
 parenthesizeToString : TsType -> String

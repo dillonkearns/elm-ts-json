@@ -138,7 +138,7 @@ suite =
                             ]
                         )
                         |> expectEqualTypes
-                            "({ author : string; version : number } & { data : { payload : string } } | { payload : string })"
+                            "({ author : string; version : number } & ({ data : { payload : string } } | { payload : string }))"
             , test "union is preserved with parens as needed when intersected" <|
                 \() ->
                     TypeReducer.intersect

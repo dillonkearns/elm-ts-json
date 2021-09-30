@@ -467,5 +467,5 @@ andThenTests =
             }
                 |> Expect.equal
                     { encoded = """{"data":"test"}"""
-                    , tsType = "({ version : number } & { data : string } | { payload : string })"
+                    , tsType = "({ version : number } & ({ data : string } | { payload : string }))"
                     }
