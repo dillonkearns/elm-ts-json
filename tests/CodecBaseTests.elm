@@ -34,6 +34,7 @@ suite =
         , describe "recursive" recursiveTests
         , describe "map,andThen" mapAndThenTests
         , andThenTests
+        , andThenTests_
         ]
 
 
@@ -468,4 +469,74 @@ andThenTests =
                 |> Expect.equal
                     { encoded = """{"data":"test"}"""
                     , tsType = "({ version : number } & ({ data : string } | { payload : string }))"
+                    }
+
+
+andThenTests_ : Test
+andThenTests_ =
+    test "andThenExample2" <|
+        \() ->
+            let
+                v1Codec : Codec String
+                v1Codec =
+                    Codec.object identity
+                        |> Codec.field "data" identity Codec.string
+                        |> Codec.buildObject
+
+                v2Codec : Codec String
+                v2Codec =
+                    Codec.object identity
+                        |> Codec.field "payload" identity Codec.string
+                        |> Codec.buildObject
+
+                versionCodec : Codec Int
+                versionCodec =
+                    Codec.object identity
+                        |> Codec.field "version" identity Codec.int
+                        |> Codec.buildObject
+
+                example : Codec { version : Int, data : String }
+                example =
+                    versionCodec
+                        |> Codec.finishAndThen
+                            (Codec.andThenInit
+                                (\v1 v2 version ->
+                                    case version of
+                                        1 ->
+                                            v1
+
+                                        _ ->
+                                            v2
+                                )
+                                |> Codec.andThenCodec v1Codec
+                                |> Codec.andThenCodec v2Codec
+                            )
+                            (\data version -> { data = data, version = version })
+                            .version
+                            .data
+            in
+            { encoded =
+                (example
+                    |> Codec.encoder
+                    |> TsJson.Encode.encoder
+                )
+                    { version = 1
+                    , data = "test"
+                    }
+                    |> Json.Encode.encode 0
+            , decoded =
+                """{"version": 1, "data":"test"}"""
+                    |> JD.decodeString
+                        (example
+                            |> Codec.decoder
+                            |> TsJson.Decode.decoder
+                        )
+            }
+                |> Expect.equal
+                    { encoded = """{"version": 1, "data":"test"}"""
+                    , decoded =
+                        Ok
+                            { version = 1
+                            , data = "test"
+                            }
                     }
