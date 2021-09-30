@@ -319,22 +319,6 @@ result errorCodec valueCodec =
 
 
 
---{-| `Codec` for `Result` values.
----}
---result : Codec error -> Codec value -> Codec (Result error value)
---result errorCodec valueCodec =
---    custom
---        (\ferr fok v ->
---            case v of
---                Err err ->
---                    ferr err
---
---                Ok ok ->
---                    fok ok
---        )
---        |> variant1 "Err" Err errorCodec
---        |> variant1 "Ok" Ok valueCodec
---        |> buildCustom
 -- OBJECTS
 
 
