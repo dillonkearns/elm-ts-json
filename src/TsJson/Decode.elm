@@ -478,7 +478,7 @@ unknownAndThen function (Decoder innerDecoder innerType) =
     field "version" int |> andThen example
         |> runExample """{"version": 1, "payload": "Hello"}"""
     --> { decoded = Ok "Hello"
-    --> , tsType = "({ version : number } & { data : { payload : string } } | { payload : string })"
+    --> , tsType = "({ version : number } & ({ data : { payload : string } } | { payload : string }))"
     --> }
 
 -}
