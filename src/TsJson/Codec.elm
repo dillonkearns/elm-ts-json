@@ -77,7 +77,7 @@ import Set exposing (Set)
 import TsJson.Decode as JD
 import TsJson.Encode as JE exposing (Encoder, Property)
 import TsJson.Internal.Decode
-import TsJson.Internal.Encode exposing (Encoder(..), UnionBuilder(..))
+import TsJson.Internal.Encode exposing (Encoder(..), UnionBuilder(..), UnionEncodeValue(..))
 
 
 
@@ -493,7 +493,7 @@ variant0 name constructor codec =
         (\encodeCustomTypeArgs ->
             []
                 |> encodeCustomTypeArgs
-                |> JE.UnionEncodeValue
+                |> UnionEncodeValue
         )
         (Json.Decode.succeed constructor
             |> variantArgsDecoder name
@@ -517,7 +517,7 @@ variant1 name constructor arg1Codec codec =
             [ a |> JE.encoder (encoder arg1Codec)
             ]
                 |> encodeCustomTypeArgs
-                |> JE.UnionEncodeValue
+                |> UnionEncodeValue
         )
         (Json.Decode.map constructor
             (variantArgDecoder 0 arg1Codec)
@@ -545,7 +545,7 @@ variant2 name constructor arg1Codec arg2Codec codec =
             , JE.encoder (encoder arg2Codec) arg2
             ]
                 |> encodeCustomTypeArgs
-                |> JE.UnionEncodeValue
+                |> UnionEncodeValue
         )
         (Json.Decode.map2 constructor
             (variantArgDecoder 0 arg1Codec)
@@ -577,7 +577,7 @@ variant3 name constructor arg1Codec arg2Codec arg3Codec codec =
             , JE.encoder (encoder arg3Codec) arg3
             ]
                 |> encodeCustomTypeArgs
-                |> JE.UnionEncodeValue
+                |> UnionEncodeValue
         )
         (Json.Decode.map3 constructor
             (variantArgDecoder 0 arg1Codec)
@@ -613,7 +613,7 @@ variant4 name constructor arg1Codec arg2Codec arg3Codec arg4Codec codec =
             , JE.encoder (encoder arg4Codec) arg4
             ]
                 |> encodeCustomTypeArgs
-                |> JE.UnionEncodeValue
+                |> UnionEncodeValue
         )
         (Json.Decode.map4 constructor
             (variantArgDecoder 0 arg1Codec)
@@ -653,7 +653,7 @@ variant5 name constructor arg1Codec arg2Codec arg3Codec arg4Codec arg5Codec code
             , JE.encoder (encoder arg5Codec) arg5
             ]
                 |> encodeCustomTypeArgs
-                |> JE.UnionEncodeValue
+                |> UnionEncodeValue
         )
         (Json.Decode.map5 constructor
             (variantArgDecoder 0 arg1Codec)
@@ -697,7 +697,7 @@ variant6 name constructor arg1Codec arg2Codec arg3Codec arg4Codec arg5Codec arg6
             , JE.encoder (encoder arg6Codec) arg6
             ]
                 |> encodeCustomTypeArgs
-                |> JE.UnionEncodeValue
+                |> UnionEncodeValue
         )
         (Json.Decode.map6 constructor
             (variantArgDecoder 0 arg1Codec)
@@ -745,7 +745,7 @@ variant7 name constructor arg1Codec arg2Codec arg3Codec arg4Codec arg5Codec arg6
             , JE.encoder (encoder arg7Codec) arg7
             ]
                 |> encodeCustomTypeArgs
-                |> JE.UnionEncodeValue
+                |> UnionEncodeValue
         )
         (Json.Decode.map7 constructor
             (variantArgDecoder 0 arg1Codec)
@@ -797,7 +797,7 @@ variant8 name constructor arg1Codec arg2Codec arg3Codec arg4Codec arg5Codec arg6
             , JE.encoder (encoder arg8Codec) arg8
             ]
                 |> encodeCustomTypeArgs
-                |> JE.UnionEncodeValue
+                |> UnionEncodeValue
         )
         (Json.Decode.map8 constructor
             (variantArgDecoder 0 arg1Codec)

@@ -4,7 +4,7 @@ module TsJson.Encode exposing
     , map
     , object, Property, optional, required
     , UnionBuilder, union, variant, variant0, variantObject, variantLiteral, variantTagged, buildUnion
-    , UnionEncodeValue(..)
+    , UnionEncodeValue
     , list, dict, tuple, triple, maybe, array
     , value
     , encoder, tsType
@@ -176,7 +176,7 @@ import Dict exposing (Dict)
 import Internal.TsJsonType exposing (..)
 import Internal.TypeReducer as TypeReducer
 import Json.Encode as Encode
-import TsJson.Internal.Encode exposing (Encoder(..), UnionBuilder(..))
+import TsJson.Internal.Encode exposing (Encoder(..), UnionBuilder(..), UnionEncodeValue(..))
 import TsType
 
 
@@ -819,8 +819,8 @@ give you more functions/values to give UnionEncodeValue's with
 different shapes, if you need them.
 
 -}
-type UnionEncodeValue
-    = UnionEncodeValue Encode.Value
+type alias UnionEncodeValue =
+    TsJson.Internal.Encode.UnionEncodeValue
 
 
 unwrapUnion : UnionEncodeValue -> Encode.Value
