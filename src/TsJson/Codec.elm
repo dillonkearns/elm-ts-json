@@ -70,6 +70,7 @@ import Json.Encode
 import Set exposing (Set)
 import TsJson.Decode as JD
 import TsJson.Encode as JE exposing (Encoder, Property)
+import TsJson.Internal.Codec exposing (Codec(..))
 import TsJson.Internal.Decode
 import TsJson.Internal.Encode exposing (Encoder(..), UnionBuilder(..), UnionEncodeValue(..))
 
@@ -80,11 +81,8 @@ import TsJson.Internal.Encode exposing (Encoder(..), UnionBuilder(..), UnionEnco
 
 {-| A value that knows how to encode and decode JSON values.
 -}
-type Codec a
-    = Codec
-        { encoder : Encoder a
-        , decoder : JD.Decoder a
-        }
+type alias Codec a =
+    TsJson.Internal.Codec.Codec a
 
 
 
