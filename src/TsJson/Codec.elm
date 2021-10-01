@@ -8,9 +8,8 @@ module TsJson.Codec exposing
     , CustomCodec, custom, variant0, variant1, variant2, variant3, variant4, variant5, variant6, variant7, variant8, buildCustom
     , oneOf
     , map
-    , succeed, recursive, fail, andThen, lazy, value, build
+    , succeed, recursive, fail, lazy, value, build
     , tsType
-    , andThenCodec, andThenInit, finishAndThen
     )
 
 {-| A `Codec a` contain a JSON `Decoder a` and the corresponding `a -> Value` encoder.
@@ -63,7 +62,7 @@ module TsJson.Codec exposing
 
 # Fancy Codecs
 
-@docs succeed, recursive, fail, andThen, lazy, value, build
+@docs succeed, recursive, fail, lazy, value, build
 
 @docs tsType
 
@@ -925,7 +924,7 @@ map go back codec =
 
 
 {-| Ignore the JSON and make the decoder fail. This is handy when used with
-`oneOf` or `andThen` where you want to give a custom error message in some
+`oneOf` where you want to give a custom error message in some
 case. The encoder will produce `null`.
 -}
 fail : String -> Codec a
@@ -934,96 +933,6 @@ fail msg =
         { decoder = JD.fail msg
         , encoder = JE.null
         }
-
-
-{-| Create codecs that depend on previous results.
--}
-andThen :
-    JD.AndThenContinuation (JD.Decoder decodesTo -> value -> JD.Decoder decodesTo)
-    -> Codec decodesTo
-    -> Codec value
-    -> Codec decodesTo
-andThen andThenContinuation (Codec decodesToCodec) (Codec valueCodec) =
-    Codec
-        { decoder = JD.andThen (JD.andThenDecoder decodesToCodec.decoder andThenContinuation) valueCodec.decoder
-        , encoder = TsJson.Internal.Encode.intersectTypes decodesToCodec.encoder (JE.tsType valueCodec.encoder)
-        }
-
-
-andThenInit :
-    --(intermediary -> discriminant -> final)
-    ---> (final -> discriminant)
-    ---> (soFar -> discriminant -> Codec String)
-    constructor
-    ---> Codec discriminant
-    -> AndThen constructor
-andThenInit constructor =
-    AndThen constructor []
-
-
-type AndThen a
-    = AndThen a (List TsType)
-
-
-finishAndThen :
-    AndThen (discriminant -> Codec intermediary)
-    -> (intermediary -> discriminant -> final)
-    -> (final -> discriminant)
-    -> (final -> intermediary)
-    -> Codec discriminant
-    -> Codec final
-finishAndThen (AndThen discriminantToCodec tsTypes) constructor getDiscriminant toIntermediary discriminantCodec =
-    let
-        myEncoder : final -> Json.Encode.Value
-        myEncoder final =
-            let
-                discriminant : discriminant
-                discriminant =
-                    final
-                        |> getDiscriminant
-
-                intermediary : intermediary
-                intermediary =
-                    toIntermediary final
-
-                thing : intermediary -> Json.Encode.Value
-                thing =
-                    discriminantToCodec discriminant
-                        |> encoder
-                        |> JE.encoder
-            in
-            thing intermediary
-    in
-    Codec
-        { encoder = Encoder myEncoder TsType.Unknown
-        , decoder =
-            JD.Decoder
-                (decoder discriminantCodec
-                    |> JD.decoder
-                    |> Json.Decode.andThen
-                        (\discriminant ->
-                            discriminant
-                                |> discriminantToCodec
-                                |> decoder
-                                |> JD.decoder
-                                |> Json.Decode.map (\v -> constructor v discriminant)
-                        )
-                )
-                TsType.Unknown
-        }
-
-
-andThenCodec :
-    Codec soFar
-    -> AndThen (Codec soFar -> final)
-    -> AndThen final
-andThenCodec soFarCodec (AndThen function types) =
-    let
-        newCodec : final
-        newCodec =
-            function soFarCodec
-    in
-    AndThen newCodec (tsType soFarCodec :: types)
 
 
 {-| Create a `Codec` for a recursive data structure.
