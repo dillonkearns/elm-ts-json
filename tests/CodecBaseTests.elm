@@ -35,6 +35,7 @@ suite =
         ]
 
 
+decodeValue : Codec value -> JD.Value -> Result JD.Error value
 decodeValue codec =
     JD.decodeValue (Codec.decoder codec |> TsJson.Decode.decoder)
 

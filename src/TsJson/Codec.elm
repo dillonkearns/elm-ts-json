@@ -88,7 +88,7 @@ import TsJson.Internal.Encode exposing (Encoder(..), UnionBuilder(..), UnionEnco
 -}
 type Codec a
     = Codec
-        { encoder : JE.Encoder a
+        { encoder : Encoder a
         , decoder : Decoder a
         }
 
@@ -148,7 +148,7 @@ decodeValue codec =
 
 {-| Extracts the encoding function contained inside the `Codec`.
 -}
-encoder : Codec a -> JE.Encoder a
+encoder : Codec a -> Encoder a
 encoder (Codec m) =
     m.encoder
 
@@ -177,7 +177,7 @@ encodeToValue codec =
 {-| Build your own custom `Codec`.
 Useful if you have pre-existing `Decoder`s you need to use.
 -}
-build : JE.Encoder a -> Decoder a -> Codec a
+build : Encoder a -> Decoder a -> Codec a
 build encoder_ decoder_ =
     Codec
         { encoder = encoder_
@@ -217,7 +217,7 @@ float =
 -- DATA STRUCTURES
 
 
-composite : (JE.Encoder b -> JE.Encoder a) -> (Decoder b -> Decoder a) -> Codec b -> Codec a
+composite : (Encoder b -> Encoder a) -> (Decoder b -> Decoder a) -> Codec b -> Codec a
 composite enc dec (Codec codec) =
     Codec
         { encoder = enc codec.encoder
