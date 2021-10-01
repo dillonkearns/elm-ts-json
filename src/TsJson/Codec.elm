@@ -76,6 +76,7 @@ import Json.Encode
 import Set exposing (Set)
 import TsJson.Decode as JD
 import TsJson.Encode as JE exposing (Encoder, Property)
+import TsJson.Internal.Decode
 import TsJson.Internal.Encode exposing (Encoder(..))
 
 
@@ -871,7 +872,7 @@ variant_ name argTypes matchPiece decoderPiece (CustomCodec am) =
 
         --, decoder = Dict.insert name decoderPiece am.decoder
         , decoder =
-            JD.Decoder decoderPiece thisType
+            TsJson.Internal.Decode.Decoder decoderPiece thisType
                 :: am.decoder
         }
 
@@ -961,7 +962,7 @@ lazy : (() -> Codec a) -> Codec a
 lazy f =
     Codec
         { decoder =
-            JD.Decoder
+            TsJson.Internal.Decode.Decoder
                 (Json.Decode.lazy
                     (\() ->
                         decoder (f ())
