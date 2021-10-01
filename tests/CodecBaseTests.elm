@@ -472,6 +472,10 @@ andThenTests =
                     }
 
 
+type alias Versioned =
+    { version : Int, data : String }
+
+
 andThenTests_ : Test
 andThenTests_ =
     test "andThenExample2" <|
@@ -495,7 +499,7 @@ andThenTests_ =
                         |> Codec.field "version" identity Codec.int
                         |> Codec.buildObject
 
-                example : Codec { version : Int, data : String }
+                example : Codec Versioned
                 example =
                     versionCodec
                         |> Codec.finishAndThen
