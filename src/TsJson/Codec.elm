@@ -1,7 +1,6 @@
 module TsJson.Codec exposing
-    ( Codec, Value, Error
-    , Decoder, decoder, decodeString, decodeValue
-    , encoder, encodeToString, encodeToValue
+    ( Codec
+    , decoder, encoder
     , string, bool, int, float
     , maybe, list, array, dict, set, tuple, triple, result
     , ObjectCodec, object, field, maybeField, nullableField, buildObject
@@ -17,17 +16,12 @@ module TsJson.Codec exposing
 
 # Definition
 
-@docs Codec, Value, Error
+@docs Codec
 
 
-# Decode
+# Running Encoders/Decoders
 
-@docs Decoder, decoder, decodeString, decodeValue
-
-
-# Encode
-
-@docs encoder, encodeToString, encodeToValue
+@docs decoder, encoder
 
 
 # Primitives
@@ -89,57 +83,19 @@ import TsJson.Internal.Encode exposing (Encoder(..), UnionBuilder(..), UnionEnco
 type Codec a
     = Codec
         { encoder : Encoder a
-        , decoder : Decoder a
+        , decoder : JD.Decoder a
         }
-
-
-{-| Represents a JavaScript value.
--}
-type alias Value =
-    Json.Encode.Value
-
-
-{-| A structured error describing exactly how the decoder failed. You can use
-this to create more elaborate visualizations of a decoder problem. For example,
-you could show the entire JSON object and show the part causing the failure in
-red.
--}
-type alias Error =
-    Json.Decode.Error
 
 
 
 -- DECODE
 
 
-{-| A value that knows how to decode JSON values.
--}
-type alias Decoder a =
-    JD.Decoder a
-
-
 {-| Extracts the `Decoder` contained inside the `Codec`.
 -}
-decoder : Codec a -> Decoder a
+decoder : Codec a -> JD.Decoder a
 decoder (Codec m) =
     m.decoder
-
-
-{-| Parse the given string into a JSON value and then run the `Codec` on it.
-This will fail if the string is not well-formed JSON or if the `Codec`
-fails for some reason.
--}
-decodeString : Codec a -> String -> Result Error a
-decodeString codec =
-    Json.Decode.decodeString (decoder codec |> JD.decoder)
-
-
-{-| Run a `Codec` to decode some JSON `Value`. You can send these JSON values
-through ports, so that is probably the main time you would use this function.
--}
-decodeValue : Codec a -> Value -> Result Error a
-decodeValue codec =
-    Json.Decode.decodeValue (decoder codec |> JD.decoder)
 
 
 
@@ -153,23 +109,6 @@ encoder (Codec m) =
     m.encoder
 
 
-{-| Convert a value into a prettified JSON string. The first argument specifies
-the amount of indentation in the result string.
--}
-encodeToString : Int -> Codec a -> (a -> String)
-encodeToString indentation codec =
-    encodeToValue codec >> Json.Encode.encode indentation
-
-
-{-| Convert a value into a Javascript `Value`.
--}
-encodeToValue : Codec a -> a -> Value
-encodeToValue codec =
-    codec
-        |> encoder
-        |> JE.encoder
-
-
 
 -- BASE
 
@@ -177,7 +116,7 @@ encodeToValue codec =
 {-| Build your own custom `Codec`.
 Useful if you have pre-existing `Decoder`s you need to use.
 -}
-build : Encoder a -> Decoder a -> Codec a
+build : Encoder a -> JD.Decoder a -> Codec a
 build encoder_ decoder_ =
     Codec
         { encoder = encoder_
@@ -217,7 +156,7 @@ float =
 -- DATA STRUCTURES
 
 
-composite : (Encoder b -> Encoder a) -> (Decoder b -> Decoder a) -> Codec b -> Codec a
+composite : (Encoder b -> Encoder a) -> (JD.Decoder b -> JD.Decoder a) -> Codec b -> Codec a
 composite enc dec (Codec codec) =
     Codec
         { encoder = enc codec.encoder
@@ -328,7 +267,7 @@ result errorCodec valueCodec =
 type ObjectCodec a b
     = ObjectCodec
         { encoder : List (Property a)
-        , decoder : Decoder b
+        , decoder : JD.Decoder b
         }
 
 
@@ -439,7 +378,7 @@ buildObject (ObjectCodec om) =
 type CustomCodec match v
     = CustomCodec
         { match : JE.UnionBuilder match
-        , decoder : List (Decoder v)
+        , decoder : List (JD.Decoder v)
         }
 
 
@@ -838,7 +777,7 @@ variantArgsDecoder expectedTagName argsDecoder =
 variant_ :
     String
     -> List TsType
-    -> ((List Value -> Value) -> a)
+    -> ((List Json.Decode.Value -> Json.Decode.Value) -> a)
     -> Json.Decode.Decoder v
     -> CustomCodec (a -> b) v
     -> CustomCodec b v
@@ -975,7 +914,7 @@ lazy f =
 
 {-| Create a `Codec` that doesn't transform the JSON value, just brings it to and from Elm as a `Value`.
 -}
-value : Codec Value
+value : Codec Json.Decode.Value
 value =
     Codec
         { encoder = JE.value
