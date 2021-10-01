@@ -4,6 +4,7 @@ import Dict
 import Expect
 import Fuzz exposing (Fuzzer)
 import Json.Decode as JD
+import Json.Encode as JE
 import Set
 import Test exposing (Test, describe, fuzz, test)
 import TsJson.Codec as Codec exposing (Codec)
@@ -35,11 +36,6 @@ suite =
         ]
 
 
-decodeValue : Codec value -> JD.Value -> Result JD.Error value
-decodeValue codec =
-    JD.decodeValue (Codec.decoder codec |> TsJson.Decode.decoder)
-
-
 roundtrips : Fuzzer a -> Codec a -> Test
 roundtrips fuzzer codec =
     fuzz fuzzer "is a roundtrip" <|
@@ -50,7 +46,10 @@ roundtrips fuzzer codec =
                         |> TsJson.Encode.encoder (Codec.encoder codec)
             in
             encoded
-                |> Codec.decodeValue codec
+                |> (Codec.decoder codec
+                        |> TsJson.Decode.decoder
+                        |> JD.decodeValue
+                   )
                 |> Result.mapError JD.errorToString
                 |> Expect.all
                     [ Expect.equal (Ok value)
@@ -67,7 +66,10 @@ roundtripsWithDifferentAnnotations fuzzer codec =
         \value ->
             value
                 |> TsJson.Encode.encoder (Codec.encoder codec)
-                |> Codec.decodeValue codec
+                |> (Codec.decoder codec
+                        |> TsJson.Decode.decoder
+                        |> JD.decodeValue
+                   )
                 |> Expect.equal (Ok value)
 
 
@@ -77,7 +79,10 @@ roundtripsWithin fuzzer codec =
         \value ->
             value
                 |> TsJson.Encode.encoder (Codec.encoder codec)
-                |> Codec.decodeValue codec
+                |> (Codec.decoder codec
+                        |> TsJson.Decode.decoder
+                        |> JD.decodeValue
+                   )
                 |> Result.withDefault -999.1234567
                 |> Expect.within (Expect.Relative 0.000001) value
 
@@ -182,7 +187,7 @@ objectTests =
         [ test "a nullableField is required" <|
             \_ ->
                 "{}"
-                    |> Codec.decodeString nullableCodec
+                    |> decodeString nullableCodec
                     |> (\r ->
                             case r of
                                 Ok _ ->
@@ -194,20 +199,36 @@ objectTests =
         , test "a nullableField produces a field with a null value on encoding Nothing" <|
             \_ ->
                 { f = Nothing }
-                    |> Codec.encodeToString 0 nullableCodec
+                    |> encodeToString nullableCodec
                     |> Expect.equal "{\"f\":null}"
         , test "a maybeField is optional" <|
             \_ ->
                 "{}"
-                    |> Codec.decodeString maybeCodec
+                    |> decodeString maybeCodec
                     |> Expect.equal (Ok { f = Nothing })
         , test "a maybeField doesn't produce a field on encoding Nothing" <|
             \_ ->
                 { f = Nothing }
-                    |> Codec.encodeToString 0 maybeCodec
+                    |> encodeToString maybeCodec
                     |> Expect.equal "{}"
         ]
     ]
+
+
+encodeToString : Codec input -> (input -> String)
+encodeToString codec =
+    (codec
+        |> Codec.encoder
+        |> TsJson.Encode.encoder
+    )
+        >> JE.encode 0
+
+
+decodeString : Codec a -> String -> Result JD.Error a
+decodeString codec =
+    Codec.decoder codec
+        |> TsJson.Decode.decoder
+        |> JD.decodeString
 
 
 type Newtype a
