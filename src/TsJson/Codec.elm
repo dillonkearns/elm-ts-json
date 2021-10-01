@@ -13,6 +13,8 @@ module TsJson.Codec exposing
 
 {-| A `Codec a` contain a JSON `Decoder a` and the corresponding `a -> Value` encoder.
 
+This module is a port of [`miniBill/elm-codec`](https://package.elm-lang.org/packages/miniBill/elm-codec/latest/). Thank you for the great API design miniBill!
+
 
 # Definition
 
