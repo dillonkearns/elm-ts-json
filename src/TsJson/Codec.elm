@@ -77,7 +77,7 @@ import Set exposing (Set)
 import TsJson.Decode as JD
 import TsJson.Encode as JE exposing (Encoder, Property)
 import TsJson.Internal.Decode
-import TsJson.Internal.Encode exposing (Encoder(..))
+import TsJson.Internal.Encode exposing (Encoder(..), UnionBuilder(..))
 
 
 
@@ -846,13 +846,11 @@ variant_ name argTypes matchPiece decoderPiece (CustomCodec am) =
     let
         thing =
             JE.object
-                [ --( "tag", JE.string name )
-                  JE.required "tag" identity (JE.literal (Json.Encode.string name))
+                [ JE.required "tag" identity (JE.literal (Json.Encode.string name))
                 , JE.required "args" identity (JE.list JE.value)
-
-                --, JE.required "args" Tuple.pair JE.tuple
                 ]
 
+        enc : List Json.Encode.Value -> Json.Encode.Value
         enc =
             thing |> JE.encoder
 
@@ -865,12 +863,9 @@ variant_ name argTypes matchPiece decoderPiece (CustomCodec am) =
     CustomCodec
         { match =
             case am.match of
-                JE.UnionBuilder matcher types ->
-                    JE.UnionBuilder (matcher (matchPiece enc))
-                        --JE.tsType thing
+                UnionBuilder matcher types ->
+                    UnionBuilder (matcher (matchPiece enc))
                         (thisType :: types)
-
-        --, decoder = Dict.insert name decoderPiece am.decoder
         , decoder =
             TsJson.Internal.Decode.Decoder decoderPiece thisType
                 :: am.decoder

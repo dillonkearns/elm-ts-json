@@ -3,7 +3,7 @@ module TsJson.Encode exposing
     , string, int, float, literal, bool, null
     , map
     , object, Property, optional, required
-    , UnionBuilder(..), union, variant, variant0, variantObject, variantLiteral, variantTagged, buildUnion
+    , UnionBuilder, union, variant, variant0, variantObject, variantLiteral, variantTagged, buildUnion
     , UnionEncodeValue(..)
     , list, dict, tuple, triple, maybe, array
     , value
@@ -176,7 +176,7 @@ import Dict exposing (Dict)
 import Internal.TsJsonType exposing (..)
 import Internal.TypeReducer as TypeReducer
 import Json.Encode as Encode
-import TsJson.Internal.Encode exposing (Encoder(..))
+import TsJson.Internal.Encode exposing (Encoder(..), UnionBuilder(..))
 import TsType
 
 
@@ -676,8 +676,8 @@ union constructor =
 
 
 {-| -}
-type UnionBuilder match
-    = UnionBuilder match (List TsType)
+type alias UnionBuilder match =
+    TsJson.Internal.Encode.UnionBuilder match
 
 
 {-| -}
