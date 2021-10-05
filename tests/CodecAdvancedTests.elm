@@ -1,4 +1,4 @@
-module CodecAdvancedTests exposing (..)
+module CodecAdvancedTests exposing (Semaphore(..), roundtripTest, suite)
 
 import Expect
 import Fuzz exposing (Fuzzer)
@@ -113,20 +113,14 @@ shapesTests =
             )
 
 
+decodeValue : Codec a -> Json.Decode.Value -> Result Json.Decode.Error a
 decodeValue codec =
     TsJson.Codec.decoder codec
         |> TsJson.Decode.decoder
         |> Json.Decode.decodeValue
 
 
-encodeToString codec =
-    (codec
-        |> TsJson.Codec.encoder
-        |> TsJson.Encode.encoder
-    )
-        >> JE.encode 0
-
-
+decodeString : Codec a -> String -> Result Json.Decode.Error a
 decodeString codec =
     TsJson.Codec.decoder codec
         |> TsJson.Decode.decoder
