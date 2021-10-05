@@ -12,26 +12,26 @@ import TsJson.Encode
 
 
 type Semaphore
-    = --Red Int String |
-      Yellow
+    = Red Int String
+    | Yellow
     | Green Float
 
 
 semaphoreCodec : TsJson.Codec.Codec Semaphore
 semaphoreCodec =
     Codec.customObject "color"
-        (\yellow green value ->
+        (\red yellow green value ->
             case value of
-                --Red i s ->
-                --    red i s
-                --
+                Red i s ->
+                    red i s
+
                 Yellow ->
                     yellow
 
                 Green f ->
                     green f
         )
-        --|> Codec.objectVariant2 "red" Red ( "first", Codec.int ) ( "second", Codec.string )
+        |> Codec.objectVariant2 "red" Red ( "first", TsJson.Codec.int ) ( "second", TsJson.Codec.string )
         |> Codec.objectVariant0 "yellow" Yellow
         |> Codec.objectVariant1 "green" Green ( "value", TsJson.Codec.float )
         |> Codec.buildCustomObject
@@ -58,22 +58,22 @@ roundtripTest =
 semaphoreFuzzer : Fuzzer Semaphore
 semaphoreFuzzer =
     Fuzz.oneOf
-        [ --Fuzz.map2 Red Fuzz.int Fuzz.string,
-          Fuzz.constant Yellow
+        [ Fuzz.map2 Red Fuzz.int Fuzz.string
+        , Fuzz.constant Yellow
         , Fuzz.map Green Fuzz.float
         ]
 
 
 shapesTests : List Test
 shapesTests =
-    [ --( "Red decode"
-      --  , [ ( "color", JE.string "red" )
-      --    , ( "first", JE.int 42 )
-      --    , ( "second", JE.string "413" )
-      --    ]
-      --  , Ok <| Red 42 "413"
-      --  ),
-      ( "Yellow decode"
+    [ ( "Red decode"
+      , [ ( "color", JE.string "red" )
+        , ( "first", JE.int 42 )
+        , ( "second", JE.string "413" )
+        ]
+      , Ok <| Red 42 "413"
+      )
+    , ( "Yellow decode"
       , [ ( "color", JE.string "yellow" )
         , ( "extra", JE.null )
         ]

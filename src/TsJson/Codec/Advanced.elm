@@ -3,8 +3,9 @@ module TsJson.Codec.Advanced exposing
     , customObject
     , objectVariant0
     , objectVariant1
+    , objectVariant2
     , buildCustomObject
-    --, objectVariant2, objectVariant3, objectVariant4, objectVariant5, objectVariant6, objectVariant7, objectVariant8
+    --,objectVariant3, objectVariant4, objectVariant5, objectVariant6, objectVariant7, objectVariant8
     )
 
 {-| Codecs that can encode/decode objects of a custom shape. These are similar to the codecs for custom types in the `Codec` module, but give you more control over the shape of the result.
@@ -175,30 +176,31 @@ objectVariant1 name ctor ( f1, m1 ) =
         )
 
 
+{-| Define a variant with 2 parameters for a custom type.
+-}
+objectVariant2 :
+    String
+    -> (a -> b -> v)
+    -> ( String, Codec a )
+    -> ( String, Codec b )
+    -> CustomObjectCodec ((a -> b -> TsJson.Encode.UnionEncodeValue) -> c) v
+    -> CustomObjectCodec c v
+objectVariant2 name ctor ( f1, m1 ) ( f2, m2 ) =
+    objectVariant_ name
+        []
+        (\c v1 v2 ->
+            c
+                [ ( f1, TsJson.Encode.encoder (encoder m1) v1 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f2, TsJson.Encode.encoder (encoder m2) v2 |> TsJson.Internal.Encode.UnionEncodeValue )
+                ]
+        )
+        (JD.map2 ctor
+            (JD.field f1 <| TsJson.Decode.decoder (decoder m1))
+            (JD.field f2 <| TsJson.Decode.decoder (decoder m2))
+        )
 
---{-| Define a variant with 2 parameters for a custom type.
----}
---objectVariant2 :
---    String
---    -> (a -> b -> v)
---    -> ( String, Codec a )
---    -> ( String, Codec b )
---    -> CustomObjectCodec ((a -> b -> Value) -> c) v
---    -> CustomObjectCodec c v
---objectVariant2 name ctor ( f1, m1 ) ( f2, m2 ) =
---    objectVariant name
---        (\c v1 v2 ->
---            c
---                [ ( f1, encoder m1 v1 )
---                , ( f2, encoder m2 v2 )
---                ]
---        )
---        (JD.map2 ctor
---            (JD.field f1 <| decoder m1)
---            (JD.field f2 <| decoder m2)
---        )
---
---
+
+
 --{-| Define a variant with 4 parameters for a custom type.
 ---}
 --objectVariant3 :
