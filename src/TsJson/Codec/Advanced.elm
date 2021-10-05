@@ -1,12 +1,4 @@
-module TsJson.Codec.Advanced exposing
-    ( CustomObjectCodec
-    , customObject
-    , objectVariant0
-    , objectVariant1
-    , objectVariant2
-    , buildCustomObject
-    --,objectVariant3, objectVariant4, objectVariant5, objectVariant6, objectVariant7, objectVariant8
-    )
+module TsJson.Codec.Advanced exposing (CustomObjectCodec, customObject, objectVariant0, objectVariant1, objectVariant2, objectVariant3, objectVariant4, objectVariant5, objectVariant6, objectVariant7, objectVariant8, buildCustomObject)
 
 {-| Codecs that can encode/decode objects of a custom shape. These are similar to the codecs for custom types in the `Codec` module, but give you more control over the shape of the result.
 
@@ -74,25 +66,6 @@ customObject tagField match =
         , match = TsJson.Internal.Encode.UnionBuilder match []
         , decoder = Dict.empty
         }
-
-
-
---objectVariant :
---    String
---    -> ((List ( String, Value ) -> Value) -> a)
---    -> Decoder v
---    -> CustomObjectCodec (a -> b) v
---    -> CustomObjectCodec b v
---objectVariant name matchPiece decoderPiece (CustomCodec am) =
---    let
---        enc v =
---            JE.object <| ( am.tagField, JE.string name ) :: v
---    in
---    CustomCodec
---        { tagField = am.tagField
---        , match = am.match <| matchPiece enc
---        , decoder = Dict.insert name decoderPiece am.decoder
---        }
 
 
 objectVariant_ :
@@ -201,206 +174,244 @@ objectVariant2 name ctor ( f1, m1 ) ( f2, m2 ) =
         )
 
 
+{-| Define a variant with 3 parameters for a custom type.
+-}
+objectVariant3 :
+    String
+    -> (a1 -> a2 -> a3 -> v)
+    -> ( String, Codec a1 )
+    -> ( String, Codec a2 )
+    -> ( String, Codec a3 )
+    -> CustomObjectCodec ((a1 -> a2 -> a3 -> TsJson.Encode.UnionEncodeValue) -> c) v
+    -> CustomObjectCodec c v
+objectVariant3 name ctor ( f1, m1 ) ( f2, m2 ) ( f3, m3 ) =
+    objectVariant_ name
+        [ ( f1, TsJson.Codec.tsType m1 )
+        , ( f2, TsJson.Codec.tsType m2 )
+        , ( f3, TsJson.Codec.tsType m3 )
+        ]
+        (\c v1 v2 v3 ->
+            c
+                [ ( f1, TsJson.Encode.encoder (encoder m1) v1 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f2, TsJson.Encode.encoder (encoder m2) v2 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f3, TsJson.Encode.encoder (encoder m3) v3 |> TsJson.Internal.Encode.UnionEncodeValue )
+                ]
+        )
+        (JD.map3 ctor
+            (JD.field f1 <| TsJson.Decode.decoder (decoder m1))
+            (JD.field f2 <| TsJson.Decode.decoder (decoder m2))
+            (JD.field f3 <| TsJson.Decode.decoder (decoder m3))
+        )
 
---{-| Define a variant with 4 parameters for a custom type.
----}
---objectVariant3 :
---    String
---    -> (a -> b -> c -> v)
---    -> ( String, Codec a )
---    -> ( String, Codec b )
---    -> ( String, Codec c )
---    -> CustomObjectCodec ((a -> b -> c -> Value) -> k) v
---    -> CustomObjectCodec k v
---objectVariant3 name ctor ( f1, m1 ) ( f2, m2 ) ( f3, m3 ) =
---    objectVariant name
---        (\c v1 v2 v3 ->
---            c
---                [ ( f1, encoder m1 v1 )
---                , ( f2, encoder m2 v2 )
---                , ( f3, encoder m3 v3 )
---                ]
---        )
---        (JD.map3 ctor
---            (JD.field f1 <| decoder m1)
---            (JD.field f2 <| decoder m2)
---            (JD.field f3 <| decoder m3)
---        )
---
---
---{-| Define a variant with 4 parameters for a custom type.
----}
---objectVariant4 :
---    String
---    -> (a -> b -> c -> d -> v)
---    -> ( String, Codec a )
---    -> ( String, Codec b )
---    -> ( String, Codec c )
---    -> ( String, Codec d )
---    -> CustomObjectCodec ((a -> b -> c -> d -> Value) -> k) v
---    -> CustomObjectCodec k v
---objectVariant4 name ctor ( f1, m1 ) ( f2, m2 ) ( f3, m3 ) ( f4, m4 ) =
---    objectVariant name
---        (\c v1 v2 v3 v4 ->
---            c
---                [ ( f1, encoder m1 v1 )
---                , ( f2, encoder m2 v2 )
---                , ( f3, encoder m3 v3 )
---                , ( f4, encoder m4 v4 )
---                ]
---        )
---        (JD.map4 ctor
---            (JD.field f1 <| decoder m1)
---            (JD.field f2 <| decoder m2)
---            (JD.field f3 <| decoder m3)
---            (JD.field f4 <| decoder m4)
---        )
---
---
---{-| Define a variant with 5 parameters for a custom type.
----}
---objectVariant5 :
---    String
---    -> (a -> b -> c -> d -> e -> v)
---    -> ( String, Codec a )
---    -> ( String, Codec b )
---    -> ( String, Codec c )
---    -> ( String, Codec d )
---    -> ( String, Codec e )
---    -> CustomObjectCodec ((a -> b -> c -> d -> e -> Value) -> k) v
---    -> CustomObjectCodec k v
---objectVariant5 name ctor ( f1, m1 ) ( f2, m2 ) ( f3, m3 ) ( f4, m4 ) ( f5, m5 ) =
---    objectVariant name
---        (\c v1 v2 v3 v4 v5 ->
---            c
---                [ ( f1, encoder m1 v1 )
---                , ( f2, encoder m2 v2 )
---                , ( f3, encoder m3 v3 )
---                , ( f4, encoder m4 v4 )
---                , ( f5, encoder m5 v5 )
---                ]
---        )
---        (JD.map5 ctor
---            (JD.field f1 <| decoder m1)
---            (JD.field f2 <| decoder m2)
---            (JD.field f3 <| decoder m3)
---            (JD.field f4 <| decoder m4)
---            (JD.field f5 <| decoder m5)
---        )
---
---
---{-| Define a variant with 6 parameters for a custom type.
----}
---objectVariant6 :
---    String
---    -> (a -> b -> c -> d -> e -> f -> v)
---    -> ( String, Codec a )
---    -> ( String, Codec b )
---    -> ( String, Codec c )
---    -> ( String, Codec d )
---    -> ( String, Codec e )
---    -> ( String, Codec f )
---    -> CustomObjectCodec ((a -> b -> c -> d -> e -> f -> Value) -> k) v
---    -> CustomObjectCodec k v
---objectVariant6 name ctor ( f1, m1 ) ( f2, m2 ) ( f3, m3 ) ( f4, m4 ) ( f5, m5 ) ( f6, m6 ) =
---    objectVariant name
---        (\c v1 v2 v3 v4 v5 v6 ->
---            c
---                [ ( f1, encoder m1 v1 )
---                , ( f2, encoder m2 v2 )
---                , ( f3, encoder m3 v3 )
---                , ( f4, encoder m4 v4 )
---                , ( f5, encoder m5 v5 )
---                , ( f6, encoder m6 v6 )
---                ]
---        )
---        (JD.map6 ctor
---            (JD.field f1 <| decoder m1)
---            (JD.field f2 <| decoder m2)
---            (JD.field f3 <| decoder m3)
---            (JD.field f4 <| decoder m4)
---            (JD.field f5 <| decoder m5)
---            (JD.field f6 <| decoder m6)
---        )
---
---
---{-| Define a variant with 7 parameters for a custom type.
----}
---objectVariant7 :
---    String
---    -> (a -> b -> c -> d -> e -> f -> g -> v)
---    -> ( String, Codec a )
---    -> ( String, Codec b )
---    -> ( String, Codec c )
---    -> ( String, Codec d )
---    -> ( String, Codec e )
---    -> ( String, Codec f )
---    -> ( String, Codec g )
---    -> CustomObjectCodec ((a -> b -> c -> d -> e -> f -> g -> Value) -> k) v
---    -> CustomObjectCodec k v
---objectVariant7 name ctor ( f1, m1 ) ( f2, m2 ) ( f3, m3 ) ( f4, m4 ) ( f5, m5 ) ( f6, m6 ) ( f7, m7 ) =
---    objectVariant name
---        (\c v1 v2 v3 v4 v5 v6 v7 ->
---            c
---                [ ( f1, encoder m1 v1 )
---                , ( f2, encoder m2 v2 )
---                , ( f3, encoder m3 v3 )
---                , ( f4, encoder m4 v4 )
---                , ( f5, encoder m5 v5 )
---                , ( f6, encoder m6 v6 )
---                , ( f7, encoder m7 v7 )
---                ]
---        )
---        (JD.map7 ctor
---            (JD.field f1 <| decoder m1)
---            (JD.field f2 <| decoder m2)
---            (JD.field f3 <| decoder m3)
---            (JD.field f4 <| decoder m4)
---            (JD.field f5 <| decoder m5)
---            (JD.field f6 <| decoder m6)
---            (JD.field f7 <| decoder m7)
---        )
---
---
---{-| Define a variant with 8 parameters for a custom type.
----}
---objectVariant8 :
---    String
---    -> (a -> b -> c -> d -> e -> f -> g -> h -> v)
---    -> ( String, Codec a )
---    -> ( String, Codec b )
---    -> ( String, Codec c )
---    -> ( String, Codec d )
---    -> ( String, Codec e )
---    -> ( String, Codec f )
---    -> ( String, Codec g )
---    -> ( String, Codec h )
---    -> CustomObjectCodec ((a -> b -> c -> d -> e -> f -> g -> h -> Value) -> k) v
---    -> CustomObjectCodec k v
---objectVariant8 name ctor ( f1, m1 ) ( f2, m2 ) ( f3, m3 ) ( f4, m4 ) ( f5, m5 ) ( f6, m6 ) ( f7, m7 ) ( f8, m8 ) =
---    objectVariant name
---        (\c v1 v2 v3 v4 v5 v6 v7 v8 ->
---            c
---                [ ( f1, encoder m1 v1 )
---                , ( f2, encoder m2 v2 )
---                , ( f3, encoder m3 v3 )
---                , ( f4, encoder m4 v4 )
---                , ( f5, encoder m5 v5 )
---                , ( f6, encoder m6 v6 )
---                , ( f7, encoder m7 v7 )
---                , ( f8, encoder m8 v8 )
---                ]
---        )
---        (JD.map8 ctor
---            (JD.field f1 <| decoder m1)
---            (JD.field f2 <| decoder m2)
---            (JD.field f3 <| decoder m3)
---            (JD.field f4 <| decoder m4)
---            (JD.field f5 <| decoder m5)
---            (JD.field f6 <| decoder m6)
---            (JD.field f7 <| decoder m7)
---            (JD.field f8 <| decoder m8)
---        )
+
+{-| Define a variant with 4 parameters for a custom type.
+-}
+objectVariant4 :
+    String
+    -> (a1 -> a2 -> a3 -> a4 -> v)
+    -> ( String, Codec a1 )
+    -> ( String, Codec a2 )
+    -> ( String, Codec a3 )
+    -> ( String, Codec a4 )
+    -> CustomObjectCodec ((a1 -> a2 -> a3 -> a4 -> TsJson.Encode.UnionEncodeValue) -> c) v
+    -> CustomObjectCodec c v
+objectVariant4 name ctor ( f1, m1 ) ( f2, m2 ) ( f3, m3 ) ( f4, m4 ) =
+    objectVariant_ name
+        [ ( f1, TsJson.Codec.tsType m1 )
+        , ( f2, TsJson.Codec.tsType m2 )
+        , ( f3, TsJson.Codec.tsType m3 )
+        , ( f4, TsJson.Codec.tsType m4 )
+        ]
+        (\c v1 v2 v3 v4 ->
+            c
+                [ ( f1, TsJson.Encode.encoder (encoder m1) v1 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f2, TsJson.Encode.encoder (encoder m2) v2 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f3, TsJson.Encode.encoder (encoder m3) v3 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f4, TsJson.Encode.encoder (encoder m4) v4 |> TsJson.Internal.Encode.UnionEncodeValue )
+                ]
+        )
+        (JD.map4 ctor
+            (JD.field f1 <| TsJson.Decode.decoder (decoder m1))
+            (JD.field f2 <| TsJson.Decode.decoder (decoder m2))
+            (JD.field f3 <| TsJson.Decode.decoder (decoder m3))
+            (JD.field f4 <| TsJson.Decode.decoder (decoder m4))
+        )
+
+
+{-| Define a variant with 5 parameters for a custom type.
+-}
+objectVariant5 :
+    String
+    -> (a1 -> a2 -> a3 -> a4 -> a5 -> v)
+    -> ( String, Codec a1 )
+    -> ( String, Codec a2 )
+    -> ( String, Codec a3 )
+    -> ( String, Codec a4 )
+    -> ( String, Codec a5 )
+    -> CustomObjectCodec ((a1 -> a2 -> a3 -> a4 -> a5 -> TsJson.Encode.UnionEncodeValue) -> c) v
+    -> CustomObjectCodec c v
+objectVariant5 name ctor ( f1, m1 ) ( f2, m2 ) ( f3, m3 ) ( f4, m4 ) ( f5, m5 ) =
+    objectVariant_ name
+        [ ( f1, TsJson.Codec.tsType m1 )
+        , ( f2, TsJson.Codec.tsType m2 )
+        , ( f3, TsJson.Codec.tsType m3 )
+        , ( f4, TsJson.Codec.tsType m4 )
+        , ( f5, TsJson.Codec.tsType m5 )
+        ]
+        (\c v1 v2 v3 v4 v5 ->
+            c
+                [ ( f1, TsJson.Encode.encoder (encoder m1) v1 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f2, TsJson.Encode.encoder (encoder m2) v2 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f3, TsJson.Encode.encoder (encoder m3) v3 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f4, TsJson.Encode.encoder (encoder m4) v4 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f5, TsJson.Encode.encoder (encoder m5) v5 |> TsJson.Internal.Encode.UnionEncodeValue )
+                ]
+        )
+        (JD.map5 ctor
+            (JD.field f1 <| TsJson.Decode.decoder (decoder m1))
+            (JD.field f2 <| TsJson.Decode.decoder (decoder m2))
+            (JD.field f3 <| TsJson.Decode.decoder (decoder m3))
+            (JD.field f4 <| TsJson.Decode.decoder (decoder m4))
+            (JD.field f5 <| TsJson.Decode.decoder (decoder m5))
+        )
+
+
+{-| Define a variant with 6 parameters for a custom type.
+-}
+objectVariant6 :
+    String
+    -> (a1 -> a2 -> a3 -> a4 -> a5 -> a6 -> v)
+    -> ( String, Codec a1 )
+    -> ( String, Codec a2 )
+    -> ( String, Codec a3 )
+    -> ( String, Codec a4 )
+    -> ( String, Codec a5 )
+    -> ( String, Codec a6 )
+    -> CustomObjectCodec ((a1 -> a2 -> a3 -> a4 -> a5 -> a6 -> TsJson.Encode.UnionEncodeValue) -> c) v
+    -> CustomObjectCodec c v
+objectVariant6 name ctor ( f1, m1 ) ( f2, m2 ) ( f3, m3 ) ( f4, m4 ) ( f5, m5 ) ( f6, m6 ) =
+    objectVariant_ name
+        [ ( f1, TsJson.Codec.tsType m1 )
+        , ( f2, TsJson.Codec.tsType m2 )
+        , ( f3, TsJson.Codec.tsType m3 )
+        , ( f4, TsJson.Codec.tsType m4 )
+        , ( f5, TsJson.Codec.tsType m5 )
+        , ( f6, TsJson.Codec.tsType m6 )
+        ]
+        (\c v1 v2 v3 v4 v5 v6 ->
+            c
+                [ ( f1, TsJson.Encode.encoder (encoder m1) v1 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f2, TsJson.Encode.encoder (encoder m2) v2 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f3, TsJson.Encode.encoder (encoder m3) v3 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f4, TsJson.Encode.encoder (encoder m4) v4 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f5, TsJson.Encode.encoder (encoder m5) v5 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f6, TsJson.Encode.encoder (encoder m6) v6 |> TsJson.Internal.Encode.UnionEncodeValue )
+                ]
+        )
+        (JD.map6 ctor
+            (JD.field f1 <| TsJson.Decode.decoder (decoder m1))
+            (JD.field f2 <| TsJson.Decode.decoder (decoder m2))
+            (JD.field f3 <| TsJson.Decode.decoder (decoder m3))
+            (JD.field f4 <| TsJson.Decode.decoder (decoder m4))
+            (JD.field f5 <| TsJson.Decode.decoder (decoder m5))
+            (JD.field f6 <| TsJson.Decode.decoder (decoder m6))
+        )
+
+
+{-| Define a variant with 7 parameters for a custom type.
+-}
+objectVariant7 :
+    String
+    -> (a1 -> a2 -> a3 -> a4 -> a5 -> a6 -> a7 -> v)
+    -> ( String, Codec a1 )
+    -> ( String, Codec a2 )
+    -> ( String, Codec a3 )
+    -> ( String, Codec a4 )
+    -> ( String, Codec a5 )
+    -> ( String, Codec a6 )
+    -> ( String, Codec a7 )
+    -> CustomObjectCodec ((a1 -> a2 -> a3 -> a4 -> a5 -> a6 -> a7 -> TsJson.Encode.UnionEncodeValue) -> c) v
+    -> CustomObjectCodec c v
+objectVariant7 name ctor ( f1, m1 ) ( f2, m2 ) ( f3, m3 ) ( f4, m4 ) ( f5, m5 ) ( f6, m6 ) ( f7, m7 ) =
+    objectVariant_ name
+        [ ( f1, TsJson.Codec.tsType m1 )
+        , ( f2, TsJson.Codec.tsType m2 )
+        , ( f3, TsJson.Codec.tsType m3 )
+        , ( f4, TsJson.Codec.tsType m4 )
+        , ( f5, TsJson.Codec.tsType m5 )
+        , ( f6, TsJson.Codec.tsType m6 )
+        , ( f7, TsJson.Codec.tsType m7 )
+        ]
+        (\c v1 v2 v3 v4 v5 v6 v7 ->
+            c
+                [ ( f1, TsJson.Encode.encoder (encoder m1) v1 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f2, TsJson.Encode.encoder (encoder m2) v2 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f3, TsJson.Encode.encoder (encoder m3) v3 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f4, TsJson.Encode.encoder (encoder m4) v4 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f5, TsJson.Encode.encoder (encoder m5) v5 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f6, TsJson.Encode.encoder (encoder m6) v6 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f7, TsJson.Encode.encoder (encoder m7) v7 |> TsJson.Internal.Encode.UnionEncodeValue )
+                ]
+        )
+        (JD.map7 ctor
+            (JD.field f1 <| TsJson.Decode.decoder (decoder m1))
+            (JD.field f2 <| TsJson.Decode.decoder (decoder m2))
+            (JD.field f3 <| TsJson.Decode.decoder (decoder m3))
+            (JD.field f4 <| TsJson.Decode.decoder (decoder m4))
+            (JD.field f5 <| TsJson.Decode.decoder (decoder m5))
+            (JD.field f6 <| TsJson.Decode.decoder (decoder m6))
+            (JD.field f7 <| TsJson.Decode.decoder (decoder m7))
+        )
+
+
+{-| Define a variant with 8 parameters for a custom type.
+-}
+objectVariant8 :
+    String
+    -> (a1 -> a2 -> a3 -> a4 -> a5 -> a6 -> a7 -> a8 -> v)
+    -> ( String, Codec a1 )
+    -> ( String, Codec a2 )
+    -> ( String, Codec a3 )
+    -> ( String, Codec a4 )
+    -> ( String, Codec a5 )
+    -> ( String, Codec a6 )
+    -> ( String, Codec a7 )
+    -> ( String, Codec a8 )
+    -> CustomObjectCodec ((a1 -> a2 -> a3 -> a4 -> a5 -> a6 -> a7 -> a8 -> TsJson.Encode.UnionEncodeValue) -> c) v
+    -> CustomObjectCodec c v
+objectVariant8 name ctor ( f1, m1 ) ( f2, m2 ) ( f3, m3 ) ( f4, m4 ) ( f5, m5 ) ( f6, m6 ) ( f7, m7 ) ( f8, m8 ) =
+    objectVariant_ name
+        [ ( f1, TsJson.Codec.tsType m1 )
+        , ( f2, TsJson.Codec.tsType m2 )
+        , ( f3, TsJson.Codec.tsType m3 )
+        , ( f4, TsJson.Codec.tsType m4 )
+        , ( f5, TsJson.Codec.tsType m5 )
+        , ( f6, TsJson.Codec.tsType m6 )
+        , ( f7, TsJson.Codec.tsType m7 )
+        , ( f8, TsJson.Codec.tsType m8 )
+        ]
+        (\c v1 v2 v3 v4 v5 v6 v7 v8 ->
+            c
+                [ ( f1, TsJson.Encode.encoder (encoder m1) v1 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f2, TsJson.Encode.encoder (encoder m2) v2 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f3, TsJson.Encode.encoder (encoder m3) v3 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f4, TsJson.Encode.encoder (encoder m4) v4 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f5, TsJson.Encode.encoder (encoder m5) v5 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f6, TsJson.Encode.encoder (encoder m6) v6 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f7, TsJson.Encode.encoder (encoder m7) v7 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f8, TsJson.Encode.encoder (encoder m8) v8 |> TsJson.Internal.Encode.UnionEncodeValue )
+                ]
+        )
+        (JD.map8 ctor
+            (JD.field f1 <| TsJson.Decode.decoder (decoder m1))
+            (JD.field f2 <| TsJson.Decode.decoder (decoder m2))
+            (JD.field f3 <| TsJson.Decode.decoder (decoder m3))
+            (JD.field f4 <| TsJson.Decode.decoder (decoder m4))
+            (JD.field f5 <| TsJson.Decode.decoder (decoder m5))
+            (JD.field f6 <| TsJson.Decode.decoder (decoder m6))
+            (JD.field f7 <| TsJson.Decode.decoder (decoder m7))
+            (JD.field f8 <| TsJson.Decode.decoder (decoder m8))
+        )
 
 
 {-| Build a `Codec` for a fully specified custom type.
