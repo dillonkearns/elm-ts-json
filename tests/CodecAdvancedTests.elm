@@ -38,6 +38,32 @@ semaphoreCodec =
         |> Codec.buildCustomObject
 
 
+type Shape
+    = Rectangle Int Int
+    | Square Int
+    | Circle Int
+
+
+shapeCodec : TsJson.Codec.Codec Shape
+shapeCodec =
+    Codec.customObject "shape"
+        (\rectangle square circle value ->
+            case value of
+                Rectangle width height ->
+                    rectangle width height
+
+                Square width ->
+                    square width
+
+                Circle radius ->
+                    circle radius
+        )
+        |> Codec.objectVariant2 "rectangle" Rectangle ( "width", TsJson.Codec.int ) ( "height", TsJson.Codec.int )
+        |> Codec.objectVariant1 "square" Square ( "width", TsJson.Codec.int )
+        |> Codec.objectVariant1 "circle" Circle ( "radius", TsJson.Codec.int )
+        |> Codec.buildCustomObject
+
+
 suite : Test
 suite =
     describe "Testing customObjectCodec"
@@ -50,6 +76,13 @@ suite =
                     |> TsType.toString
                     |> Expect.equal
                         """{ color : "green"; value : number } | { color : "yellow" } | { color : "red"; first : number; second : string }"""
+        , test "shape TsType" <|
+            \() ->
+                shapeCodec
+                    |> TsJson.Codec.tsType
+                    |> TsType.toString
+                    |> Expect.equal
+                        """{ radius : number; shape : "circle" } | { shape : "square"; width : number } | { height : number; shape : "rectangle"; width : number }"""
         ]
 
 

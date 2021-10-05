@@ -18,7 +18,7 @@ import TsJson.Internal.Decode
 import TsJson.Internal.Encode exposing (UnionBuilder(..))
 
 
-{-| A partially built `Codec` for an object with a custom shape.
+{-| A partially built `Codec` for a [discriminated union object](https://basarat.gitbook.io/typescript/type-system/discriminated-unions).
 -}
 type CustomObjectCodec match v
     = CustomCodec
@@ -28,35 +28,44 @@ type CustomObjectCodec match v
         }
 
 
-{-| Starts building a `Codec` for an object with a custom shape.
+{-| Starts building a `Codec` for an object with a custom object.
 
 You need to pass the field name there the variant name will be stored, and a pattern matching function, built like this:
 
-    type Semaphore
-        = Red Int String
-        | Yellow
-        | Green Float
+    import TsJson.Codec exposing (Codec)
+    import TsJson.Codec.Advanced as Codec
 
-    semaphoreCodec : Codec Semaphore
-    semaphoreCodec =
-        Codec.customObject "color"
-            (\red yellow green value ->
-                case value of
-                    Red i s ->
-                        red i s
+    type Shape
+        = Rectangle Int Int
+        | Square Int
+        | Circle Int
 
-                    Yellow ->
-                        yellow
+    shapeCodec : TsJson.Codec.Codec Shape
+    shapeCodec =
+        Codec.customObject "shape"
+            (\vRectangle vSquare vCircle shape ->
+                case shape of
+                    Rectangle width height ->
+                        vRectangle width height
 
-                    Green f ->
-                        green f
+                    Square width ->
+                        vSquare width
+
+                    Circle radius ->
+                        vCircle radius
             )
-            |> Codec.objectVariant2 "Red" Red ( "width", Codec.int ) ( "label", Codec.string )
-            |> Codec.objectVariant0 "Yellow" Yellow
-            |> Codec.objectVariant1 "Green" Green ( "value", Codec.float )
+            |> Codec.objectVariant2 "rectangle" Rectangle ( "width", TsJson.Codec.int ) ( "height", TsJson.Codec.int )
+            |> Codec.objectVariant1 "square" Square ( "width", TsJson.Codec.int )
+            |> Codec.objectVariant1 "circle" Circle ( "radius", TsJson.Codec.int )
             |> Codec.buildCustomObject
 
-This codec would generate and parse values such as `{ "color": "Red", "width": 42, "label": "413" }`, `{ "color": "yellow" }` and `{ "color": "green", "value": 0.42 }`
+The `TsType` for `shapeCodec` is the following discriminated union:
+
+```typescript
+{ radius : number; shape : "circle" }
+| { shape : "square"; width : number }
+| { height : number; shape : "rectangle"; width : number }
+```
 
 -}
 customObject : String -> match -> CustomObjectCodec match value
