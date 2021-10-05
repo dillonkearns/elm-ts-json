@@ -97,7 +97,7 @@ customObject tagField match =
 
 objectVariant_ :
     String
-    -> List TsType
+    -> List ( String, TsType )
     -> ((List ( String, TsJson.Encode.UnionEncodeValue ) -> TsJson.Encode.UnionEncodeValue) -> a)
     -> JD.Decoder v
     -> CustomObjectCodec (a -> b) v
@@ -123,12 +123,10 @@ objectVariant_ name argTypes matchPiece decoderPiece (CustomCodec am) =
 
         thisType : TsType
         thisType =
-            -- TODO
-            --TsType.Unknown
             TsType.TypeObject
-                [ ( TsType.Required, "tag", TsType.Literal (JE.string name) )
-                , ( TsType.Required, "args", TsType.Tuple argTypes Nothing )
-                ]
+                (( TsType.Required, am.tagField, TsType.Literal (JE.string name) )
+                    :: List.map (\( argName, argType ) -> ( TsType.Required, argName, argType )) argTypes
+                )
     in
     CustomCodec
         { tagField = am.tagField
@@ -165,7 +163,8 @@ objectVariant1 :
     -> CustomObjectCodec c v
 objectVariant1 name ctor ( f1, m1 ) =
     objectVariant_ name
-        []
+        [ ( f1, TsJson.Codec.tsType m1 )
+        ]
         (\c v1 ->
             c
                 [ ( f1, TsJson.Encode.encoder (encoder m1) v1 |> TsJson.Internal.Encode.UnionEncodeValue )
@@ -187,7 +186,9 @@ objectVariant2 :
     -> CustomObjectCodec c v
 objectVariant2 name ctor ( f1, m1 ) ( f2, m2 ) =
     objectVariant_ name
-        []
+        [ ( f1, TsJson.Codec.tsType m1 )
+        , ( f2, TsJson.Codec.tsType m2 )
+        ]
         (\c v1 v2 ->
             c
                 [ ( f1, TsJson.Encode.encoder (encoder m1) v1 |> TsJson.Internal.Encode.UnionEncodeValue )
@@ -416,10 +417,13 @@ buildCustomObject (CustomCodec am) =
                             |> Maybe.withDefault
                                 (JD.fail <| am.tagField ++ " \"" ++ tag ++ "\" did not match")
                     )
+
+        encoder =
+            am.match |> TsJson.Encode.buildUnion
     in
     TsJson.Internal.Codec.Codec
-        { encoder = am.match |> TsJson.Encode.buildUnion
+        { encoder = encoder
         , decoder =
             TsJson.Internal.Decode.Decoder decoder
-                TsType.Unknown
+                (TsJson.Encode.tsType encoder)
         }

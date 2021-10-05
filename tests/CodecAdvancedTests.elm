@@ -4,11 +4,12 @@ import Expect
 import Fuzz exposing (Fuzzer)
 import Json.Decode
 import Json.Encode as JE
-import Test exposing (Test, describe, fuzz)
+import Test exposing (Test, describe, fuzz, test)
 import TsJson.Codec exposing (Codec)
 import TsJson.Codec.Advanced as Codec
 import TsJson.Decode
 import TsJson.Encode
+import TsType
 
 
 type Semaphore
@@ -42,6 +43,13 @@ suite =
     describe "Testing customObjectCodec"
         [ describe "Roundtrip" [ roundtripTest ]
         , describe "Correct shapes" shapesTests
+        , test "TsType" <|
+            \() ->
+                semaphoreCodec
+                    |> TsJson.Codec.tsType
+                    |> TsType.toString
+                    |> Expect.equal
+                        """{ color : "green"; value : number } | { color : "yellow" } | { color : "red"; first : number; second : string }"""
         ]
 
 
