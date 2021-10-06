@@ -6,7 +6,7 @@ module TsJson.Codec exposing
     , ObjectCodec, object, field, maybeField, nullableField, buildObject
     , CustomCodec, custom, buildCustom
     , variant0
-    , namedVariant1, namedVariant2
+    , namedVariant1, namedVariant2, namedVariant3, namedVariant4, namedVariant5, namedVariant6, namedVariant7, namedVariant8
     , positionalVariant1, positionalVariant2, positionalVariant3, positionalVariant4, positionalVariant5, positionalVariant6, positionalVariant7, positionalVariant8
     , oneOf
     , map
@@ -53,7 +53,7 @@ This module is a port of [`miniBill/elm-codec`](https://package.elm-lang.org/pac
 
 ## Keyword Variants
 
-@docs namedVariant1, namedVariant2
+@docs namedVariant1, namedVariant2, namedVariant3, namedVariant4, namedVariant5, namedVariant6, namedVariant7, namedVariant8
 
 
 ## Positional Variants
@@ -455,7 +455,7 @@ variant0 :
     -> CustomCodec (TsEncode.UnionEncodeValue -> c) v
     -> CustomCodec c v
 variant0 name ctor =
-    objectVariant_ name
+    namedVariant_ name
         []
         (\c -> c [])
         (Json.Decode.succeed ctor)
@@ -834,14 +834,14 @@ variant_ name argTypes matchPiece decoderPiece (CustomCodec am) =
         }
 
 
-objectVariant_ :
+namedVariant_ :
     String
     -> List ( String, TsType )
     -> ((List ( String, TsEncode.UnionEncodeValue ) -> TsEncode.UnionEncodeValue) -> a)
     -> Json.Decode.Decoder v
     -> CustomCodec (a -> b) v
     -> CustomCodec b v
-objectVariant_ name argTypes matchPiece decoderPiece (CustomCodec am) =
+namedVariant_ name argTypes matchPiece decoderPiece (CustomCodec am) =
     let
         discriminant =
             am.discriminant |> Maybe.withDefault "tag"
@@ -890,7 +890,7 @@ namedVariant1 :
     -> CustomCodec ((a -> UnionEncodeValue) -> c) v
     -> CustomCodec c v
 namedVariant1 name ctor ( f1, m1 ) =
-    objectVariant_ name
+    namedVariant_ name
         [ ( f1, tsType m1 )
         ]
         (\c v1 ->
@@ -913,7 +913,7 @@ namedVariant2 :
     -> CustomCodec ((a -> b -> TsEncode.UnionEncodeValue) -> c) v
     -> CustomCodec c v
 namedVariant2 name ctor ( f1, m1 ) ( f2, m2 ) =
-    objectVariant_ name
+    namedVariant_ name
         [ ( f1, tsType m1 )
         , ( f2, tsType m2 )
         ]
@@ -926,6 +926,246 @@ namedVariant2 name ctor ( f1, m1 ) ( f2, m2 ) =
         (Json.Decode.map2 ctor
             (Json.Decode.field f1 <| TsDecode.decoder (decoder m1))
             (Json.Decode.field f2 <| TsDecode.decoder (decoder m2))
+        )
+
+
+{-| Define a variant with 3 parameters for a custom type.
+-}
+namedVariant3 :
+    String
+    -> (a1 -> a2 -> a3 -> v)
+    -> ( String, Codec a1 )
+    -> ( String, Codec a2 )
+    -> ( String, Codec a3 )
+    -> CustomCodec ((a1 -> a2 -> a3 -> TsEncode.UnionEncodeValue) -> c) v
+    -> CustomCodec c v
+namedVariant3 name ctor ( f1, m1 ) ( f2, m2 ) ( f3, m3 ) =
+    namedVariant_ name
+        [ ( f1, tsType m1 )
+        , ( f2, tsType m2 )
+        , ( f3, tsType m3 )
+        ]
+        (\c v1 v2 v3 ->
+            c
+                [ ( f1, TsEncode.encoder (encoder m1) v1 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f2, TsEncode.encoder (encoder m2) v2 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f3, TsEncode.encoder (encoder m3) v3 |> TsJson.Internal.Encode.UnionEncodeValue )
+                ]
+        )
+        (Json.Decode.map3 ctor
+            (Json.Decode.field f1 <| TsDecode.decoder (decoder m1))
+            (Json.Decode.field f2 <| TsDecode.decoder (decoder m2))
+            (Json.Decode.field f3 <| TsDecode.decoder (decoder m3))
+        )
+
+
+{-| Define a variant with 4 parameters for a custom type.
+-}
+namedVariant4 :
+    String
+    -> (a1 -> a2 -> a3 -> a4 -> v)
+    -> ( String, Codec a1 )
+    -> ( String, Codec a2 )
+    -> ( String, Codec a3 )
+    -> ( String, Codec a4 )
+    -> CustomCodec ((a1 -> a2 -> a3 -> a4 -> TsEncode.UnionEncodeValue) -> c) v
+    -> CustomCodec c v
+namedVariant4 name ctor ( f1, m1 ) ( f2, m2 ) ( f3, m3 ) ( f4, m4 ) =
+    namedVariant_ name
+        [ ( f1, tsType m1 )
+        , ( f2, tsType m2 )
+        , ( f3, tsType m3 )
+        , ( f4, tsType m4 )
+        ]
+        (\c v1 v2 v3 v4 ->
+            c
+                [ ( f1, TsEncode.encoder (encoder m1) v1 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f2, TsEncode.encoder (encoder m2) v2 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f3, TsEncode.encoder (encoder m3) v3 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f4, TsEncode.encoder (encoder m4) v4 |> TsJson.Internal.Encode.UnionEncodeValue )
+                ]
+        )
+        (Json.Decode.map4 ctor
+            (Json.Decode.field f1 <| TsDecode.decoder (decoder m1))
+            (Json.Decode.field f2 <| TsDecode.decoder (decoder m2))
+            (Json.Decode.field f3 <| TsDecode.decoder (decoder m3))
+            (Json.Decode.field f4 <| TsDecode.decoder (decoder m4))
+        )
+
+
+{-| Define a variant with 5 parameters for a custom type.
+-}
+namedVariant5 :
+    String
+    -> (a1 -> a2 -> a3 -> a4 -> a5 -> v)
+    -> ( String, Codec a1 )
+    -> ( String, Codec a2 )
+    -> ( String, Codec a3 )
+    -> ( String, Codec a4 )
+    -> ( String, Codec a5 )
+    -> CustomCodec ((a1 -> a2 -> a3 -> a4 -> a5 -> TsEncode.UnionEncodeValue) -> c) v
+    -> CustomCodec c v
+namedVariant5 name ctor ( f1, m1 ) ( f2, m2 ) ( f3, m3 ) ( f4, m4 ) ( f5, m5 ) =
+    namedVariant_ name
+        [ ( f1, tsType m1 )
+        , ( f2, tsType m2 )
+        , ( f3, tsType m3 )
+        , ( f4, tsType m4 )
+        , ( f5, tsType m5 )
+        ]
+        (\c v1 v2 v3 v4 v5 ->
+            c
+                [ ( f1, TsEncode.encoder (encoder m1) v1 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f2, TsEncode.encoder (encoder m2) v2 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f3, TsEncode.encoder (encoder m3) v3 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f4, TsEncode.encoder (encoder m4) v4 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f5, TsEncode.encoder (encoder m5) v5 |> TsJson.Internal.Encode.UnionEncodeValue )
+                ]
+        )
+        (Json.Decode.map5 ctor
+            (Json.Decode.field f1 <| TsDecode.decoder (decoder m1))
+            (Json.Decode.field f2 <| TsDecode.decoder (decoder m2))
+            (Json.Decode.field f3 <| TsDecode.decoder (decoder m3))
+            (Json.Decode.field f4 <| TsDecode.decoder (decoder m4))
+            (Json.Decode.field f5 <| TsDecode.decoder (decoder m5))
+        )
+
+
+{-| Define a variant with 6 parameters for a custom type.
+-}
+namedVariant6 :
+    String
+    -> (a1 -> a2 -> a3 -> a4 -> a5 -> a6 -> v)
+    -> ( String, Codec a1 )
+    -> ( String, Codec a2 )
+    -> ( String, Codec a3 )
+    -> ( String, Codec a4 )
+    -> ( String, Codec a5 )
+    -> ( String, Codec a6 )
+    -> CustomCodec ((a1 -> a2 -> a3 -> a4 -> a5 -> a6 -> TsEncode.UnionEncodeValue) -> c) v
+    -> CustomCodec c v
+namedVariant6 name ctor ( f1, m1 ) ( f2, m2 ) ( f3, m3 ) ( f4, m4 ) ( f5, m5 ) ( f6, m6 ) =
+    namedVariant_ name
+        [ ( f1, tsType m1 )
+        , ( f2, tsType m2 )
+        , ( f3, tsType m3 )
+        , ( f4, tsType m4 )
+        , ( f5, tsType m5 )
+        , ( f6, tsType m6 )
+        ]
+        (\c v1 v2 v3 v4 v5 v6 ->
+            c
+                [ ( f1, TsEncode.encoder (encoder m1) v1 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f2, TsEncode.encoder (encoder m2) v2 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f3, TsEncode.encoder (encoder m3) v3 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f4, TsEncode.encoder (encoder m4) v4 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f5, TsEncode.encoder (encoder m5) v5 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f6, TsEncode.encoder (encoder m6) v6 |> TsJson.Internal.Encode.UnionEncodeValue )
+                ]
+        )
+        (Json.Decode.map6 ctor
+            (Json.Decode.field f1 <| TsDecode.decoder (decoder m1))
+            (Json.Decode.field f2 <| TsDecode.decoder (decoder m2))
+            (Json.Decode.field f3 <| TsDecode.decoder (decoder m3))
+            (Json.Decode.field f4 <| TsDecode.decoder (decoder m4))
+            (Json.Decode.field f5 <| TsDecode.decoder (decoder m5))
+            (Json.Decode.field f6 <| TsDecode.decoder (decoder m6))
+        )
+
+
+{-| Define a variant with 7 parameters for a custom type.
+-}
+namedVariant7 :
+    String
+    -> (a1 -> a2 -> a3 -> a4 -> a5 -> a6 -> a7 -> v)
+    -> ( String, Codec a1 )
+    -> ( String, Codec a2 )
+    -> ( String, Codec a3 )
+    -> ( String, Codec a4 )
+    -> ( String, Codec a5 )
+    -> ( String, Codec a6 )
+    -> ( String, Codec a7 )
+    -> CustomCodec ((a1 -> a2 -> a3 -> a4 -> a5 -> a6 -> a7 -> TsEncode.UnionEncodeValue) -> c) v
+    -> CustomCodec c v
+namedVariant7 name ctor ( f1, m1 ) ( f2, m2 ) ( f3, m3 ) ( f4, m4 ) ( f5, m5 ) ( f6, m6 ) ( f7, m7 ) =
+    namedVariant_ name
+        [ ( f1, tsType m1 )
+        , ( f2, tsType m2 )
+        , ( f3, tsType m3 )
+        , ( f4, tsType m4 )
+        , ( f5, tsType m5 )
+        , ( f6, tsType m6 )
+        , ( f7, tsType m7 )
+        ]
+        (\c v1 v2 v3 v4 v5 v6 v7 ->
+            c
+                [ ( f1, TsEncode.encoder (encoder m1) v1 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f2, TsEncode.encoder (encoder m2) v2 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f3, TsEncode.encoder (encoder m3) v3 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f4, TsEncode.encoder (encoder m4) v4 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f5, TsEncode.encoder (encoder m5) v5 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f6, TsEncode.encoder (encoder m6) v6 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f7, TsEncode.encoder (encoder m7) v7 |> TsJson.Internal.Encode.UnionEncodeValue )
+                ]
+        )
+        (Json.Decode.map7 ctor
+            (Json.Decode.field f1 <| TsDecode.decoder (decoder m1))
+            (Json.Decode.field f2 <| TsDecode.decoder (decoder m2))
+            (Json.Decode.field f3 <| TsDecode.decoder (decoder m3))
+            (Json.Decode.field f4 <| TsDecode.decoder (decoder m4))
+            (Json.Decode.field f5 <| TsDecode.decoder (decoder m5))
+            (Json.Decode.field f6 <| TsDecode.decoder (decoder m6))
+            (Json.Decode.field f7 <| TsDecode.decoder (decoder m7))
+        )
+
+
+{-| Define a variant with 8 parameters for a custom type.
+-}
+namedVariant8 :
+    String
+    -> (a1 -> a2 -> a3 -> a4 -> a5 -> a6 -> a7 -> a8 -> v)
+    -> ( String, Codec a1 )
+    -> ( String, Codec a2 )
+    -> ( String, Codec a3 )
+    -> ( String, Codec a4 )
+    -> ( String, Codec a5 )
+    -> ( String, Codec a6 )
+    -> ( String, Codec a7 )
+    -> ( String, Codec a8 )
+    -> CustomCodec ((a1 -> a2 -> a3 -> a4 -> a5 -> a6 -> a7 -> a8 -> TsEncode.UnionEncodeValue) -> c) v
+    -> CustomCodec c v
+namedVariant8 name ctor ( f1, m1 ) ( f2, m2 ) ( f3, m3 ) ( f4, m4 ) ( f5, m5 ) ( f6, m6 ) ( f7, m7 ) ( f8, m8 ) =
+    namedVariant_ name
+        [ ( f1, tsType m1 )
+        , ( f2, tsType m2 )
+        , ( f3, tsType m3 )
+        , ( f4, tsType m4 )
+        , ( f5, tsType m5 )
+        , ( f6, tsType m6 )
+        , ( f7, tsType m7 )
+        , ( f8, tsType m8 )
+        ]
+        (\c v1 v2 v3 v4 v5 v6 v7 v8 ->
+            c
+                [ ( f1, TsEncode.encoder (encoder m1) v1 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f2, TsEncode.encoder (encoder m2) v2 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f3, TsEncode.encoder (encoder m3) v3 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f4, TsEncode.encoder (encoder m4) v4 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f5, TsEncode.encoder (encoder m5) v5 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f6, TsEncode.encoder (encoder m6) v6 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f7, TsEncode.encoder (encoder m7) v7 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f8, TsEncode.encoder (encoder m8) v8 |> TsJson.Internal.Encode.UnionEncodeValue )
+                ]
+        )
+        (Json.Decode.map8 ctor
+            (Json.Decode.field f1 <| TsDecode.decoder (decoder m1))
+            (Json.Decode.field f2 <| TsDecode.decoder (decoder m2))
+            (Json.Decode.field f3 <| TsDecode.decoder (decoder m3))
+            (Json.Decode.field f4 <| TsDecode.decoder (decoder m4))
+            (Json.Decode.field f5 <| TsDecode.decoder (decoder m5))
+            (Json.Decode.field f6 <| TsDecode.decoder (decoder m6))
+            (Json.Decode.field f7 <| TsDecode.decoder (decoder m7))
+            (Json.Decode.field f8 <| TsDecode.decoder (decoder m8))
         )
 
 
