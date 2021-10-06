@@ -76,7 +76,7 @@ This module is a port of [`miniBill/elm-codec`](https://package.elm-lang.org/pac
 import Array exposing (Array)
 import Dict exposing (Dict)
 import Internal.TsJsonType as TsType exposing (TsType)
-import Json.Decode
+import Json.Decode exposing (Decoder)
 import Json.Encode
 import Set exposing (Set)
 import TsJson.Decode as JD
@@ -387,7 +387,7 @@ buildObject (ObjectCodec om) =
 type CustomCodec match v
     = CustomCodec
         { match : JE.UnionBuilder match
-        , decoder : List (JD.Decoder v)
+        , decoder : Dict String (Json.Decode.Decoder v)
         , discriminant : Maybe String
         }
 
@@ -436,7 +436,7 @@ custom : Maybe String -> match -> CustomCodec match value
 custom discriminant match =
     CustomCodec
         { match = JE.union match
-        , decoder = []
+        , decoder = Dict.empty
         , discriminant = discriminant
         }
 
@@ -830,9 +830,7 @@ variant_ name argTypes matchPiece decoderPiece (CustomCodec am) =
                 UnionBuilder matcher types ->
                     UnionBuilder (matcher (matchPiece enc))
                         (thisType :: types)
-        , decoder =
-            TsJson.Internal.Decode.Decoder decoderPiece thisType
-                :: am.decoder
+        , decoder = Dict.insert name decoderPiece am.decoder
         , discriminant = am.discriminant
         }
 
@@ -841,9 +839,30 @@ variant_ name argTypes matchPiece decoderPiece (CustomCodec am) =
 -}
 buildCustom : CustomCodec (a -> JE.UnionEncodeValue) a -> Codec a
 buildCustom (CustomCodec am) =
-    Codec
-        { encoder = am.match |> JE.buildUnion
-        , decoder = JD.oneOf am.decoder
+    let
+        discriminant : String
+        discriminant =
+            am.discriminant |> Maybe.withDefault "tag"
+
+        decoder_ : Decoder a
+        decoder_ =
+            Json.Decode.field discriminant Json.Decode.string
+                |> Json.Decode.andThen
+                    (\tag ->
+                        Dict.get tag am.decoder
+                            |> Maybe.withDefault
+                                (Json.Decode.fail <| discriminant ++ " \"" ++ tag ++ "\" did not match")
+                    )
+
+        encoder_ : Encoder a
+        encoder_ =
+            am.match |> JE.buildUnion
+    in
+    TsJson.Internal.Codec.Codec
+        { encoder = encoder_
+        , decoder =
+            TsJson.Internal.Decode.Decoder decoder_
+                (JE.tsType encoder_)
         }
 
 
@@ -929,7 +948,6 @@ lazy f =
                             |> JD.decoder
                     )
                 )
-                --(tsType (f ()))
                 TsType.Unknown
         , encoder =
             Encoder
