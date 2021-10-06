@@ -6,6 +6,7 @@ module TsJson.Codec exposing
     , ObjectCodec, object, field, maybeField, nullableField, buildObject
     , CustomCodec, custom, buildCustom
     , variant0
+    , namedVariant1
     , positionalVariant1, positionalVariant2, positionalVariant3, positionalVariant4, positionalVariant5, positionalVariant6, positionalVariant7, positionalVariant8
     , oneOf
     , map
@@ -51,6 +52,8 @@ This module is a port of [`miniBill/elm-codec`](https://package.elm-lang.org/pac
 
 
 ## Keyword Variants
+
+@docs namedVariant1
 
 
 ## Positional Variants
@@ -883,6 +886,28 @@ objectVariant_ name argTypes matchPiece decoderPiece (CustomCodec am) =
                         (thisType :: types)
         , decoder = Dict.insert name decoderPiece am.decoder
         }
+
+
+{-| Define a variant with 1 parameter for a custom type.
+-}
+namedVariant1 :
+    String
+    -> (a -> v)
+    -> ( String, Codec a )
+    -> CustomCodec ((a -> UnionEncodeValue) -> c) v
+    -> CustomCodec c v
+namedVariant1 name ctor ( f1, m1 ) =
+    objectVariant_ name
+        [ ( f1, tsType m1 )
+        ]
+        (\c v1 ->
+            c
+                [ ( f1, JE.encoder (encoder m1) v1 |> TsJson.Internal.Encode.UnionEncodeValue )
+                ]
+        )
+        (Json.Decode.map ctor
+            (Json.Decode.field f1 <| JD.decoder (decoder m1))
+        )
 
 
 {-| Build a `Codec` for a fully specified custom type.
