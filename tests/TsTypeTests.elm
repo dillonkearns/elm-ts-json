@@ -138,7 +138,17 @@ suite =
                             ]
                         )
                         |> expectEqualTypes
-                            "({ author : string; version : number } & { data : { payload : string } } | { payload : string })"
+                            "({ author : string; version : number } & ({ data : { payload : string } } | { payload : string }))"
+            , test "union is preserved with parens as needed when intersected" <|
+                \() ->
+                    TypeReducer.intersect
+                        (TypeObject [ ( Required, "version", Number ) ])
+                        (TypeReducer.union
+                            [ TypeObject [ ( Required, "data", String ) ]
+                            , TypeObject [ ( Required, "payload", String ) ]
+                            ]
+                        )
+                        |> expectEqualTypes "({ version : number } & ({ data : string } | { payload : string }))"
             , test "contradictory scalars" <|
                 \() ->
                     combinesToNever String Number

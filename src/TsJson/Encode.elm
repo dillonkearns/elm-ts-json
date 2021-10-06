@@ -5,7 +5,7 @@ module TsJson.Encode exposing
     , object, Property, optional, required
     , UnionBuilder, union, variant, variant0, variantObject, variantLiteral, variantTagged, buildUnion
     , UnionEncodeValue
-    , list, dict, tuple, triple, maybe
+    , list, dict, tuple, triple, maybe, array
     , value
     , encoder, tsType
     , runExample
@@ -76,7 +76,7 @@ TypeScript Declaration file for your compiled Elm code.
 
 ## Collections
 
-@docs list, dict, tuple, triple, maybe
+@docs list, dict, tuple, triple, maybe, array
 
 
 ## In-Depth Example
@@ -171,10 +171,12 @@ tool will use these for you under the hood. These can be helpful for debugging, 
 
 -}
 
+import Array exposing (Array)
 import Dict exposing (Dict)
 import Internal.TsJsonType exposing (..)
 import Internal.TypeReducer as TypeReducer
 import Json.Encode as Encode
+import TsJson.Internal.Encode exposing (Encoder(..), UnionBuilder(..), UnionEncodeValue(..))
 import TsType
 
 
@@ -216,8 +218,8 @@ Let's compare the two with an example for encoding a first and last name.
     --> }
 
 -}
-type Encoder input
-    = Encoder (input -> Encode.Value) TsType
+type alias Encoder input =
+    TsJson.Internal.Encode.Encoder input
 
 
 {-| -}
@@ -577,6 +579,15 @@ list (Encoder encodeFn tsType_) =
         (List tsType_)
 
 
+{-| Like `Encode.list`, but takes an `Array` instead of a `List` as input.
+-}
+array : Encoder a -> Encoder (Array a)
+array (Encoder encodeFn tsType_) =
+    Encoder
+        (\input -> Encode.array encodeFn input)
+        (List tsType_)
+
+
 {-| TypeScript [has a Tuple type](https://www.typescriptlang.org/docs/handbook/basic-types.html#tuple). It's just an
 Array with 2 items, and the TypeScript compiler will enforce that there are two elements. You can turn an Elm Tuple
 into a TypeScript Tuple.
@@ -665,8 +676,8 @@ union constructor =
 
 
 {-| -}
-type UnionBuilder match
-    = UnionBuilder match (List TsType)
+type alias UnionBuilder match =
+    TsJson.Internal.Encode.UnionBuilder match
 
 
 {-| -}
@@ -704,6 +715,29 @@ variant (Encoder encoder_ tsType_) (UnionBuilder builder tsTypes_) =
     UnionBuilder
         (builder (encoder_ >> UnionEncodeValue))
         (tsType_ :: tsTypes_)
+
+
+{-| -}
+variant_ :
+    Encoder input
+    -> UnionBuilder ((input -> UnionEncodeValue) -> match)
+    -> UnionBuilder match
+variant_ (Encoder encoder_ tsType_) (UnionBuilder builder tsTypes_) =
+    UnionBuilder
+        (builder (encoder_ >> UnionEncodeValue))
+        (tsType_ :: tsTypes_)
+
+
+
+--{-| -}
+--variantNew :
+--    Encoder input
+--    -> UnionBuilder ((input -> UnionEncodeValue) -> match)
+--    -> UnionBuilder match
+--variantNew (Encoder encoder_ tsType_) (UnionBuilder builder tsTypes_) =
+--    UnionBuilder
+--        (builder (encoder_ >> UnionEncodeValue))
+--        (tsType_ :: tsTypes_)
 
 
 {-| Takes any Encoder and includes that data under an Object property "data".
@@ -785,8 +819,8 @@ give you more functions/values to give UnionEncodeValue's with
 different shapes, if you need them.
 
 -}
-type UnionEncodeValue
-    = UnionEncodeValue Encode.Value
+type alias UnionEncodeValue =
+    TsJson.Internal.Encode.UnionEncodeValue
 
 
 unwrapUnion : UnionEncodeValue -> Encode.Value

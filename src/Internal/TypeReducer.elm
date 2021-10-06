@@ -141,7 +141,7 @@ intersect type1 type2 =
 
             _ ->
                 if type1 == type2 then
-                    Intersection [ type1, type2 ]
+                    type1
 
                 else
                     Intersection [ type1, type2 ]

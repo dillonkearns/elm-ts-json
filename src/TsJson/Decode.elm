@@ -161,6 +161,7 @@ import Internal.TsJsonType exposing (..)
 import Internal.TypeReducer as TypeReducer
 import Json.Decode as Decode
 import Json.Encode as Encode
+import TsJson.Internal.Decode exposing (Decoder(..))
 import TsType
 
 
@@ -413,8 +414,8 @@ oneOf decoders =
 
 {-| Just like a `Decoder` in `elm/json`, except these `Decoder`s track the TypeScript types that they can successfully handle.
 -}
-type Decoder value
-    = Decoder (Decode.Decoder value) TsType
+type alias Decoder value =
+    TsJson.Internal.Decode.Decoder value
 
 
 {-|
@@ -477,7 +478,7 @@ unknownAndThen function (Decoder innerDecoder innerType) =
     field "version" int |> andThen example
         |> runExample """{"version": 1, "payload": "Hello"}"""
     --> { decoded = Ok "Hello"
-    --> , tsType = "({ version : number } & { data : { payload : string } } | { payload : string })"
+    --> , tsType = "({ version : number } & ({ data : { payload : string } } | { payload : string }))"
     --> }
 
 -}

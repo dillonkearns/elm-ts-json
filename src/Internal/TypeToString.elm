@@ -36,12 +36,13 @@ toString tsType_ =
 
         Union ( firstType, tsTypes ) ->
             (firstType :: tsTypes)
-                |> List.map toString
+                |> List.map parenthesizeToString
                 |> String.join " | "
 
         TypeObject keyTypes ->
             "{ "
                 ++ (keyTypes
+                        |> List.sortBy (\( _, fieldName, _ ) -> fieldName)
                         |> List.map
                             (\( optionality, key, tsType__ ) ->
                                 (case optionality of
@@ -86,7 +87,7 @@ toString tsType_ =
 
         Intersection types ->
             types
-                |> List.map toString
+                |> List.map parenthesizeToString
                 |> String.join " & "
                 |> parenthesize
 
@@ -140,7 +141,7 @@ parenthesizeToString type_ =
                     False
     in
     if needsParens then
-        "(" ++ toString type_ ++ ")"
+        toString type_ |> parenthesize
 
     else
         toString type_
