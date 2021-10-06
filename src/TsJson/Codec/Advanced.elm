@@ -8,11 +8,11 @@ module TsJson.Codec.Advanced exposing (CustomObjectCodec, customObject, objectVa
 
 import Dict exposing (Dict)
 import Internal.TsJsonType as TsType exposing (TsType)
-import Json.Decode as JD exposing (Decoder, Value)
-import Json.Encode as JE
+import Json.Decode exposing (Decoder, Value)
+import Json.Encode
 import TsJson.Codec exposing (Codec, decoder, encoder)
-import TsJson.Decode
-import TsJson.Encode
+import TsJson.Decode as TsDecode
+import TsJson.Encode as TsEncode
 import TsJson.Internal.Codec
 import TsJson.Internal.Decode
 import TsJson.Internal.Encode exposing (UnionBuilder(..))
@@ -23,8 +23,8 @@ import TsJson.Internal.Encode exposing (UnionBuilder(..))
 type CustomObjectCodec match v
     = CustomCodec
         { tagField : String
-        , match : TsJson.Encode.UnionBuilder match
-        , decoder : Dict String (JD.Decoder v)
+        , match : TsEncode.UnionBuilder match
+        , decoder : Dict String (Json.Decode.Decoder v)
         }
 
 
@@ -80,33 +80,33 @@ customObject tagField match =
 objectVariant_ :
     String
     -> List ( String, TsType )
-    -> ((List ( String, TsJson.Encode.UnionEncodeValue ) -> TsJson.Encode.UnionEncodeValue) -> a)
-    -> JD.Decoder v
+    -> ((List ( String, TsEncode.UnionEncodeValue ) -> TsEncode.UnionEncodeValue) -> a)
+    -> Json.Decode.Decoder v
     -> CustomObjectCodec (a -> b) v
     -> CustomObjectCodec b v
 objectVariant_ name argTypes matchPiece decoderPiece (CustomCodec am) =
     let
-        combine : List ( String, TsJson.Encode.UnionEncodeValue ) -> TsJson.Encode.Encoder (List ( String, TsJson.Encode.UnionEncodeValue ))
+        combine : List ( String, TsEncode.UnionEncodeValue ) -> TsEncode.Encoder (List ( String, TsEncode.UnionEncodeValue ))
         combine things =
             TsJson.Internal.Encode.Encoder
                 (\_ ->
-                    JE.object
-                        (( am.tagField, JE.string name ) :: List.map (Tuple.mapSecond unwrapped) things)
+                    Json.Encode.object
+                        (( am.tagField, Json.Encode.string name ) :: List.map (Tuple.mapSecond unwrapped) things)
                 )
                 thisType
 
-        unwrapped : TsJson.Internal.Encode.UnionEncodeValue -> JE.Value
+        unwrapped : TsJson.Internal.Encode.UnionEncodeValue -> Json.Encode.Value
         unwrapped (TsJson.Internal.Encode.UnionEncodeValue rawValue) =
             rawValue
 
-        enc : List ( String, TsJson.Encode.UnionEncodeValue ) -> TsJson.Encode.UnionEncodeValue
+        enc : List ( String, TsEncode.UnionEncodeValue ) -> TsEncode.UnionEncodeValue
         enc props =
-            props |> (combine props |> TsJson.Encode.encoder) |> TsJson.Internal.Encode.UnionEncodeValue
+            props |> (combine props |> TsEncode.encoder) |> TsJson.Internal.Encode.UnionEncodeValue
 
         thisType : TsType
         thisType =
             TsType.TypeObject
-                (( TsType.Required, am.tagField, TsType.Literal (JE.string name) )
+                (( TsType.Required, am.tagField, TsType.Literal (Json.Encode.string name) )
                     :: List.map (\( argName, argType ) -> ( TsType.Required, argName, argType )) argTypes
                 )
     in
@@ -126,13 +126,13 @@ objectVariant_ name argTypes matchPiece decoderPiece (CustomCodec am) =
 objectVariant0 :
     String
     -> v
-    -> CustomObjectCodec (TsJson.Encode.UnionEncodeValue -> c) v
+    -> CustomObjectCodec (TsEncode.UnionEncodeValue -> c) v
     -> CustomObjectCodec c v
 objectVariant0 name ctor =
     objectVariant_ name
         []
         (\c -> c [])
-        (JD.succeed ctor)
+        (Json.Decode.succeed ctor)
 
 
 {-| Define a variant with 1 parameter for a custom type.
@@ -141,7 +141,7 @@ objectVariant1 :
     String
     -> (a -> v)
     -> ( String, Codec a )
-    -> CustomObjectCodec ((a -> TsJson.Encode.UnionEncodeValue) -> c) v
+    -> CustomObjectCodec ((a -> TsEncode.UnionEncodeValue) -> c) v
     -> CustomObjectCodec c v
 objectVariant1 name ctor ( f1, m1 ) =
     objectVariant_ name
@@ -149,11 +149,11 @@ objectVariant1 name ctor ( f1, m1 ) =
         ]
         (\c v1 ->
             c
-                [ ( f1, TsJson.Encode.encoder (encoder m1) v1 |> TsJson.Internal.Encode.UnionEncodeValue )
+                [ ( f1, TsEncode.encoder (encoder m1) v1 |> TsJson.Internal.Encode.UnionEncodeValue )
                 ]
         )
-        (JD.map ctor
-            (JD.field f1 <| TsJson.Decode.decoder (decoder m1))
+        (Json.Decode.map ctor
+            (Json.Decode.field f1 <| TsDecode.decoder (decoder m1))
         )
 
 
@@ -164,7 +164,7 @@ objectVariant2 :
     -> (a -> b -> v)
     -> ( String, Codec a )
     -> ( String, Codec b )
-    -> CustomObjectCodec ((a -> b -> TsJson.Encode.UnionEncodeValue) -> c) v
+    -> CustomObjectCodec ((a -> b -> TsEncode.UnionEncodeValue) -> c) v
     -> CustomObjectCodec c v
 objectVariant2 name ctor ( f1, m1 ) ( f2, m2 ) =
     objectVariant_ name
@@ -173,13 +173,13 @@ objectVariant2 name ctor ( f1, m1 ) ( f2, m2 ) =
         ]
         (\c v1 v2 ->
             c
-                [ ( f1, TsJson.Encode.encoder (encoder m1) v1 |> TsJson.Internal.Encode.UnionEncodeValue )
-                , ( f2, TsJson.Encode.encoder (encoder m2) v2 |> TsJson.Internal.Encode.UnionEncodeValue )
+                [ ( f1, TsEncode.encoder (encoder m1) v1 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f2, TsEncode.encoder (encoder m2) v2 |> TsJson.Internal.Encode.UnionEncodeValue )
                 ]
         )
-        (JD.map2 ctor
-            (JD.field f1 <| TsJson.Decode.decoder (decoder m1))
-            (JD.field f2 <| TsJson.Decode.decoder (decoder m2))
+        (Json.Decode.map2 ctor
+            (Json.Decode.field f1 <| TsDecode.decoder (decoder m1))
+            (Json.Decode.field f2 <| TsDecode.decoder (decoder m2))
         )
 
 
@@ -191,7 +191,7 @@ objectVariant3 :
     -> ( String, Codec a1 )
     -> ( String, Codec a2 )
     -> ( String, Codec a3 )
-    -> CustomObjectCodec ((a1 -> a2 -> a3 -> TsJson.Encode.UnionEncodeValue) -> c) v
+    -> CustomObjectCodec ((a1 -> a2 -> a3 -> TsEncode.UnionEncodeValue) -> c) v
     -> CustomObjectCodec c v
 objectVariant3 name ctor ( f1, m1 ) ( f2, m2 ) ( f3, m3 ) =
     objectVariant_ name
@@ -201,15 +201,15 @@ objectVariant3 name ctor ( f1, m1 ) ( f2, m2 ) ( f3, m3 ) =
         ]
         (\c v1 v2 v3 ->
             c
-                [ ( f1, TsJson.Encode.encoder (encoder m1) v1 |> TsJson.Internal.Encode.UnionEncodeValue )
-                , ( f2, TsJson.Encode.encoder (encoder m2) v2 |> TsJson.Internal.Encode.UnionEncodeValue )
-                , ( f3, TsJson.Encode.encoder (encoder m3) v3 |> TsJson.Internal.Encode.UnionEncodeValue )
+                [ ( f1, TsEncode.encoder (encoder m1) v1 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f2, TsEncode.encoder (encoder m2) v2 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f3, TsEncode.encoder (encoder m3) v3 |> TsJson.Internal.Encode.UnionEncodeValue )
                 ]
         )
-        (JD.map3 ctor
-            (JD.field f1 <| TsJson.Decode.decoder (decoder m1))
-            (JD.field f2 <| TsJson.Decode.decoder (decoder m2))
-            (JD.field f3 <| TsJson.Decode.decoder (decoder m3))
+        (Json.Decode.map3 ctor
+            (Json.Decode.field f1 <| TsDecode.decoder (decoder m1))
+            (Json.Decode.field f2 <| TsDecode.decoder (decoder m2))
+            (Json.Decode.field f3 <| TsDecode.decoder (decoder m3))
         )
 
 
@@ -222,7 +222,7 @@ objectVariant4 :
     -> ( String, Codec a2 )
     -> ( String, Codec a3 )
     -> ( String, Codec a4 )
-    -> CustomObjectCodec ((a1 -> a2 -> a3 -> a4 -> TsJson.Encode.UnionEncodeValue) -> c) v
+    -> CustomObjectCodec ((a1 -> a2 -> a3 -> a4 -> TsEncode.UnionEncodeValue) -> c) v
     -> CustomObjectCodec c v
 objectVariant4 name ctor ( f1, m1 ) ( f2, m2 ) ( f3, m3 ) ( f4, m4 ) =
     objectVariant_ name
@@ -233,17 +233,17 @@ objectVariant4 name ctor ( f1, m1 ) ( f2, m2 ) ( f3, m3 ) ( f4, m4 ) =
         ]
         (\c v1 v2 v3 v4 ->
             c
-                [ ( f1, TsJson.Encode.encoder (encoder m1) v1 |> TsJson.Internal.Encode.UnionEncodeValue )
-                , ( f2, TsJson.Encode.encoder (encoder m2) v2 |> TsJson.Internal.Encode.UnionEncodeValue )
-                , ( f3, TsJson.Encode.encoder (encoder m3) v3 |> TsJson.Internal.Encode.UnionEncodeValue )
-                , ( f4, TsJson.Encode.encoder (encoder m4) v4 |> TsJson.Internal.Encode.UnionEncodeValue )
+                [ ( f1, TsEncode.encoder (encoder m1) v1 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f2, TsEncode.encoder (encoder m2) v2 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f3, TsEncode.encoder (encoder m3) v3 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f4, TsEncode.encoder (encoder m4) v4 |> TsJson.Internal.Encode.UnionEncodeValue )
                 ]
         )
-        (JD.map4 ctor
-            (JD.field f1 <| TsJson.Decode.decoder (decoder m1))
-            (JD.field f2 <| TsJson.Decode.decoder (decoder m2))
-            (JD.field f3 <| TsJson.Decode.decoder (decoder m3))
-            (JD.field f4 <| TsJson.Decode.decoder (decoder m4))
+        (Json.Decode.map4 ctor
+            (Json.Decode.field f1 <| TsDecode.decoder (decoder m1))
+            (Json.Decode.field f2 <| TsDecode.decoder (decoder m2))
+            (Json.Decode.field f3 <| TsDecode.decoder (decoder m3))
+            (Json.Decode.field f4 <| TsDecode.decoder (decoder m4))
         )
 
 
@@ -257,7 +257,7 @@ objectVariant5 :
     -> ( String, Codec a3 )
     -> ( String, Codec a4 )
     -> ( String, Codec a5 )
-    -> CustomObjectCodec ((a1 -> a2 -> a3 -> a4 -> a5 -> TsJson.Encode.UnionEncodeValue) -> c) v
+    -> CustomObjectCodec ((a1 -> a2 -> a3 -> a4 -> a5 -> TsEncode.UnionEncodeValue) -> c) v
     -> CustomObjectCodec c v
 objectVariant5 name ctor ( f1, m1 ) ( f2, m2 ) ( f3, m3 ) ( f4, m4 ) ( f5, m5 ) =
     objectVariant_ name
@@ -269,19 +269,19 @@ objectVariant5 name ctor ( f1, m1 ) ( f2, m2 ) ( f3, m3 ) ( f4, m4 ) ( f5, m5 ) 
         ]
         (\c v1 v2 v3 v4 v5 ->
             c
-                [ ( f1, TsJson.Encode.encoder (encoder m1) v1 |> TsJson.Internal.Encode.UnionEncodeValue )
-                , ( f2, TsJson.Encode.encoder (encoder m2) v2 |> TsJson.Internal.Encode.UnionEncodeValue )
-                , ( f3, TsJson.Encode.encoder (encoder m3) v3 |> TsJson.Internal.Encode.UnionEncodeValue )
-                , ( f4, TsJson.Encode.encoder (encoder m4) v4 |> TsJson.Internal.Encode.UnionEncodeValue )
-                , ( f5, TsJson.Encode.encoder (encoder m5) v5 |> TsJson.Internal.Encode.UnionEncodeValue )
+                [ ( f1, TsEncode.encoder (encoder m1) v1 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f2, TsEncode.encoder (encoder m2) v2 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f3, TsEncode.encoder (encoder m3) v3 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f4, TsEncode.encoder (encoder m4) v4 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f5, TsEncode.encoder (encoder m5) v5 |> TsJson.Internal.Encode.UnionEncodeValue )
                 ]
         )
-        (JD.map5 ctor
-            (JD.field f1 <| TsJson.Decode.decoder (decoder m1))
-            (JD.field f2 <| TsJson.Decode.decoder (decoder m2))
-            (JD.field f3 <| TsJson.Decode.decoder (decoder m3))
-            (JD.field f4 <| TsJson.Decode.decoder (decoder m4))
-            (JD.field f5 <| TsJson.Decode.decoder (decoder m5))
+        (Json.Decode.map5 ctor
+            (Json.Decode.field f1 <| TsDecode.decoder (decoder m1))
+            (Json.Decode.field f2 <| TsDecode.decoder (decoder m2))
+            (Json.Decode.field f3 <| TsDecode.decoder (decoder m3))
+            (Json.Decode.field f4 <| TsDecode.decoder (decoder m4))
+            (Json.Decode.field f5 <| TsDecode.decoder (decoder m5))
         )
 
 
@@ -296,7 +296,7 @@ objectVariant6 :
     -> ( String, Codec a4 )
     -> ( String, Codec a5 )
     -> ( String, Codec a6 )
-    -> CustomObjectCodec ((a1 -> a2 -> a3 -> a4 -> a5 -> a6 -> TsJson.Encode.UnionEncodeValue) -> c) v
+    -> CustomObjectCodec ((a1 -> a2 -> a3 -> a4 -> a5 -> a6 -> TsEncode.UnionEncodeValue) -> c) v
     -> CustomObjectCodec c v
 objectVariant6 name ctor ( f1, m1 ) ( f2, m2 ) ( f3, m3 ) ( f4, m4 ) ( f5, m5 ) ( f6, m6 ) =
     objectVariant_ name
@@ -309,21 +309,21 @@ objectVariant6 name ctor ( f1, m1 ) ( f2, m2 ) ( f3, m3 ) ( f4, m4 ) ( f5, m5 ) 
         ]
         (\c v1 v2 v3 v4 v5 v6 ->
             c
-                [ ( f1, TsJson.Encode.encoder (encoder m1) v1 |> TsJson.Internal.Encode.UnionEncodeValue )
-                , ( f2, TsJson.Encode.encoder (encoder m2) v2 |> TsJson.Internal.Encode.UnionEncodeValue )
-                , ( f3, TsJson.Encode.encoder (encoder m3) v3 |> TsJson.Internal.Encode.UnionEncodeValue )
-                , ( f4, TsJson.Encode.encoder (encoder m4) v4 |> TsJson.Internal.Encode.UnionEncodeValue )
-                , ( f5, TsJson.Encode.encoder (encoder m5) v5 |> TsJson.Internal.Encode.UnionEncodeValue )
-                , ( f6, TsJson.Encode.encoder (encoder m6) v6 |> TsJson.Internal.Encode.UnionEncodeValue )
+                [ ( f1, TsEncode.encoder (encoder m1) v1 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f2, TsEncode.encoder (encoder m2) v2 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f3, TsEncode.encoder (encoder m3) v3 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f4, TsEncode.encoder (encoder m4) v4 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f5, TsEncode.encoder (encoder m5) v5 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f6, TsEncode.encoder (encoder m6) v6 |> TsJson.Internal.Encode.UnionEncodeValue )
                 ]
         )
-        (JD.map6 ctor
-            (JD.field f1 <| TsJson.Decode.decoder (decoder m1))
-            (JD.field f2 <| TsJson.Decode.decoder (decoder m2))
-            (JD.field f3 <| TsJson.Decode.decoder (decoder m3))
-            (JD.field f4 <| TsJson.Decode.decoder (decoder m4))
-            (JD.field f5 <| TsJson.Decode.decoder (decoder m5))
-            (JD.field f6 <| TsJson.Decode.decoder (decoder m6))
+        (Json.Decode.map6 ctor
+            (Json.Decode.field f1 <| TsDecode.decoder (decoder m1))
+            (Json.Decode.field f2 <| TsDecode.decoder (decoder m2))
+            (Json.Decode.field f3 <| TsDecode.decoder (decoder m3))
+            (Json.Decode.field f4 <| TsDecode.decoder (decoder m4))
+            (Json.Decode.field f5 <| TsDecode.decoder (decoder m5))
+            (Json.Decode.field f6 <| TsDecode.decoder (decoder m6))
         )
 
 
@@ -339,7 +339,7 @@ objectVariant7 :
     -> ( String, Codec a5 )
     -> ( String, Codec a6 )
     -> ( String, Codec a7 )
-    -> CustomObjectCodec ((a1 -> a2 -> a3 -> a4 -> a5 -> a6 -> a7 -> TsJson.Encode.UnionEncodeValue) -> c) v
+    -> CustomObjectCodec ((a1 -> a2 -> a3 -> a4 -> a5 -> a6 -> a7 -> TsEncode.UnionEncodeValue) -> c) v
     -> CustomObjectCodec c v
 objectVariant7 name ctor ( f1, m1 ) ( f2, m2 ) ( f3, m3 ) ( f4, m4 ) ( f5, m5 ) ( f6, m6 ) ( f7, m7 ) =
     objectVariant_ name
@@ -353,23 +353,23 @@ objectVariant7 name ctor ( f1, m1 ) ( f2, m2 ) ( f3, m3 ) ( f4, m4 ) ( f5, m5 ) 
         ]
         (\c v1 v2 v3 v4 v5 v6 v7 ->
             c
-                [ ( f1, TsJson.Encode.encoder (encoder m1) v1 |> TsJson.Internal.Encode.UnionEncodeValue )
-                , ( f2, TsJson.Encode.encoder (encoder m2) v2 |> TsJson.Internal.Encode.UnionEncodeValue )
-                , ( f3, TsJson.Encode.encoder (encoder m3) v3 |> TsJson.Internal.Encode.UnionEncodeValue )
-                , ( f4, TsJson.Encode.encoder (encoder m4) v4 |> TsJson.Internal.Encode.UnionEncodeValue )
-                , ( f5, TsJson.Encode.encoder (encoder m5) v5 |> TsJson.Internal.Encode.UnionEncodeValue )
-                , ( f6, TsJson.Encode.encoder (encoder m6) v6 |> TsJson.Internal.Encode.UnionEncodeValue )
-                , ( f7, TsJson.Encode.encoder (encoder m7) v7 |> TsJson.Internal.Encode.UnionEncodeValue )
+                [ ( f1, TsEncode.encoder (encoder m1) v1 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f2, TsEncode.encoder (encoder m2) v2 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f3, TsEncode.encoder (encoder m3) v3 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f4, TsEncode.encoder (encoder m4) v4 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f5, TsEncode.encoder (encoder m5) v5 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f6, TsEncode.encoder (encoder m6) v6 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f7, TsEncode.encoder (encoder m7) v7 |> TsJson.Internal.Encode.UnionEncodeValue )
                 ]
         )
-        (JD.map7 ctor
-            (JD.field f1 <| TsJson.Decode.decoder (decoder m1))
-            (JD.field f2 <| TsJson.Decode.decoder (decoder m2))
-            (JD.field f3 <| TsJson.Decode.decoder (decoder m3))
-            (JD.field f4 <| TsJson.Decode.decoder (decoder m4))
-            (JD.field f5 <| TsJson.Decode.decoder (decoder m5))
-            (JD.field f6 <| TsJson.Decode.decoder (decoder m6))
-            (JD.field f7 <| TsJson.Decode.decoder (decoder m7))
+        (Json.Decode.map7 ctor
+            (Json.Decode.field f1 <| TsDecode.decoder (decoder m1))
+            (Json.Decode.field f2 <| TsDecode.decoder (decoder m2))
+            (Json.Decode.field f3 <| TsDecode.decoder (decoder m3))
+            (Json.Decode.field f4 <| TsDecode.decoder (decoder m4))
+            (Json.Decode.field f5 <| TsDecode.decoder (decoder m5))
+            (Json.Decode.field f6 <| TsDecode.decoder (decoder m6))
+            (Json.Decode.field f7 <| TsDecode.decoder (decoder m7))
         )
 
 
@@ -386,7 +386,7 @@ objectVariant8 :
     -> ( String, Codec a6 )
     -> ( String, Codec a7 )
     -> ( String, Codec a8 )
-    -> CustomObjectCodec ((a1 -> a2 -> a3 -> a4 -> a5 -> a6 -> a7 -> a8 -> TsJson.Encode.UnionEncodeValue) -> c) v
+    -> CustomObjectCodec ((a1 -> a2 -> a3 -> a4 -> a5 -> a6 -> a7 -> a8 -> TsEncode.UnionEncodeValue) -> c) v
     -> CustomObjectCodec c v
 objectVariant8 name ctor ( f1, m1 ) ( f2, m2 ) ( f3, m3 ) ( f4, m4 ) ( f5, m5 ) ( f6, m6 ) ( f7, m7 ) ( f8, m8 ) =
     objectVariant_ name
@@ -401,49 +401,49 @@ objectVariant8 name ctor ( f1, m1 ) ( f2, m2 ) ( f3, m3 ) ( f4, m4 ) ( f5, m5 ) 
         ]
         (\c v1 v2 v3 v4 v5 v6 v7 v8 ->
             c
-                [ ( f1, TsJson.Encode.encoder (encoder m1) v1 |> TsJson.Internal.Encode.UnionEncodeValue )
-                , ( f2, TsJson.Encode.encoder (encoder m2) v2 |> TsJson.Internal.Encode.UnionEncodeValue )
-                , ( f3, TsJson.Encode.encoder (encoder m3) v3 |> TsJson.Internal.Encode.UnionEncodeValue )
-                , ( f4, TsJson.Encode.encoder (encoder m4) v4 |> TsJson.Internal.Encode.UnionEncodeValue )
-                , ( f5, TsJson.Encode.encoder (encoder m5) v5 |> TsJson.Internal.Encode.UnionEncodeValue )
-                , ( f6, TsJson.Encode.encoder (encoder m6) v6 |> TsJson.Internal.Encode.UnionEncodeValue )
-                , ( f7, TsJson.Encode.encoder (encoder m7) v7 |> TsJson.Internal.Encode.UnionEncodeValue )
-                , ( f8, TsJson.Encode.encoder (encoder m8) v8 |> TsJson.Internal.Encode.UnionEncodeValue )
+                [ ( f1, TsEncode.encoder (encoder m1) v1 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f2, TsEncode.encoder (encoder m2) v2 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f3, TsEncode.encoder (encoder m3) v3 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f4, TsEncode.encoder (encoder m4) v4 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f5, TsEncode.encoder (encoder m5) v5 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f6, TsEncode.encoder (encoder m6) v6 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f7, TsEncode.encoder (encoder m7) v7 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f8, TsEncode.encoder (encoder m8) v8 |> TsJson.Internal.Encode.UnionEncodeValue )
                 ]
         )
-        (JD.map8 ctor
-            (JD.field f1 <| TsJson.Decode.decoder (decoder m1))
-            (JD.field f2 <| TsJson.Decode.decoder (decoder m2))
-            (JD.field f3 <| TsJson.Decode.decoder (decoder m3))
-            (JD.field f4 <| TsJson.Decode.decoder (decoder m4))
-            (JD.field f5 <| TsJson.Decode.decoder (decoder m5))
-            (JD.field f6 <| TsJson.Decode.decoder (decoder m6))
-            (JD.field f7 <| TsJson.Decode.decoder (decoder m7))
-            (JD.field f8 <| TsJson.Decode.decoder (decoder m8))
+        (Json.Decode.map8 ctor
+            (Json.Decode.field f1 <| TsDecode.decoder (decoder m1))
+            (Json.Decode.field f2 <| TsDecode.decoder (decoder m2))
+            (Json.Decode.field f3 <| TsDecode.decoder (decoder m3))
+            (Json.Decode.field f4 <| TsDecode.decoder (decoder m4))
+            (Json.Decode.field f5 <| TsDecode.decoder (decoder m5))
+            (Json.Decode.field f6 <| TsDecode.decoder (decoder m6))
+            (Json.Decode.field f7 <| TsDecode.decoder (decoder m7))
+            (Json.Decode.field f8 <| TsDecode.decoder (decoder m8))
         )
 
 
 {-| Build a `Codec` for a fully specified custom type.
 -}
-buildCustomObject : CustomObjectCodec (a -> TsJson.Encode.UnionEncodeValue) a -> Codec a
+buildCustomObject : CustomObjectCodec (a -> TsEncode.UnionEncodeValue) a -> Codec a
 buildCustomObject (CustomCodec am) =
     let
         decoder : Decoder a
         decoder =
-            JD.field am.tagField JD.string
-                |> JD.andThen
+            Json.Decode.field am.tagField Json.Decode.string
+                |> Json.Decode.andThen
                     (\tag ->
                         Dict.get tag am.decoder
                             |> Maybe.withDefault
-                                (JD.fail <| am.tagField ++ " \"" ++ tag ++ "\" did not match")
+                                (Json.Decode.fail <| am.tagField ++ " \"" ++ tag ++ "\" did not match")
                     )
 
         encoder =
-            am.match |> TsJson.Encode.buildUnion
+            am.match |> TsEncode.buildUnion
     in
     TsJson.Internal.Codec.Codec
         { encoder = encoder
         , decoder =
             TsJson.Internal.Decode.Decoder decoder
-                (TsJson.Encode.tsType encoder)
+                (TsEncode.tsType encoder)
         }
