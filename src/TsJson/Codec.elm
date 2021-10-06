@@ -451,21 +451,14 @@ custom discriminant match =
 -}
 variant0 :
     String
-    -> decodesTo
-    -> CustomCodec (TsEncode.UnionEncodeValue -> input) decodesTo
-    -> CustomCodec input decodesTo
-variant0 name constructor codec =
-    variant_ name
+    -> v
+    -> CustomCodec (TsEncode.UnionEncodeValue -> c) v
+    -> CustomCodec c v
+variant0 name ctor =
+    objectVariant_ name
         []
-        (\encodeCustomTypeArgs ->
-            []
-                |> encodeCustomTypeArgs
-                |> UnionEncodeValue
-        )
-        (Json.Decode.succeed constructor
-            |> variantArgsDecoder name
-        )
-        codec
+        (\c -> c [])
+        (Json.Decode.succeed ctor)
 
 
 {-| Define a variant with 0 parameters for a custom type.

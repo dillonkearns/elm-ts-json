@@ -311,7 +311,7 @@ customTests =
         ]
             |> roundtripsTest "codec type"
                 codec
-                """{ args : [ number, number ]; tag : "Just" } | { args : [  ]; tag : "Nothing" }"""
+                """{ args : [ number, number ]; tag : "Just" } | { tag : "Nothing" }"""
     , describe "with 3 ctors, 0,3 args" <|
         let
             codec : Codec MyCustomType
@@ -427,7 +427,7 @@ recursiveTests =
                         |> Codec.buildCustom
                 )
             )
-            """{ args : [ number, JsonValue ]; tag : "(::)" } | { args : [  ]; tag : "[]" }"""
+            """{ args : [ number, JsonValue ]; tag : "(::)" } | { tag : "[]" }"""
 
 
 mapAndThenTests : List Test

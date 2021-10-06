@@ -5,8 +5,7 @@ import Fuzz exposing (Fuzzer)
 import Json.Decode
 import Json.Encode as JE
 import Test exposing (Test, describe, fuzz, test)
-import TsJson.Codec exposing (Codec)
-import TsJson.Codec.Advanced as Codec
+import TsJson.Codec as Codec exposing (Codec)
 import TsJson.Decode
 import TsJson.Encode
 import TsType
@@ -18,9 +17,9 @@ type Semaphore
     | Green Float
 
 
-semaphoreCodec : TsJson.Codec.Codec Semaphore
+semaphoreCodec : Codec Semaphore
 semaphoreCodec =
-    Codec.customObject "color"
+    Codec.custom (Just "color")
         (\red yellow green value ->
             case value of
                 Red i s ->
@@ -32,10 +31,10 @@ semaphoreCodec =
                 Green f ->
                     green f
         )
-        |> Codec.objectVariant2 "red" Red ( "first", TsJson.Codec.int ) ( "second", TsJson.Codec.string )
-        |> Codec.objectVariant0 "yellow" Yellow
-        |> Codec.objectVariant1 "green" Green ( "value", TsJson.Codec.float )
-        |> Codec.buildCustomObject
+        |> Codec.namedVariant2 "red" Red ( "first", Codec.int ) ( "second", Codec.string )
+        |> Codec.variant0 "yellow" Yellow
+        |> Codec.namedVariant1 "green" Green ( "value", Codec.float )
+        |> Codec.buildCustom
 
 
 type Shape
@@ -44,9 +43,9 @@ type Shape
     | Circle Int
 
 
-shapeCodec : TsJson.Codec.Codec Shape
+shapeCodec : Codec.Codec Shape
 shapeCodec =
-    Codec.customObject "shape"
+    Codec.custom (Just "shape")
         (\rectangle square circle value ->
             case value of
                 Rectangle width height ->
@@ -58,10 +57,10 @@ shapeCodec =
                 Circle radius ->
                     circle radius
         )
-        |> Codec.objectVariant2 "rectangle" Rectangle ( "width", TsJson.Codec.int ) ( "height", TsJson.Codec.int )
-        |> Codec.objectVariant1 "square" Square ( "width", TsJson.Codec.int )
-        |> Codec.objectVariant1 "circle" Circle ( "radius", TsJson.Codec.int )
-        |> Codec.buildCustomObject
+        |> Codec.namedVariant2 "rectangle" Rectangle ( "width", Codec.int ) ( "height", Codec.int )
+        |> Codec.namedVariant1 "square" Square ( "width", Codec.int )
+        |> Codec.namedVariant1 "circle" Circle ( "radius", Codec.int )
+        |> Codec.buildCustom
 
 
 suite : Test
@@ -72,14 +71,14 @@ suite =
         , test "TsType" <|
             \() ->
                 semaphoreCodec
-                    |> TsJson.Codec.tsType
+                    |> Codec.tsType
                     |> TsType.toString
                     |> Expect.equal
                         """{ color : "green"; value : number } | { color : "yellow" } | { color : "red"; first : number; second : string }"""
         , test "shape TsType" <|
             \() ->
                 shapeCodec
-                    |> TsJson.Codec.tsType
+                    |> Codec.tsType
                     |> TsType.toString
                     |> Expect.equal
                         """{ radius : number; shape : "circle" } | { shape : "square"; width : number } | { height : number; shape : "rectangle"; width : number }"""
@@ -91,7 +90,7 @@ roundtripTest =
     fuzz semaphoreFuzzer "is a roundtrip" <|
         \value ->
             value
-                |> TsJson.Encode.encoder (TsJson.Codec.encoder semaphoreCodec)
+                |> TsJson.Encode.encoder (Codec.encoder semaphoreCodec)
                 |> decodeValue semaphoreCodec
                 |> Expect.equal (Ok value)
 
@@ -128,11 +127,11 @@ shapesTests =
       )
     , ( "Missing fields fail"
       , [ ( "color", JE.string "green" ) ]
-      , decodeString (TsJson.Codec.fail "Expecting an OBJECT with a field named `value`") """{"color": "green"}"""
+      , decodeString (Codec.fail "Expecting an OBJECT with a field named `value`") """{"color": "green"}"""
       )
     , ( "Wrong tag fail"
       , [ ( "color", JE.string "gray" ) ]
-      , decodeString (TsJson.Codec.fail "color \"gray\" did not match") """{"color": "gray"}"""
+      , decodeString (Codec.fail "color \"gray\" did not match") """{"color": "gray"}"""
       )
     ]
         |> List.map
@@ -148,13 +147,13 @@ shapesTests =
 
 decodeValue : Codec a -> Json.Decode.Value -> Result Json.Decode.Error a
 decodeValue codec =
-    TsJson.Codec.decoder codec
+    Codec.decoder codec
         |> TsJson.Decode.decoder
         |> Json.Decode.decodeValue
 
 
 decodeString : Codec a -> String -> Result Json.Decode.Error a
 decodeString codec =
-    TsJson.Codec.decoder codec
+    Codec.decoder codec
         |> TsJson.Decode.decoder
         |> Json.Decode.decodeString
