@@ -835,6 +835,53 @@ variant_ name argTypes matchPiece decoderPiece (CustomCodec am) =
         }
 
 
+objectVariant_ :
+    String
+    -> List ( String, TsType )
+    -> ((List ( String, JE.UnionEncodeValue ) -> JE.UnionEncodeValue) -> a)
+    -> Json.Decode.Decoder v
+    -> CustomCodec (a -> b) v
+    -> CustomCodec b v
+objectVariant_ name argTypes matchPiece decoderPiece (CustomCodec am) =
+    let
+        discriminant =
+            am.discriminant |> Maybe.withDefault "tag"
+
+        combine : List ( String, UnionEncodeValue ) -> JE.Encoder (List ( String, UnionEncodeValue ))
+        combine things =
+            TsJson.Internal.Encode.Encoder
+                (\_ ->
+                    Json.Encode.object
+                        (( discriminant, Json.Encode.string name ) :: List.map (Tuple.mapSecond unwrapped) things)
+                )
+                thisType
+
+        unwrapped : UnionEncodeValue -> Json.Encode.Value
+        unwrapped (UnionEncodeValue rawValue) =
+            rawValue
+
+        enc : List ( String, UnionEncodeValue ) -> UnionEncodeValue
+        enc props =
+            props |> (combine props |> JE.encoder) |> TsJson.Internal.Encode.UnionEncodeValue
+
+        thisType : TsType
+        thisType =
+            TsType.TypeObject
+                (( TsType.Required, discriminant, TsType.Literal (Json.Encode.string name) )
+                    :: List.map (\( argName, argType ) -> ( TsType.Required, argName, argType )) argTypes
+                )
+    in
+    CustomCodec
+        { discriminant = am.discriminant
+        , match =
+            case am.match of
+                UnionBuilder matcher types ->
+                    UnionBuilder (matcher (matchPiece enc))
+                        (thisType :: types)
+        , decoder = Dict.insert name decoderPiece am.decoder
+        }
+
+
 {-| Build a `Codec` for a fully specified custom type.
 -}
 buildCustom : CustomCodec (a -> JE.UnionEncodeValue) a -> Codec a
@@ -969,4 +1016,4 @@ value =
 {-| -}
 tsType : Codec value -> TsType
 tsType (Codec thing) =
-    JD.tsType thing.decoder
+    JE.tsType thing.encoder
