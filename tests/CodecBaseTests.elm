@@ -245,7 +245,7 @@ customTests =
                         () ->
                             f
                 )
-                |> Codec.positionalVariant0 "()" ()
+                |> Codec.variant0 "()" ()
                 |> Codec.buildCustom
             )
         ]
@@ -273,7 +273,7 @@ customTests =
 
             codec =
                 Codec.custom Nothing match
-                    |> Codec.positionalVariant0 "Nothing" Nothing
+                    |> Codec.variant0 "Nothing" Nothing
                     |> Codec.positionalVariant1 "Just" Just Codec.int
                     |> Codec.buildCustom
 
@@ -302,7 +302,7 @@ customTests =
             codec : Codec (Maybe ( Int, Int ))
             codec =
                 Codec.custom Nothing match
-                    |> Codec.positionalVariant0 "Nothing" Nothing
+                    |> Codec.variant0 "Nothing" Nothing
                     |> Codec.positionalVariant2 "Just" (\first second -> Just ( first, second )) Codec.int Codec.int
                     |> Codec.buildCustom
         in
@@ -422,7 +422,7 @@ recursiveTests =
                                 x :: xs ->
                                     fcons x xs
                         )
-                        |> Codec.positionalVariant0 "[]" []
+                        |> Codec.variant0 "[]" []
                         |> Codec.positionalVariant2 "(::)" (::) Codec.int c
                         |> Codec.buildCustom
                 )

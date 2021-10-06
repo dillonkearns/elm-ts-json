@@ -5,7 +5,8 @@ module TsJson.Codec exposing
     , maybe, list, array, dict, set, tuple, triple, result
     , ObjectCodec, object, field, maybeField, nullableField, buildObject
     , CustomCodec, custom, buildCustom
-    , positionalVariant0, positionalVariant1, positionalVariant2, positionalVariant3, positionalVariant4, positionalVariant5, positionalVariant6, positionalVariant7, positionalVariant8
+    , variant0
+    , positionalVariant1, positionalVariant2, positionalVariant3, positionalVariant4, positionalVariant5, positionalVariant6, positionalVariant7, positionalVariant8
     , oneOf
     , map
     , succeed, recursive, fail, lazy, value, build
@@ -46,13 +47,15 @@ This module is a port of [`miniBill/elm-codec`](https://package.elm-lang.org/pac
 
 @docs CustomCodec, custom, buildCustom
 
+@docs variant0
+
 
 ## Keyword Variants
 
 
 ## Positional Variants
 
-@docs positionalVariant0, positionalVariant1, positionalVariant2, positionalVariant3, positionalVariant4, positionalVariant5, positionalVariant6, positionalVariant7, positionalVariant8
+@docs positionalVariant1, positionalVariant2, positionalVariant3, positionalVariant4, positionalVariant5, positionalVariant6, positionalVariant7, positionalVariant8
 
 
 # Inconsistent structure
@@ -443,12 +446,12 @@ custom discriminant match =
 
 {-| Define a variant with 0 parameters for a custom type.
 -}
-positionalVariant0 :
+variant0 :
     String
     -> decodesTo
     -> CustomCodec (JE.UnionEncodeValue -> input) decodesTo
     -> CustomCodec input decodesTo
-positionalVariant0 name constructor codec =
+variant0 name constructor codec =
     variant_ name
         []
         (\encodeCustomTypeArgs ->
