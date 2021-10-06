@@ -239,7 +239,7 @@ customTests : List Test
 customTests =
     [ describe "with 1 ctor, 0 args"
         [ roundtrips (Fuzz.constant ())
-            (Codec.custom
+            (Codec.custom Nothing
                 (\f v ->
                     case v of
                         () ->
@@ -251,7 +251,7 @@ customTests =
         ]
     , describe "with 1 ctor, 1 arg"
         [ roundtrips (Fuzz.map Newtype Fuzz.int)
-            (Codec.custom
+            (Codec.custom Nothing
                 (\f v ->
                     case v of
                         Newtype a ->
@@ -272,7 +272,7 @@ customTests =
                         fjust v
 
             codec =
-                Codec.custom match
+                Codec.custom Nothing match
                     |> Codec.positionalVariant0 "Nothing" Nothing
                     |> Codec.positionalVariant1 "Just" Just Codec.int
                     |> Codec.buildCustom
@@ -301,7 +301,7 @@ customTests =
 
             codec : Codec (Maybe ( Int, Int ))
             codec =
-                Codec.custom match
+                Codec.custom Nothing match
                     |> Codec.positionalVariant0 "Nothing" Nothing
                     |> Codec.positionalVariant2 "Just" (\first second -> Just ( first, second )) Codec.int Codec.int
                     |> Codec.buildCustom
@@ -316,7 +316,7 @@ customTests =
         let
             codec : Codec MyCustomType
             codec =
-                Codec.custom
+                Codec.custom Nothing
                     (\fSingle fTriple value ->
                         case value of
                             Single v1 ->
@@ -413,7 +413,7 @@ recursiveTests =
         |> roundtripsTest "recursive list"
             (Codec.recursive
                 (\c ->
-                    Codec.custom
+                    Codec.custom Nothing
                         (\fempty fcons value ->
                             case value of
                                 [] ->

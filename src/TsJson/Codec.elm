@@ -253,7 +253,7 @@ triple m1 m2 m3 =
 -}
 result : Codec error -> Codec value -> Codec (Result error value)
 result errorCodec valueCodec =
-    custom
+    custom Nothing
         (\ferr fok v ->
             case v of
                 Err err ->
@@ -388,6 +388,7 @@ type CustomCodec match v
     = CustomCodec
         { match : JE.UnionBuilder match
         , decoder : List (JD.Decoder v)
+        , discriminant : Maybe String
         }
 
 
@@ -431,11 +432,12 @@ You need to pass a pattern matching function, built like this:
     ```
 
 -}
-custom : match -> CustomCodec match value
-custom match =
+custom : Maybe String -> match -> CustomCodec match value
+custom discriminant match =
     CustomCodec
         { match = JE.union match
         , decoder = []
+        , discriminant = discriminant
         }
 
 
@@ -828,6 +830,7 @@ variant_ name argTypes matchPiece decoderPiece (CustomCodec am) =
         , decoder =
             TsJson.Internal.Decode.Decoder decoderPiece thisType
                 :: am.decoder
+        , discriminant = am.discriminant
         }
 
 
