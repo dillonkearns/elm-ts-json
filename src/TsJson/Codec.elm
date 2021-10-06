@@ -386,29 +386,40 @@ type CustomCodec match v
 
 You need to pass a pattern matching function, built like this:
 
-    type Semaphore
-        = Red Int String
-        | Yellow Float
-        | Green
+    import TsJson.Codec exposing (Codec)
+    import TsJson.Codec.Advanced as Codec
 
-    semaphoreCodec : Codec Semaphore
-    semaphoreCodec =
+    type Shape
+        = Rectangle Int Int
+        | Square Int
+        | Circle Int
+
+    shapeCodec : Codec Shape
+    shapeCodec =
         Codec.custom
-            (\red yellow green value ->
-                case value of
-                    Red i s ->
-                        red i s
+            (\vRectangle vSquare vCircle shape ->
+                case shape of
+                    Rectangle width height ->
+                        vRectangle width height
 
-                    Yellow f ->
-                        yellow f
+                    Square width ->
+                        vSquare width
 
-                    Green ->
-                        green
+                    Circle radius ->
+                        vCircle radius
             )
-            |> Codec.variant2 "Red" Red Codec.int Codec.string
-            |> Codec.variant1 "Yellow" Yellow Codec.float
-            |> Codec.variant0 "Green" Green
-            |> Codec.buildCustom
+            |> Codec.variant2 "rectangle" Rectangle Codec.int Codec.int
+            |> Codec.variant1 "square" Square Codec.int
+            |> Codec.variant1 "circle" Circle Codec.int
+            |> Codec.buildCustomObject
+
+    The `TsType` for `shapeCodec` is the following discriminated union:
+
+    ```typescript
+    | { shape : "circle" ; args : [ number ] }
+    | { shape : "square"; args : [ number ] }
+    | { shape : "rectangle"; args : [ number, number ] }
+    ```
 
 -}
 custom : match -> CustomCodec match value
