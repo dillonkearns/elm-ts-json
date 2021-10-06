@@ -4,7 +4,8 @@ module TsJson.Codec exposing
     , string, bool, int, float
     , maybe, list, array, dict, set, tuple, triple, result
     , ObjectCodec, object, field, maybeField, nullableField, buildObject
-    , CustomCodec, custom, variant0, variant1, variant2, variant3, variant4, variant5, variant6, variant7, variant8, buildCustom
+    , CustomCodec, custom, buildCustom
+    , positionalVariant0, positionalVariant1, positionalVariant2, positionalVariant3, positionalVariant4, positionalVariant5, positionalVariant6, positionalVariant7, positionalVariant8
     , oneOf
     , map
     , succeed, recursive, fail, lazy, value, build
@@ -43,7 +44,15 @@ This module is a port of [`miniBill/elm-codec`](https://package.elm-lang.org/pac
 
 # Custom Types
 
-@docs CustomCodec, custom, variant0, variant1, variant2, variant3, variant4, variant5, variant6, variant7, variant8, buildCustom
+@docs CustomCodec, custom, buildCustom
+
+
+## Keyword Variants
+
+
+## Positional Variants
+
+@docs positionalVariant0, positionalVariant1, positionalVariant2, positionalVariant3, positionalVariant4, positionalVariant5, positionalVariant6, positionalVariant7, positionalVariant8
 
 
 # Inconsistent structure
@@ -253,8 +262,8 @@ result errorCodec valueCodec =
                 Ok ok ->
                     fok ok
         )
-        |> variant1 "Err" Err errorCodec
-        |> variant1 "Ok" Ok valueCodec
+        |> positionalVariant1 "Err" Err errorCodec
+        |> positionalVariant1 "Ok" Ok valueCodec
         |> buildCustom
 
 
@@ -432,12 +441,12 @@ custom match =
 
 {-| Define a variant with 0 parameters for a custom type.
 -}
-variant0 :
+positionalVariant0 :
     String
     -> decodesTo
     -> CustomCodec (JE.UnionEncodeValue -> input) decodesTo
     -> CustomCodec input decodesTo
-variant0 name constructor codec =
+positionalVariant0 name constructor codec =
     variant_ name
         []
         (\encodeCustomTypeArgs ->
@@ -453,13 +462,13 @@ variant0 name constructor codec =
 
 {-| Define a variant with 0 parameters for a custom type.
 -}
-variant1 :
+positionalVariant1 :
     String
     -> (arg1 -> v)
     -> Codec arg1
     -> CustomCodec ((arg1 -> JE.UnionEncodeValue) -> c) v
     -> CustomCodec c v
-variant1 name constructor arg1Codec codec =
+positionalVariant1 name constructor arg1Codec codec =
     variant_ name
         [ tsType arg1Codec
         ]
@@ -478,14 +487,14 @@ variant1 name constructor arg1Codec codec =
 
 {-| Define a variant with 2 parameters for a custom type.
 -}
-variant2 :
+positionalVariant2 :
     String
     -> (arg1 -> arg2 -> v)
     -> Codec arg1
     -> Codec arg2
     -> CustomCodec ((arg1 -> arg2 -> JE.UnionEncodeValue) -> c) v
     -> CustomCodec c v
-variant2 name constructor arg1Codec arg2Codec codec =
+positionalVariant2 name constructor arg1Codec arg2Codec codec =
     variant_ name
         [ tsType arg1Codec
         , tsType arg2Codec
@@ -507,7 +516,7 @@ variant2 name constructor arg1Codec arg2Codec codec =
 
 {-| Define a variant with 3 parameters for a custom type.
 -}
-variant3 :
+positionalVariant3 :
     String
     -> (arg1 -> arg2 -> arg3 -> v)
     -> Codec arg1
@@ -515,7 +524,7 @@ variant3 :
     -> Codec arg3
     -> CustomCodec ((arg1 -> arg2 -> arg3 -> JE.UnionEncodeValue) -> partial) v
     -> CustomCodec partial v
-variant3 name constructor arg1Codec arg2Codec arg3Codec codec =
+positionalVariant3 name constructor arg1Codec arg2Codec arg3Codec codec =
     variant_ name
         [ tsType arg1Codec
         , tsType arg2Codec
@@ -540,7 +549,7 @@ variant3 name constructor arg1Codec arg2Codec arg3Codec codec =
 
 {-| Define a variant with 3 parameters for a custom type.
 -}
-variant4 :
+positionalVariant4 :
     String
     -> (arg1 -> arg2 -> arg3 -> arg4 -> v)
     -> Codec arg1
@@ -549,7 +558,7 @@ variant4 :
     -> Codec arg4
     -> CustomCodec ((arg1 -> arg2 -> arg3 -> arg4 -> JE.UnionEncodeValue) -> partial) v
     -> CustomCodec partial v
-variant4 name constructor arg1Codec arg2Codec arg3Codec arg4Codec codec =
+positionalVariant4 name constructor arg1Codec arg2Codec arg3Codec arg4Codec codec =
     variant_ name
         [ tsType arg1Codec
         , tsType arg2Codec
@@ -577,7 +586,7 @@ variant4 name constructor arg1Codec arg2Codec arg3Codec arg4Codec codec =
 
 {-| Define a variant with 3 parameters for a custom type.
 -}
-variant5 :
+positionalVariant5 :
     String
     -> (arg1 -> arg2 -> arg3 -> arg4 -> arg5 -> v)
     -> Codec arg1
@@ -587,7 +596,7 @@ variant5 :
     -> Codec arg5
     -> CustomCodec ((arg1 -> arg2 -> arg3 -> arg4 -> arg5 -> JE.UnionEncodeValue) -> partial) v
     -> CustomCodec partial v
-variant5 name constructor arg1Codec arg2Codec arg3Codec arg4Codec arg5Codec codec =
+positionalVariant5 name constructor arg1Codec arg2Codec arg3Codec arg4Codec arg5Codec codec =
     variant_ name
         [ tsType arg1Codec
         , tsType arg2Codec
@@ -618,7 +627,7 @@ variant5 name constructor arg1Codec arg2Codec arg3Codec arg4Codec arg5Codec code
 
 {-| Define a variant with 3 parameters for a custom type.
 -}
-variant6 :
+positionalVariant6 :
     String
     -> (arg1 -> arg2 -> arg3 -> arg4 -> arg5 -> arg6 -> v)
     -> Codec arg1
@@ -629,7 +638,7 @@ variant6 :
     -> Codec arg6
     -> CustomCodec ((arg1 -> arg2 -> arg3 -> arg4 -> arg5 -> arg6 -> JE.UnionEncodeValue) -> partial) v
     -> CustomCodec partial v
-variant6 name constructor arg1Codec arg2Codec arg3Codec arg4Codec arg5Codec arg6Codec codec =
+positionalVariant6 name constructor arg1Codec arg2Codec arg3Codec arg4Codec arg5Codec arg6Codec codec =
     variant_ name
         [ tsType arg1Codec
         , tsType arg2Codec
@@ -663,7 +672,7 @@ variant6 name constructor arg1Codec arg2Codec arg3Codec arg4Codec arg5Codec arg6
 
 {-| Define a variant with 3 parameters for a custom type.
 -}
-variant7 :
+positionalVariant7 :
     String
     -> (arg1 -> arg2 -> arg3 -> arg4 -> arg5 -> arg6 -> arg7 -> v)
     -> Codec arg1
@@ -675,7 +684,7 @@ variant7 :
     -> Codec arg7
     -> CustomCodec ((arg1 -> arg2 -> arg3 -> arg4 -> arg5 -> arg6 -> arg7 -> JE.UnionEncodeValue) -> partial) v
     -> CustomCodec partial v
-variant7 name constructor arg1Codec arg2Codec arg3Codec arg4Codec arg5Codec arg6Codec arg7Codec codec =
+positionalVariant7 name constructor arg1Codec arg2Codec arg3Codec arg4Codec arg5Codec arg6Codec arg7Codec codec =
     variant_ name
         [ tsType arg1Codec
         , tsType arg2Codec
@@ -712,7 +721,7 @@ variant7 name constructor arg1Codec arg2Codec arg3Codec arg4Codec arg5Codec arg6
 
 {-| Define a variant with 3 parameters for a custom type.
 -}
-variant8 :
+positionalVariant8 :
     String
     -> (arg1 -> arg2 -> arg3 -> arg4 -> arg5 -> arg6 -> arg7 -> arg8 -> v)
     -> Codec arg1
@@ -725,7 +734,7 @@ variant8 :
     -> Codec arg8
     -> CustomCodec ((arg1 -> arg2 -> arg3 -> arg4 -> arg5 -> arg6 -> arg7 -> arg8 -> JE.UnionEncodeValue) -> partial) v
     -> CustomCodec partial v
-variant8 name constructor arg1Codec arg2Codec arg3Codec arg4Codec arg5Codec arg6Codec arg7Codec arg8Codec codec =
+positionalVariant8 name constructor arg1Codec arg2Codec arg3Codec arg4Codec arg5Codec arg6Codec arg7Codec arg8Codec codec =
     variant_ name
         [ tsType arg1Codec
         , tsType arg2Codec

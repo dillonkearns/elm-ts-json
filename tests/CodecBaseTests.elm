@@ -245,7 +245,7 @@ customTests =
                         () ->
                             f
                 )
-                |> Codec.variant0 "()" ()
+                |> Codec.positionalVariant0 "()" ()
                 |> Codec.buildCustom
             )
         ]
@@ -257,7 +257,7 @@ customTests =
                         Newtype a ->
                             f a
                 )
-                |> Codec.variant1 "Newtype" Newtype Codec.int
+                |> Codec.positionalVariant1 "Newtype" Newtype Codec.int
                 |> Codec.buildCustom
             )
         ]
@@ -273,8 +273,8 @@ customTests =
 
             codec =
                 Codec.custom match
-                    |> Codec.variant0 "Nothing" Nothing
-                    |> Codec.variant1 "Just" Just Codec.int
+                    |> Codec.positionalVariant0 "Nothing" Nothing
+                    |> Codec.positionalVariant1 "Just" Just Codec.int
                     |> Codec.buildCustom
 
             fuzzers =
@@ -302,8 +302,8 @@ customTests =
             codec : Codec (Maybe ( Int, Int ))
             codec =
                 Codec.custom match
-                    |> Codec.variant0 "Nothing" Nothing
-                    |> Codec.variant2 "Just" (\first second -> Just ( first, second )) Codec.int Codec.int
+                    |> Codec.positionalVariant0 "Nothing" Nothing
+                    |> Codec.positionalVariant2 "Just" (\first second -> Just ( first, second )) Codec.int Codec.int
                     |> Codec.buildCustom
         in
         [ ( "1st ctor", Fuzz.constant Nothing )
@@ -325,8 +325,8 @@ customTests =
                             Triple v1 v2 v3 ->
                                 fTriple v1 v2 v3
                     )
-                    |> Codec.variant1 "Single" Single Codec.int
-                    |> Codec.variant3 "Triple" (\v1 v2 v3 -> Triple v1 v2 v3) Codec.int Codec.int Codec.int
+                    |> Codec.positionalVariant1 "Single" Single Codec.int
+                    |> Codec.positionalVariant3 "Triple" (\v1 v2 v3 -> Triple v1 v2 v3) Codec.int Codec.int Codec.int
                     |> Codec.buildCustom
         in
         [ ( "1st ctor", Fuzz.map Single Fuzz.int )
@@ -422,8 +422,8 @@ recursiveTests =
                                 x :: xs ->
                                     fcons x xs
                         )
-                        |> Codec.variant0 "[]" []
-                        |> Codec.variant2 "(::)" (::) Codec.int c
+                        |> Codec.positionalVariant0 "[]" []
+                        |> Codec.positionalVariant2 "(::)" (::) Codec.int c
                         |> Codec.buildCustom
                 )
             )
