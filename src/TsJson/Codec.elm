@@ -805,9 +805,12 @@ variant_ :
     -> CustomCodec b v
 variant_ name argTypes matchPiece decoderPiece (CustomCodec am) =
     let
+        discriminant =
+            am.discriminant |> Maybe.withDefault "tag"
+
         thing =
             JE.object
-                [ JE.required "tag" identity (JE.literal (Json.Encode.string name))
+                [ JE.required discriminant identity (JE.literal (Json.Encode.string name))
                 , JE.required "args" identity (JE.list JE.value)
                 ]
 
@@ -817,7 +820,7 @@ variant_ name argTypes matchPiece decoderPiece (CustomCodec am) =
 
         thisType =
             TsType.TypeObject
-                [ ( TsType.Required, "tag", TsType.Literal (Json.Encode.string name) )
+                [ ( TsType.Required, discriminant, TsType.Literal (Json.Encode.string name) )
                 , ( TsType.Required, "args", TsType.Tuple argTypes Nothing )
                 ]
     in
