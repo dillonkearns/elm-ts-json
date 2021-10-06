@@ -412,7 +412,7 @@ You need to pass a pattern matching function, built like this:
 
     shapeCodec : Codec Shape
     shapeCodec =
-        Codec.custom
+        Codec.custom (Just "shape")
             (\vRectangle vSquare vCircle shape ->
                 case shape of
                     Rectangle width height ->
@@ -424,17 +424,17 @@ You need to pass a pattern matching function, built like this:
                     Circle radius ->
                         vCircle radius
             )
-            |> Codec.variant2 "rectangle" Rectangle Codec.int Codec.int
-            |> Codec.variant1 "square" Square Codec.int
-            |> Codec.variant1 "circle" Circle Codec.int
+            |> Codec.namedVariant2 "rectangle" Rectangle Codec.int Codec.int
+            |> Codec.positionalVariant1 "square" Square Codec.int
+            |> Codec.namedVariant1 "circle" Circle Codec.int
             |> Codec.buildCustomObject
 
     The `TsType` for `shapeCodec` is the following discriminated union:
 
     ```typescript
-    | { shape : "circle" ; args : [ number ] }
-    | { shape : "square"; args : [ number ] }
-    | { shape : "rectangle"; args : [ number, number ] }
+    | { shape: "rectangle"; width: number; height: number }
+    | { shape: "square"; args: [ number ] }
+    | { shape: "circle"; radius: number }
     ```
 
 -}
