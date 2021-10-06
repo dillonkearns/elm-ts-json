@@ -6,7 +6,7 @@ module TsJson.Codec exposing
     , ObjectCodec, object, field, maybeField, nullableField, buildObject
     , CustomCodec, custom, buildCustom
     , variant0
-    , namedVariant1
+    , namedVariant1, namedVariant2
     , positionalVariant1, positionalVariant2, positionalVariant3, positionalVariant4, positionalVariant5, positionalVariant6, positionalVariant7, positionalVariant8
     , oneOf
     , map
@@ -53,7 +53,7 @@ This module is a port of [`miniBill/elm-codec`](https://package.elm-lang.org/pac
 
 ## Keyword Variants
 
-@docs namedVariant1
+@docs namedVariant1, namedVariant2
 
 
 ## Positional Variants
@@ -907,6 +907,32 @@ namedVariant1 name ctor ( f1, m1 ) =
         )
         (Json.Decode.map ctor
             (Json.Decode.field f1 <| TsDecode.decoder (decoder m1))
+        )
+
+
+{-| Define a variant with 2 parameters for a custom type.
+-}
+namedVariant2 :
+    String
+    -> (a -> b -> v)
+    -> ( String, Codec a )
+    -> ( String, Codec b )
+    -> CustomCodec ((a -> b -> TsEncode.UnionEncodeValue) -> c) v
+    -> CustomCodec c v
+namedVariant2 name ctor ( f1, m1 ) ( f2, m2 ) =
+    objectVariant_ name
+        [ ( f1, tsType m1 )
+        , ( f2, tsType m2 )
+        ]
+        (\c v1 v2 ->
+            c
+                [ ( f1, TsEncode.encoder (encoder m1) v1 |> TsJson.Internal.Encode.UnionEncodeValue )
+                , ( f2, TsEncode.encoder (encoder m2) v2 |> TsJson.Internal.Encode.UnionEncodeValue )
+                ]
+        )
+        (Json.Decode.map2 ctor
+            (Json.Decode.field f1 <| TsDecode.decoder (decoder m1))
+            (Json.Decode.field f2 <| TsDecode.decoder (decoder m2))
         )
 
 
