@@ -67,7 +67,7 @@ all =
                     |> runWith """{"a":{},"x":{"y":"bar"}}"""
                     |> Expect.equal
                         { decoded = Ok ( "--", "bar" )
-                        , tsType = ""
+                        , tsType = "{ a? : { b? : string }; x? : { y? : string } }"
                         }
         , test "optional succeeds if the field is not present" <|
             \() ->
@@ -77,7 +77,7 @@ all =
                     |> runWith """{"x":"five"}"""
                     |> Expect.equal
                         { decoded = Ok ( "--", "five" )
-                        , tsType = ""
+                        , tsType = "{ a? : string; x? : string }"
                         }
         , test "optional succeeds with fallback if the field is present but null" <|
             \() ->
@@ -87,7 +87,7 @@ all =
                     |> runWith """{"a":null,"x":"five"}"""
                     |> Expect.equal
                         { decoded = Ok ( "--", "five" )
-                        , tsType = ""
+                        , tsType = "{ a? : string; x? : string }"
                         }
         , test "optional succeeds with result of the given decoder if the field is null and the decoder decodes nulls" <|
             \() ->
@@ -95,7 +95,10 @@ all =
                     |> optional "a" (null "null") "--"
                     |> optional "x" string "--"
                     |> runWith """{"a":null,"x":"five"}"""
-                    |> Expect.equal { decoded = Ok ( "null", "five" ), tsType = "" }
+                    |> Expect.equal
+                        { decoded = Ok ( "null", "five" )
+                        , tsType = "{ a? : null; x? : string }"
+                        }
         , test "optional fails if the field is present but doesn't decode" <|
             \() ->
                 Decode.succeed Tuple.pair

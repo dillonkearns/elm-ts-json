@@ -20,7 +20,9 @@ Use the `(|>)` operator to build JSON decoders.
 -}
 
 import Internal.TsJsonType as TsType
+import Internal.TypeReducer as TypeReducer
 import Json.Decode
+import Json.Encode
 import TsJson.Decode as Decode exposing (Decoder)
 import TsJson.Internal.Decode
 
@@ -111,18 +113,18 @@ values if you need to:
 -}
 optional : String -> Decoder a -> a -> Decoder (a -> b) -> Decoder b
 optional key valDecoder fallback decoder =
-    custom (optionalDecoder (Decode.field key Decode.value) valDecoder fallback) decoder
+    custom (optionalDecoder [ key ] (Decode.field key Decode.value) valDecoder fallback) decoder
 
 
 {-| Decode an optional nested field.
 -}
 optionalAt : List String -> Decoder a -> a -> Decoder (a -> b) -> Decoder b
 optionalAt path valDecoder fallback decoder =
-    custom (optionalDecoder (Decode.at path Decode.value) valDecoder fallback) decoder
+    custom (optionalDecoder path (Decode.at path Decode.value) valDecoder fallback) decoder
 
 
-optionalDecoder : Decoder Json.Decode.Value -> Decoder a -> a -> Decoder a
-optionalDecoder pathDecoder valDecoder fallback =
+optionalDecoder : List String -> Decoder Json.Decode.Value -> Decoder a -> a -> Decoder a
+optionalDecoder path pathDecoder valDecoder fallback =
     let
         nullOr : Decoder a -> Decoder a
         nullOr decoder =
@@ -148,7 +150,18 @@ optionalDecoder pathDecoder valDecoder fallback =
                     Json.Decode.succeed fallback
     in
     TsJson.Internal.Decode.Decoder (Json.Decode.value |> Json.Decode.andThen handleResult)
-        TsType.Unknown
+        (optionalAtType path (Decode.tsType valDecoder))
+
+
+optionalAtType : List String -> TsType.TsType -> TsType.TsType
+optionalAtType path innerType =
+    case path of
+        [] ->
+            innerType
+
+        key :: remainingPath ->
+            TsType.TypeObject
+                [ ( TsType.Optional, key, optionalAtType remainingPath innerType ) ]
 
 
 {-| Rather than decoding anything, use a fixed value for the next step in the
