@@ -12,11 +12,6 @@ Use the `(|>)` operator to build JSON decoders.
 
 @docs required, requiredAt, optional, optionalAt, hardcoded, custom
 
-
-## Ending pipelines
-
-@docs resolve
-
 -}
 
 import Internal.TsJsonType as TsType

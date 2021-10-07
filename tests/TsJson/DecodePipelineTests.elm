@@ -1,4 +1,4 @@
-module TsJson.DecodePipelineTests exposing (..)
+module TsJson.DecodePipelineTests exposing (all)
 
 import Expect exposing (Expectation)
 import Json.Decode
