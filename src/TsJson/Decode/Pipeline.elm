@@ -1,11 +1,8 @@
 module TsJson.Decode.Pipeline exposing (required, requiredAt, optional, optionalAt, hardcoded, custom)
 
-{-|
+{-| Use the `(|>)` operator to build JSON decoders.
 
-
-# Json.Decode.Pipeline
-
-Use the `(|>)` operator to build JSON decoders.
+This is a typed fork of [NoRedInk/elm-json-decode-pipeline](https://package.elm-lang.org/packages/NoRedInk/elm-json-decode-pipeline/latest). Thanks to NoRedInk for the original API!
 
 
 ## Decoding fields
@@ -24,8 +21,8 @@ import TsJson.Internal.Decode
 
 {-| Decode a required field.
 
-    import Json.Decode as Decode exposing (Decoder, int, string)
-    import Json.Decode.Pipeline exposing (required)
+    import TsJson.Decode Decode exposing (Decoder, int, string)
+    import TsJson.Decode.Pipeline exposing (required)
 
     type alias User =
         { id : Int
@@ -69,8 +66,8 @@ then `valDecoder` is used to decode its value. If `valDecoder` fails on a
 `null` value, then the `fallback` is used as if the field were missing
 entirely.
 
-    import Json.Decode as Decode exposing (Decoder, int, null, oneOf, string)
-    import Json.Decode.Pipeline exposing (optional, required)
+    import TsJson.Decode Decode exposing (Decoder, int, null, oneOf, string)
+    import TsJson.Decode.Pipeline exposing (optional, required)
 
     type alias User =
         { id : Int
@@ -162,8 +159,8 @@ optionalAtType path innerType =
 {-| Rather than decoding anything, use a fixed value for the next step in the
 pipeline. `harcoded` does not look at the JSON at all.
 
-    import Json.Decode as Decode exposing (Decoder, int, string)
-    import Json.Decode.Pipeline exposing (required)
+    import TsJson.Decode Decode exposing (Decoder, int, string)
+    import TsJson.Decode.Pipeline exposing (required)
 
     type alias User =
         { id : Int
@@ -198,8 +195,8 @@ hardcoded =
 
 Consider this example.
 
-    import Json.Decode as Decode exposing (Decoder, at, int, string)
-    import Json.Decode.Pipeline exposing (custom, required)
+    import TsJson.Decode Decode exposing (Decoder, at, int, string)
+    import TsJson.Decode.Pipeline exposing (custom, required)
 
     type alias User =
         { id : Int
