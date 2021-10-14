@@ -9,6 +9,7 @@ module TsJson.Decode exposing
     , map
     , map2, andMap
     , literal, null
+    , discriminatedUnion
     , andThen, AndThenContinuation, andThenInit, andThenDecoder
     , value, unknownAndThen, maybe
     , decoder, tsType
@@ -120,6 +121,11 @@ TypeScript tuples are much like an Elm tuples, except two key differences:
 ## TypeScript Literals
 
 @docs literal, null
+
+
+## Discriminated Unions
+
+@docs discriminatedUnion
 
 
 ## Continuation
@@ -492,6 +498,67 @@ andThen (StaticAndThen function tsTypes) (Decoder innerDecoder innerType) =
                         innerDecoder_
     in
     Decoder (Decode.andThen andThenDecoder_ innerDecoder) (TypeReducer.intersect innerType (TypeReducer.union tsTypes))
+
+
+{-| Decode a TypeScript [Discriminated Union](https://www.typescriptlang.org/docs/handbook/2/narrowing.html#discriminated-unions)
+with a String discriminant value. For example, if you wanted to decode something with the following TypeScript type:
+
+```typescript
+{ id : number; role : "admin" } | { role : "guest" }
+```
+
+You could use this Decoder:
+
+    import TsJson.Decode as TsDecode
+
+    type User
+        = Admin { id : Int }
+        | Guest
+
+
+    TsDecode.discriminatedUnion "role"
+        [ ( "admin"
+          , TsDecode.succeed (\id -> Admin { id = id })
+                |> TsDecode.andMap (TsDecode.field "id" TsDecode.int)
+          )
+        , ( "guest", TsDecode.succeed Guest )
+        ]
+        |> TsDecode.runExample """{"role": "admin", "id": 123}"""
+    --> { decoded = Ok (Admin { id = 123 })
+    --> , tsType = """{ id : number; role : "admin" } | { role : "guest" }"""
+    --> }
+
+-}
+discriminatedUnion : String -> List ( String, Decoder decoded ) -> Decoder decoded
+discriminatedUnion discriminantField decoders =
+    let
+        table =
+            Dict.fromList decoders
+    in
+    Decoder
+        (Decode.field discriminantField Decode.string
+            |> Decode.andThen
+                (\discriminantValue ->
+                    case Dict.get discriminantValue table of
+                        Just variantDecoder ->
+                            decoder variantDecoder
+
+                        Nothing ->
+                            Decode.fail <| "Unexpected discriminant value '" ++ discriminantValue ++ "' for field '" ++ discriminantField ++ "'"
+                )
+        )
+        (decoders
+            |> List.map
+                (\( discriminantValue, variantDecoder ) ->
+                    TypeReducer.intersect
+                        (Internal.TsJsonType.TypeObject
+                            [ ( Internal.TsJsonType.Required, discriminantField, Internal.TsJsonType.Literal (Encode.string discriminantValue) )
+                            ]
+                        )
+                        (tsType variantDecoder)
+                )
+            |> TypeReducer.union
+        )
 
 
 {-| This type allows you to combine all the possible Decoders you could run in an [`andThen`](#andThen) continuation.
