@@ -529,7 +529,10 @@ You could use this Decoder:
     --> }
 
 -}
-discriminatedUnion : String -> List ( String, Decoder decoded ) -> Decoder decoded
+discriminatedUnion :
+    String
+    -> List ( String, Decoder decoded )
+    -> Decoder decoded
 discriminatedUnion discriminantField decoders =
     let
         table =
