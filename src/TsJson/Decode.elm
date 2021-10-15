@@ -9,13 +9,13 @@ module TsJson.Decode exposing
     , map
     , map2, andMap
     , literal, null
+    , stringLiteral, stringUnion
     , discriminatedUnion
     , andThen, AndThenContinuation, andThenInit, andThenDecoder
     , value, unknownAndThen, maybe
     , decoder, tsType
     , map3, map4, map5, map6, map7, map8
     , runExample
-    , stringLiteral, stringUnion
     )
 
 {-| The `TsJson.Decode` module is what you use for
@@ -122,6 +122,8 @@ TypeScript tuples are much like an Elm tuples, except two key differences:
 ## TypeScript Literals
 
 @docs literal, null
+
+@docs stringLiteral, stringUnion
 
 
 ## Discriminated Unions
