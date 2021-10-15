@@ -567,7 +567,25 @@ discriminatedUnion discriminantField decoders =
         )
 
 
-{-| TODO
+{-| A convenience function for building a union out of string literals.
+
+    import TsJson.Decode as TsDecode
+
+    type Severity
+        = Info
+        | Warning
+        | Error
+
+    TsDecode.stringUnion
+        [ ( "info", Info )
+        , ( "warning", Warning )
+        , ( "error", Error )
+        ]
+        |> TsDecode.runExample """ "info" """
+    --> { decoded = Ok Info
+    --> , tsType = "\"info\" | \"warning\" | \"error\""
+    --> }
+
 -}
 stringUnion :
     List ( String, value )
