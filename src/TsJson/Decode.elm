@@ -15,7 +15,7 @@ module TsJson.Decode exposing
     , decoder, tsType
     , map3, map4, map5, map6, map7, map8
     , runExample
-    , stringUnion
+    , stringLiteral, stringUnion
     )
 
 {-| The `TsJson.Decode` module is what you use for
@@ -818,6 +818,34 @@ literal value_ literalValue =
                 )
         )
         (Literal literalValue)
+
+
+{-| A convenience function for building `literal (Json.Encode.string "my-literal-string")`.
+
+    import TsJson.Decode as TsDecode
+
+
+    TsDecode.stringLiteral () "unit"
+        |> TsDecode.runExample """ "unit" """
+    --> { decoded = Ok ()
+    --> , tsType = "\"unit\""
+    --> }
+
+-}
+stringLiteral : value -> String -> Decoder value
+stringLiteral value_ stringLiteralValue =
+    Decoder
+        (Decode.string
+            |> Decode.andThen
+                (\decodeValue ->
+                    if stringLiteralValue == decodeValue then
+                        Decode.succeed value_
+
+                    else
+                        Decode.fail ("Expected the following string literal value: \"" ++ stringLiteralValue ++ "\"")
+                )
+        )
+        (Literal (Encode.string stringLiteralValue))
 
 
 {-|
