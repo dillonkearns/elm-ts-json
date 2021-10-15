@@ -208,6 +208,28 @@ Unexpected discriminant value 'unexpected' for field 'role'"""
                             ]
                         , typeDef = """{ id : number; role : "admin" } | { role : "guest" }"""
                         }
+        , test "string union" <|
+            \() ->
+                stringUnion
+                    [ ( "info", Info )
+                    , ( "warning", Warning )
+                    , ( "error", Error )
+                    ]
+                    |> expectDecodesList
+                        { examples =
+                            [ ( "\"info\""
+                              , Ok Info
+                              )
+                            , ( "\"unexpected-string\""
+                              , Err """Problem with the given value:
+
+"unexpected-string"
+
+I was expecting a string union with one of these string values: [ "info", "warning", "error" ]"""
+                              )
+                            ]
+                        , typeDef = "\"info\" | \"warning\" | \"error\""
+                        }
         ]
 
 

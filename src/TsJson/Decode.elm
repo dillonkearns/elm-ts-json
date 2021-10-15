@@ -15,6 +15,7 @@ module TsJson.Decode exposing
     , decoder, tsType
     , map3, map4, map5, map6, map7, map8
     , runExample
+    , stringUnion
     )
 
 {-| The `TsJson.Decode` module is what you use for
@@ -561,6 +562,41 @@ discriminatedUnion discriminantField decoders =
                         (tsType variantDecoder)
                 )
             |> TypeReducer.union
+        )
+
+
+{-| TODO
+-}
+stringUnion :
+    List ( String, value )
+    -> Decoder value
+stringUnion unionMappings =
+    Decoder
+        (Decode.string
+            |> Decode.andThen
+                (\key ->
+                    case unionMappings |> Dict.fromList |> Dict.get key of
+                        Just mapped ->
+                            Decode.succeed mapped
+
+                        Nothing ->
+                            Decode.fail <|
+                                "I was expecting a string union with one of these string values: "
+                                    ++ "[ "
+                                    ++ (unionMappings
+                                            |> List.map (\( mapKey, _ ) -> "\"" ++ mapKey ++ "\"")
+                                            |> String.join ", "
+                                       )
+                                    ++ " ]"
+                )
+        )
+        (TypeReducer.union
+            (unionMappings
+                |> List.map
+                    (\( mapKey, _ ) ->
+                        Literal (Encode.string mapKey)
+                    )
+            )
         )
 
 
