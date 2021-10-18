@@ -9,6 +9,8 @@ module TsJson.Decode exposing
     , map
     , map2, andMap
     , literal, null
+    , stringLiteral, stringUnion
+    , discriminatedUnion
     , andThen, AndThenContinuation, andThenInit, andThenDecoder
     , value, unknownAndThen, maybe
     , decoder, tsType
@@ -120,6 +122,13 @@ TypeScript tuples are much like an Elm tuples, except two key differences:
 ## TypeScript Literals
 
 @docs literal, null
+
+@docs stringLiteral, stringUnion
+
+
+## Discriminated Unions
+
+@docs discriminatedUnion
 
 
 ## Continuation
@@ -494,6 +503,123 @@ andThen (StaticAndThen function tsTypes) (Decoder innerDecoder innerType) =
     Decoder (Decode.andThen andThenDecoder_ innerDecoder) (TypeReducer.intersect innerType (TypeReducer.union tsTypes))
 
 
+{-| Decode a TypeScript [Discriminated Union](https://www.typescriptlang.org/docs/handbook/2/narrowing.html#discriminated-unions)
+with a String discriminant value. For example, if you wanted to decode something with the following TypeScript type:
+
+```typescript
+{ id : number; role : "admin" } | { role : "guest" }
+```
+
+You could use this Decoder:
+
+    import TsJson.Decode as TsDecode
+
+    type User
+        = Admin { id : Int }
+        | Guest
+
+
+    TsDecode.discriminatedUnion "role"
+        [ ( "admin"
+          , TsDecode.succeed (\id -> Admin { id = id })
+                |> TsDecode.andMap (TsDecode.field "id" TsDecode.int)
+          )
+        , ( "guest", TsDecode.succeed Guest )
+        ]
+        |> TsDecode.runExample """{"role": "admin", "id": 123}"""
+    --> { decoded = Ok (Admin { id = 123 })
+    --> , tsType = """{ id : number; role : "admin" } | { role : "guest" }"""
+    --> }
+
+-}
+discriminatedUnion :
+    String
+    -> List ( String, Decoder decoded )
+    -> Decoder decoded
+discriminatedUnion discriminantField decoders =
+    let
+        table =
+            Dict.fromList decoders
+    in
+    Decoder
+        (Decode.field discriminantField Decode.string
+            |> Decode.andThen
+                (\discriminantValue ->
+                    case Dict.get discriminantValue table of
+                        Just variantDecoder ->
+                            decoder variantDecoder
+
+                        Nothing ->
+                            Decode.fail <| "Unexpected discriminant value '" ++ discriminantValue ++ "' for field '" ++ discriminantField ++ "'"
+                )
+        )
+        (decoders
+            |> List.map
+                (\( discriminantValue, variantDecoder ) ->
+                    TypeReducer.intersect
+                        (Internal.TsJsonType.TypeObject
+                            [ ( Internal.TsJsonType.Required, discriminantField, Internal.TsJsonType.Literal (Encode.string discriminantValue) )
+                            ]
+                        )
+                        (tsType variantDecoder)
+                )
+            |> TypeReducer.union
+        )
+
+
+{-| A convenience function for building a union out of string literals.
+
+    import TsJson.Decode as TsDecode
+
+    type Severity
+        = Info
+        | Warning
+        | Error
+
+    TsDecode.stringUnion
+        [ ( "info", Info )
+        , ( "warning", Warning )
+        , ( "error", Error )
+        ]
+        |> TsDecode.runExample """ "info" """
+    --> { decoded = Ok Info
+    --> , tsType = "\"info\" | \"warning\" | \"error\""
+    --> }
+
+-}
+stringUnion :
+    List ( String, value )
+    -> Decoder value
+stringUnion unionMappings =
+    Decoder
+        (Decode.string
+            |> Decode.andThen
+                (\key ->
+                    case unionMappings |> Dict.fromList |> Dict.get key of
+                        Just mapped ->
+                            Decode.succeed mapped
+
+                        Nothing ->
+                            Decode.fail <|
+                                "I was expecting a string union with one of these string values: "
+                                    ++ "[ "
+                                    ++ (unionMappings
+                                            |> List.map (\( mapKey, _ ) -> "\"" ++ mapKey ++ "\"")
+                                            |> String.join ", "
+                                       )
+                                    ++ " ]"
+                )
+        )
+        (TypeReducer.union
+            (unionMappings
+                |> List.map
+                    (\( mapKey, _ ) ->
+                        Literal (Encode.string mapKey)
+                    )
+            )
+        )
+
+
 {-| This type allows you to combine all the possible Decoders you could run in an [`andThen`](#andThen) continuation.
 
 This API allows you to define all possible Decoders you might use up front, so that all possible TypeScript types
@@ -712,6 +838,34 @@ literal value_ literalValue =
                 )
         )
         (Literal literalValue)
+
+
+{-| A convenience function for building `literal (Json.Encode.string "my-literal-string")`.
+
+    import TsJson.Decode as TsDecode
+
+
+    TsDecode.stringLiteral () "unit"
+        |> TsDecode.runExample """ "unit" """
+    --> { decoded = Ok ()
+    --> , tsType = "\"unit\""
+    --> }
+
+-}
+stringLiteral : value -> String -> Decoder value
+stringLiteral value_ stringLiteralValue =
+    Decoder
+        (Decode.string
+            |> Decode.andThen
+                (\decodeValue ->
+                    if stringLiteralValue == decodeValue then
+                        Decode.succeed value_
+
+                    else
+                        Decode.fail ("Expected the following string literal value: \"" ++ stringLiteralValue ++ "\"")
+                )
+        )
+        (Literal (Encode.string stringLiteralValue))
 
 
 {-|

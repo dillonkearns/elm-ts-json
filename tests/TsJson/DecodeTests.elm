@@ -1,6 +1,7 @@
 module TsJson.DecodeTests exposing (suite)
 
 import Array
+import Dict
 import Expect exposing (Expectation)
 import Json.Decode as Decode
 import Json.Encode as Encode
@@ -167,7 +168,92 @@ suite =
                             , output = { name = "Leonard" }
                             }
             ]
+        , test "old discriminated union style" <|
+            \() ->
+                oneOf
+                    [ succeed (\() id -> Admin { id = id })
+                        |> andMap (field "role" (literal () (Encode.string "admin")))
+                        |> andMap (field "id" int)
+                    , literal Guest (Encode.object [ ( "role", Encode.string "guest" ) ])
+                    ]
+                    |> expectDecodes
+                        { input = """{"role": "admin", "id": 123}"""
+                        , typeDef = """{ id : number; role : "admin" } | {"role":"guest"}"""
+                        , output = Admin { id = 123 }
+                        }
+        , test "discriminatedUnion" <|
+            \() ->
+                discriminatedUnion "role"
+                    [ ( "admin"
+                      , succeed (\id -> Admin { id = id })
+                            |> andMap (field "id" int)
+                      )
+                    , ( "guest", succeed Guest )
+                    ]
+                    |> expectDecodesList
+                        { examples =
+                            [ ( """{"role": "admin", "id": 123}"""
+                              , Ok (Admin { id = 123 })
+                              )
+                            , ( """{"role": "unexpected", "id": 123}"""
+                              , Err """Problem with the given value:
+
+{
+        "role": "unexpected",
+        "id": 123
+    }
+
+Unexpected discriminant value 'unexpected' for field 'role'"""
+                              )
+                            ]
+                        , typeDef = """{ id : number; role : "admin" } | { role : "guest" }"""
+                        }
+        , test "stringUnion" <|
+            \() ->
+                stringUnion
+                    [ ( "info", Info )
+                    , ( "warning", Warning )
+                    , ( "error", Error )
+                    ]
+                    |> expectDecodesList
+                        { examples =
+                            [ ( "\"info\""
+                              , Ok Info
+                              )
+                            , ( "\"unexpected-string\""
+                              , Err """Problem with the given value:
+
+"unexpected-string"
+
+I was expecting a string union with one of these string values: [ "info", "warning", "error" ]"""
+                              )
+                            ]
+                        , typeDef = "\"info\" | \"warning\" | \"error\""
+                        }
+        , test "stringLiteral" <|
+            \() ->
+                stringLiteral () "HELLO!"
+                    |> expectDecodesList
+                        { examples =
+                            [ ( "\"HELLO!\""
+                              , Ok ()
+                              )
+                            , ( "\"unexpected-string\""
+                              , Err """Problem with the given value:
+
+"unexpected-string"
+
+Expected the following string literal value: "HELLO!\""""
+                              )
+                            ]
+                        , typeDef = "\"HELLO!\""
+                        }
         ]
+
+
+type User
+    = Admin { id : Int }
+    | Guest
 
 
 type Severity
@@ -185,6 +271,25 @@ expectDecodes expect interop =
         |> Decode.decodeString (decoder interop)
         |> Expect.all
             [ \decoded -> decoded |> Expect.equal (Ok expect.output)
+            , \_ -> tsTypeToString interop |> Expect.equal expect.typeDef
+            ]
+
+
+expectDecodesList :
+    { examples : List ( String, Result String decodesTo ), typeDef : String }
+    -> Decoder decodesTo
+    -> Expectation
+expectDecodesList expect interop =
+    expect.examples
+        |> List.map
+            (\( inputString, expected ) ->
+                ( Decode.decodeString (decoder interop) inputString |> Result.mapError Decode.errorToString, expected )
+            )
+        |> Expect.all
+            [ \decoded ->
+                Expect.equalLists
+                    (decoded |> List.map Tuple.first)
+                    (decoded |> List.map Tuple.second)
             , \_ -> tsTypeToString interop |> Expect.equal expect.typeDef
             ]
 

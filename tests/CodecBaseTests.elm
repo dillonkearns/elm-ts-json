@@ -335,7 +335,46 @@ customTests =
             |> roundtripsTest "codec type"
                 codec
                 """{ args : [ number, number, number ]; tag : "Triple" } | { args : [ number ]; tag : "Single" }"""
+    , describe "stringUnion" <|
+        let
+            codec : Codec DarkMode
+            codec =
+                Codec.stringUnion [ ( "dark", Dark ), ( "light", Light ) ]
+        in
+        [ ( "dark", Fuzz.constant Dark )
+        , ( "light", Fuzz.constant Light )
+        ]
+            |> roundtripsTest "dark mode codec"
+                codec
+                "\"dark\" | \"light\""
+    , describe "literal" <|
+        let
+            codec : Codec String
+            codec =
+                Codec.literal "Hello" (JE.list JE.string [ "Hello" ])
+        in
+        [ ( "Ok test", Fuzz.constant "Hello" )
+        ]
+            |> roundtripsTest "dark mode codec"
+                codec
+                """["Hello"]"""
+    , describe "string literal" <|
+        let
+            codec : Codec ()
+            codec =
+                Codec.stringLiteral () "Hi"
+        in
+        [ ( "Ok test", Fuzz.constant () )
+        ]
+            |> roundtripsTest "dark mode codec"
+                codec
+                "\"Hi\""
     ]
+
+
+type DarkMode
+    = Dark
+    | Light
 
 
 type MyCustomType

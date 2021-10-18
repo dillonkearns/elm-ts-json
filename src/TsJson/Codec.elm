@@ -2,8 +2,10 @@ module TsJson.Codec exposing
     ( Codec
     , decoder, encoder
     , string, bool, int, float
+    , literal, stringLiteral
     , maybe, list, array, dict, set, tuple, triple, result
     , ObjectCodec, object, field, maybeField, nullableField, buildObject
+    , stringUnion
     , CustomCodec, custom, buildCustom
     , variant0
     , namedVariant1, namedVariant2, namedVariant3, namedVariant4, namedVariant5, namedVariant6, namedVariant7, namedVariant8
@@ -34,6 +36,11 @@ This module is a port of [`miniBill/elm-codec`](https://package.elm-lang.org/pac
 @docs string, bool, int, float
 
 
+# Literals
+
+@docs literal, stringLiteral
+
+
 # Data Structures
 
 @docs maybe, list, array, dict, set, tuple, triple, result
@@ -45,6 +52,8 @@ This module is a port of [`miniBill/elm-codec`](https://package.elm-lang.org/pac
 
 
 # Custom Types
+
+@docs stringUnion
 
 @docs CustomCodec, custom, buildCustom
 
@@ -403,7 +412,6 @@ type CustomCodec match v
 You need to pass a pattern matching function, built like this:
 
     import TsJson.Codec exposing (Codec)
-    import TsJson.Codec.Advanced as Codec
 
     type Shape
         = Rectangle Int Int
@@ -445,6 +453,80 @@ custom discriminant match =
         , decoder = Dict.empty
         , discriminant = discriminant
         }
+
+
+{-| Simple one-to-one mapping of Elm values to TypeScript strings (no arguments, just like values like an enumeration).
+
+    import TsJson.Codec exposing (Codec)
+
+    type DarkMode
+        = Dark
+        | Light
+
+    darkModeCodec : Codec DarkMode
+    darkModeCodec =
+        Codec.stringUnion [ ( "dark", Dark ), ( "light", Light ) ]
+
+The `TsType` for `darkModeCodec` is the following union:
+
+```typescript
+"dark" | "light"
+```
+
+-}
+stringUnion : List ( String, value ) -> Codec value
+stringUnion mappings =
+    let
+        unionDecoder : TsDecode.Decoder value
+        unionDecoder =
+            TsDecode.stringUnion mappings
+    in
+    TsJson.Internal.Codec.Codec
+        { encoder =
+            Encoder
+                (\decoded ->
+                    case find mappings decoded of
+                        Just gotValue ->
+                            gotValue |> Json.Encode.string
+
+                        Nothing ->
+                            Json.Encode.null
+                )
+                (TsDecode.tsType unionDecoder)
+        , decoder = unionDecoder
+        }
+
+
+{-| -}
+literal : value -> Json.Encode.Value -> Codec value
+literal mappedValue literalValue =
+    Codec
+        { encoder = TsEncode.literal literalValue
+        , decoder = TsDecode.literal mappedValue literalValue
+        }
+
+
+{-| -}
+stringLiteral : value -> String -> Codec value
+stringLiteral mappedValue literalValue =
+    Codec
+        { encoder = TsEncode.literal (Json.Encode.string literalValue)
+        , decoder = TsDecode.stringLiteral mappedValue literalValue
+        }
+
+
+find : List ( String, value ) -> value -> Maybe String
+find mappings mappedValue =
+    case mappings of
+        ( key, mapping ) :: rest ->
+            if mapping == mappedValue then
+                Just key
+
+            else
+                find rest mappedValue
+
+        [] ->
+            Nothing
 
 
 {-| Define a variant with 0 parameters for a custom type.
