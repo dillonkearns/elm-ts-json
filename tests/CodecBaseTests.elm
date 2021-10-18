@@ -7,7 +7,7 @@ import Json.Decode as Decode
 import Json.Encode as Encode
 import Set
 import Test exposing (Test, describe, fuzz, test)
-import TsJson.Codec as Codec exposing (Codec)
+import TsJson.Codec as TsCodec exposing (Codec)
 import TsJson.Decode as TsDecode
 import TsJson.Encode as TsEncode
 import TsJson.Type
@@ -26,8 +26,8 @@ suite =
         , describe "succeed"
             [ test "roundtrips"
                 (\_ ->
-                    Codec.succeed 632
-                        |> (\d -> Decode.decodeString (Codec.decoder d |> TsDecode.decoder) "{}")
+                    TsCodec.succeed 632
+                        |> (\d -> Decode.decodeString (TsCodec.decoder d |> TsDecode.decoder) "{}")
                         |> Expect.equal (Ok 632)
                 )
             ]
@@ -43,10 +43,10 @@ roundtrips fuzzer codec =
             let
                 encoded =
                     value
-                        |> TsEncode.encoder (Codec.encoder codec)
+                        |> TsEncode.encoder (TsCodec.encoder codec)
             in
             encoded
-                |> (Codec.decoder codec
+                |> (TsCodec.decoder codec
                         |> TsDecode.decoder
                         |> Decode.decodeValue
                    )
@@ -55,8 +55,8 @@ roundtrips fuzzer codec =
                     [ Expect.equal (Ok value)
                     , \_ ->
                         Expect.equal
-                            (codec |> Codec.encoder |> TsEncode.tsType |> TsJson.Type.toTypeScript)
-                            (codec |> Codec.decoder |> TsDecode.tsType |> TsJson.Type.toTypeScript)
+                            (codec |> TsCodec.encoder |> TsEncode.tsType |> TsJson.Type.toTypeScript)
+                            (codec |> TsCodec.decoder |> TsDecode.tsType |> TsJson.Type.toTypeScript)
                     ]
 
 
@@ -65,8 +65,8 @@ roundtripsWithDifferentAnnotations fuzzer codec =
     fuzz fuzzer "is a roundtrip" <|
         \value ->
             value
-                |> TsEncode.encoder (Codec.encoder codec)
-                |> (Codec.decoder codec
+                |> TsEncode.encoder (TsCodec.encoder codec)
+                |> (TsCodec.decoder codec
                         |> TsDecode.decoder
                         |> Decode.decodeValue
                    )
@@ -78,8 +78,8 @@ roundtripsWithin fuzzer codec =
     fuzz fuzzer "is a roundtrip" <|
         \value ->
             value
-                |> TsEncode.encoder (Codec.encoder codec)
-                |> (Codec.decoder codec
+                |> TsEncode.encoder (TsCodec.encoder codec)
+                |> (TsCodec.decoder codec
                         |> TsDecode.decoder
                         |> Decode.decodeValue
                    )
@@ -90,16 +90,16 @@ roundtripsWithin fuzzer codec =
 basicTests : List Test
 basicTests =
     [ describe "Codec.string"
-        [ roundtrips Fuzz.string Codec.string
+        [ roundtrips Fuzz.string TsCodec.string
         ]
     , describe "Codec.int"
-        [ roundtrips Fuzz.int Codec.int
+        [ roundtrips Fuzz.int TsCodec.int
         ]
     , describe "Codec.float"
-        [ roundtrips Fuzz.float Codec.float
+        [ roundtrips Fuzz.float TsCodec.float
         ]
     , describe "Codec.bool"
-        [ roundtrips Fuzz.bool Codec.bool
+        [ roundtrips Fuzz.bool TsCodec.bool
         ]
     ]
 
@@ -107,10 +107,10 @@ basicTests =
 containersTests : List Test
 containersTests =
     [ describe "Codec.array"
-        [ roundtrips (Fuzz.array Fuzz.int) (Codec.array Codec.int)
+        [ roundtrips (Fuzz.array Fuzz.int) (TsCodec.array TsCodec.int)
         ]
     , describe "Codec.list"
-        [ roundtrips (Fuzz.list Fuzz.int) (Codec.list Codec.int)
+        [ roundtrips (Fuzz.list Fuzz.int) (TsCodec.list TsCodec.int)
         ]
     , describe "Codec.dict"
         [ roundtrips
@@ -118,17 +118,17 @@ containersTests =
                 |> Fuzz.list
                 |> Fuzz.map Dict.fromList
             )
-            (Codec.dict Codec.int)
+            (TsCodec.dict TsCodec.int)
         ]
     , describe "Codec.set"
         [ roundtrips
             (Fuzz.list Fuzz.int |> Fuzz.map Set.fromList)
-            (Codec.set Codec.int)
+            (TsCodec.set TsCodec.int)
         ]
     , describe "Codec.tuple"
         [ roundtrips
             (Fuzz.tuple ( Fuzz.int, Fuzz.int ))
-            (Codec.tuple Codec.int Codec.int)
+            (TsCodec.tuple TsCodec.int TsCodec.int)
         ]
     ]
 
@@ -137,15 +137,15 @@ objectTests : List Test
 objectTests =
     [ describe "with 0 fields"
         [ roundtripsWithDifferentAnnotations (Fuzz.constant {})
-            (Codec.object {}
-                |> Codec.buildObject
+            (TsCodec.object {}
+                |> TsCodec.buildObject
             )
         ]
     , describe "with 1 field"
         [ roundtrips (Fuzz.map (\i -> { fname = i }) Fuzz.int)
-            (Codec.object (\i -> { fname = i })
-                |> Codec.field "fname" .fname Codec.int
-                |> Codec.buildObject
+            (TsCodec.object (\i -> { fname = i })
+                |> TsCodec.field "fname" .fname TsCodec.int
+                |> TsCodec.buildObject
             )
         ]
     , describe "with 2 fields"
@@ -159,30 +159,30 @@ objectTests =
                 Fuzz.int
                 Fuzz.int
             )
-            (Codec.object
+            (TsCodec.object
                 (\a b ->
                     { a = a
                     , b = b
                     }
                 )
-                |> Codec.field "a" .a Codec.int
-                |> Codec.field "b" .b Codec.int
-                |> Codec.buildObject
+                |> TsCodec.field "a" .a TsCodec.int
+                |> TsCodec.field "b" .b TsCodec.int
+                |> TsCodec.buildObject
             )
         ]
     , describe "nullableField vs maybeField" <|
         let
             nullableCodec =
-                Codec.object
+                TsCodec.object
                     (\f -> { f = f })
-                    |> Codec.nullableField "f" .f Codec.int
-                    |> Codec.buildObject
+                    |> TsCodec.nullableField "f" .f TsCodec.int
+                    |> TsCodec.buildObject
 
             maybeCodec =
-                Codec.object
+                TsCodec.object
                     (\f -> { f = f })
-                    |> Codec.maybeField "f" .f Codec.int
-                    |> Codec.buildObject
+                    |> TsCodec.maybeField "f" .f TsCodec.int
+                    |> TsCodec.buildObject
         in
         [ test "a nullableField is required" <|
             \_ ->
@@ -218,7 +218,7 @@ objectTests =
 encodeToString : Codec input -> (input -> String)
 encodeToString codec =
     (codec
-        |> Codec.encoder
+        |> TsCodec.encoder
         |> TsEncode.encoder
     )
         >> Encode.encode 0
@@ -226,7 +226,7 @@ encodeToString codec =
 
 decodeString : Codec a -> String -> Result Decode.Error a
 decodeString codec =
-    Codec.decoder codec
+    TsCodec.decoder codec
         |> TsDecode.decoder
         |> Decode.decodeString
 
@@ -239,26 +239,26 @@ customTests : List Test
 customTests =
     [ describe "with 1 ctor, 0 args"
         [ roundtrips (Fuzz.constant ())
-            (Codec.custom Nothing
+            (TsCodec.custom Nothing
                 (\f v ->
                     case v of
                         () ->
                             f
                 )
-                |> Codec.variant0 "()" ()
-                |> Codec.buildCustom
+                |> TsCodec.variant0 "()" ()
+                |> TsCodec.buildCustom
             )
         ]
     , describe "with 1 ctor, 1 arg"
         [ roundtrips (Fuzz.map Newtype Fuzz.int)
-            (Codec.custom Nothing
+            (TsCodec.custom Nothing
                 (\f v ->
                     case v of
                         Newtype a ->
                             f a
                 )
-                |> Codec.positionalVariant1 "Newtype" Newtype Codec.int
-                |> Codec.buildCustom
+                |> TsCodec.positionalVariant1 "Newtype" Newtype TsCodec.int
+                |> TsCodec.buildCustom
             )
         ]
     , describe "with 2 ctors, 0,1 args" <|
@@ -272,10 +272,10 @@ customTests =
                         fjust v
 
             codec =
-                Codec.custom Nothing match
-                    |> Codec.variant0 "Nothing" Nothing
-                    |> Codec.positionalVariant1 "Just" Just Codec.int
-                    |> Codec.buildCustom
+                TsCodec.custom Nothing match
+                    |> TsCodec.variant0 "Nothing" Nothing
+                    |> TsCodec.positionalVariant1 "Just" Just TsCodec.int
+                    |> TsCodec.buildCustom
 
             fuzzers =
                 [ ( "1st ctor", Fuzz.constant Nothing )
@@ -301,10 +301,10 @@ customTests =
 
             codec : Codec (Maybe ( Int, Int ))
             codec =
-                Codec.custom Nothing match
-                    |> Codec.variant0 "Nothing" Nothing
-                    |> Codec.positionalVariant2 "Just" (\first second -> Just ( first, second )) Codec.int Codec.int
-                    |> Codec.buildCustom
+                TsCodec.custom Nothing match
+                    |> TsCodec.variant0 "Nothing" Nothing
+                    |> TsCodec.positionalVariant2 "Just" (\first second -> Just ( first, second )) TsCodec.int TsCodec.int
+                    |> TsCodec.buildCustom
         in
         [ ( "1st ctor", Fuzz.constant Nothing )
         , ( "2nd ctor", Fuzz.map2 (\a b -> Just ( a, b )) Fuzz.int Fuzz.int )
@@ -316,7 +316,7 @@ customTests =
         let
             codec : Codec MyCustomType
             codec =
-                Codec.custom Nothing
+                TsCodec.custom Nothing
                     (\fSingle fTriple value ->
                         case value of
                             Single v1 ->
@@ -325,9 +325,9 @@ customTests =
                             Triple v1 v2 v3 ->
                                 fTriple v1 v2 v3
                     )
-                    |> Codec.positionalVariant1 "Single" Single Codec.int
-                    |> Codec.positionalVariant3 "Triple" (\v1 v2 v3 -> Triple v1 v2 v3) Codec.int Codec.int Codec.int
-                    |> Codec.buildCustom
+                    |> TsCodec.positionalVariant1 "Single" Single TsCodec.int
+                    |> TsCodec.positionalVariant3 "Triple" (\v1 v2 v3 -> Triple v1 v2 v3) TsCodec.int TsCodec.int TsCodec.int
+                    |> TsCodec.buildCustom
         in
         [ ( "1st ctor", Fuzz.map Single Fuzz.int )
         , ( "2nd ctor", Fuzz.map3 Triple Fuzz.int Fuzz.int Fuzz.int )
@@ -339,7 +339,7 @@ customTests =
         let
             codec : Codec DarkMode
             codec =
-                Codec.stringUnion [ ( "dark", Dark ), ( "light", Light ) ]
+                TsCodec.stringUnion [ ( "dark", Dark ), ( "light", Light ) ]
         in
         [ ( "dark", Fuzz.constant Dark )
         , ( "light", Fuzz.constant Light )
@@ -351,7 +351,7 @@ customTests =
         let
             codec : Codec String
             codec =
-                Codec.literal "Hello" (Encode.list Encode.string [ "Hello" ])
+                TsCodec.literal "Hello" (Encode.list Encode.string [ "Hello" ])
         in
         [ ( "Ok test", Fuzz.constant "Hello" )
         ]
@@ -362,7 +362,7 @@ customTests =
         let
             codec : Codec ()
             codec =
-                Codec.stringLiteral () "Hi"
+                TsCodec.stringLiteral () "Hi"
         in
         [ ( "Ok test", Fuzz.constant () )
         ]
@@ -392,7 +392,7 @@ roundtripsTest testName codec expectedTsType fuzzers =
     (test testName <|
         \() ->
             codec
-                |> Codec.tsType
+                |> TsCodec.tsType
                 |> TsType.toString
                 |> Expect.equal expectedTsType
     )
@@ -408,10 +408,10 @@ roundtripsTest testName codec expectedTsType fuzzers =
 bimapTests : List Test
 bimapTests =
     [ roundtripsWithin Fuzz.float <|
-        Codec.map
+        TsCodec.map
             (\x -> x * 2)
             (\x -> x / 2)
-            Codec.float
+            TsCodec.float
     ]
 
 
@@ -425,7 +425,7 @@ maybeTests =
                 ]
             )
           <|
-            Codec.maybe Codec.int
+            TsCodec.maybe TsCodec.int
         ]
 
     {-
@@ -450,9 +450,9 @@ recursiveTests : List Test
 recursiveTests =
     [ ( "list", Fuzz.list Fuzz.int ) ]
         |> roundtripsTest "recursive list"
-            (Codec.recursive
+            (TsCodec.recursive
                 (\c ->
-                    Codec.custom Nothing
+                    TsCodec.custom Nothing
                         (\fempty fcons value ->
                             case value of
                                 [] ->
@@ -461,9 +461,9 @@ recursiveTests =
                                 x :: xs ->
                                     fcons x xs
                         )
-                        |> Codec.variant0 "[]" []
-                        |> Codec.positionalVariant2 "(::)" (::) Codec.int c
-                        |> Codec.buildCustom
+                        |> TsCodec.variant0 "[]" []
+                        |> TsCodec.positionalVariant2 "(::)" (::) TsCodec.int c
+                        |> TsCodec.buildCustom
                 )
             )
             """{ args : [ number, JsonValue ]; tag : "(::)" } | { tag : "[]" }"""
@@ -473,6 +473,6 @@ mapAndThenTests : List Test
 mapAndThenTests =
     [ describe "Codec.map"
         [ roundtrips (Fuzz.intRange -10000 10000) <|
-            Codec.map (\x -> x - 1) (\x -> x + 1) Codec.int
+            TsCodec.map (\x -> x - 1) (\x -> x + 1) TsCodec.int
         ]
     ]

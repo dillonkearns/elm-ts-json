@@ -56,7 +56,7 @@ config =
     , NoInconsistentAliases.config
        [ ( "TsJson.Decode", "TsDecode" )
        , ( "TsJson.Encode", "TsEncode" )
-    --    , ( "TsJson.Codec", "TsCodec" )
+       , ( "TsJson.Codec", "TsCodec" )
        , ( "Json.Decode", "Decode" )
        , ( "Json.Encode", "Encode" )
        ]
