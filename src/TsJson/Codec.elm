@@ -406,7 +406,6 @@ type CustomCodec match v
 You need to pass a pattern matching function, built like this:
 
     import TsJson.Codec exposing (Codec)
-    import TsJson.Codec.Advanced as Codec
 
     type Shape
         = Rectangle Int Int
@@ -450,7 +449,25 @@ custom discriminant match =
         }
 
 
-{-| -}
+{-| Simple one-to-one mapping of Elm values to TypeScript strings (no arguments, just like values like an enumeration).
+
+    import TsJson.Codec exposing (Codec)
+
+    type DarkMode
+        = Dark
+        | Light
+
+    darkModeCodec : Codec DarkMode
+    darkModeCodec =
+        Codec.stringUnion [ ( "dark", Dark ), ( "light", Light ) ]
+
+The `TsType` for `darkModeCodec` is the following union:
+
+```typescript
+"dark" | "light"
+```
+
+-}
 stringUnion : List ( String, value ) -> Codec value
 stringUnion mappings =
     let
