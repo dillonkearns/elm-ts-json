@@ -3,13 +3,13 @@ module CodecBaseTests exposing (suite)
 import Dict
 import Expect
 import Fuzz exposing (Fuzzer)
-import Json.Decode as JD
-import Json.Encode as JE
+import Json.Decode as Decode
+import Json.Encode as Encode
 import Set
 import Test exposing (Test, describe, fuzz, test)
 import TsJson.Codec as Codec exposing (Codec)
-import TsJson.Decode
-import TsJson.Encode
+import TsJson.Decode as TsDecode
+import TsJson.Encode as TsEncode
 import TsJson.Type
 import TsType
 
@@ -27,7 +27,7 @@ suite =
             [ test "roundtrips"
                 (\_ ->
                     Codec.succeed 632
-                        |> (\d -> JD.decodeString (Codec.decoder d |> TsJson.Decode.decoder) "{}")
+                        |> (\d -> Decode.decodeString (Codec.decoder d |> TsDecode.decoder) "{}")
                         |> Expect.equal (Ok 632)
                 )
             ]
@@ -43,20 +43,20 @@ roundtrips fuzzer codec =
             let
                 encoded =
                     value
-                        |> TsJson.Encode.encoder (Codec.encoder codec)
+                        |> TsEncode.encoder (Codec.encoder codec)
             in
             encoded
                 |> (Codec.decoder codec
-                        |> TsJson.Decode.decoder
-                        |> JD.decodeValue
+                        |> TsDecode.decoder
+                        |> Decode.decodeValue
                    )
-                |> Result.mapError JD.errorToString
+                |> Result.mapError Decode.errorToString
                 |> Expect.all
                     [ Expect.equal (Ok value)
                     , \_ ->
                         Expect.equal
-                            (codec |> Codec.encoder |> TsJson.Encode.tsType |> TsJson.Type.toTypeScript)
-                            (codec |> Codec.decoder |> TsJson.Decode.tsType |> TsJson.Type.toTypeScript)
+                            (codec |> Codec.encoder |> TsEncode.tsType |> TsJson.Type.toTypeScript)
+                            (codec |> Codec.decoder |> TsDecode.tsType |> TsJson.Type.toTypeScript)
                     ]
 
 
@@ -65,10 +65,10 @@ roundtripsWithDifferentAnnotations fuzzer codec =
     fuzz fuzzer "is a roundtrip" <|
         \value ->
             value
-                |> TsJson.Encode.encoder (Codec.encoder codec)
+                |> TsEncode.encoder (Codec.encoder codec)
                 |> (Codec.decoder codec
-                        |> TsJson.Decode.decoder
-                        |> JD.decodeValue
+                        |> TsDecode.decoder
+                        |> Decode.decodeValue
                    )
                 |> Expect.equal (Ok value)
 
@@ -78,10 +78,10 @@ roundtripsWithin fuzzer codec =
     fuzz fuzzer "is a roundtrip" <|
         \value ->
             value
-                |> TsJson.Encode.encoder (Codec.encoder codec)
+                |> TsEncode.encoder (Codec.encoder codec)
                 |> (Codec.decoder codec
-                        |> TsJson.Decode.decoder
-                        |> JD.decodeValue
+                        |> TsDecode.decoder
+                        |> Decode.decodeValue
                    )
                 |> Result.withDefault -999.1234567
                 |> Expect.within (Expect.Relative 0.000001) value
@@ -219,16 +219,16 @@ encodeToString : Codec input -> (input -> String)
 encodeToString codec =
     (codec
         |> Codec.encoder
-        |> TsJson.Encode.encoder
+        |> TsEncode.encoder
     )
-        >> JE.encode 0
+        >> Encode.encode 0
 
 
-decodeString : Codec a -> String -> Result JD.Error a
+decodeString : Codec a -> String -> Result Decode.Error a
 decodeString codec =
     Codec.decoder codec
-        |> TsJson.Decode.decoder
-        |> JD.decodeString
+        |> TsDecode.decoder
+        |> Decode.decodeString
 
 
 type Newtype a
@@ -290,7 +290,7 @@ customTests =
                 )
     , describe "with 2 ctors, 0,2 args" <|
         let
-            match : TsJson.Encode.UnionEncodeValue -> (Int -> Int -> TsJson.Encode.UnionEncodeValue) -> Maybe ( Int, Int ) -> TsJson.Encode.UnionEncodeValue
+            match : TsEncode.UnionEncodeValue -> (Int -> Int -> TsEncode.UnionEncodeValue) -> Maybe ( Int, Int ) -> TsEncode.UnionEncodeValue
             match fnothing fjust value =
                 case value of
                     Nothing ->
@@ -351,7 +351,7 @@ customTests =
         let
             codec : Codec String
             codec =
-                Codec.literal "Hello" (JE.list JE.string [ "Hello" ])
+                Codec.literal "Hello" (Encode.list Encode.string [ "Hello" ])
         in
         [ ( "Ok test", Fuzz.constant "Hello" )
         ]

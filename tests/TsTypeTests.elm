@@ -4,7 +4,7 @@ import Expect
 import Internal.TsJsonType exposing (..)
 import Internal.TypeReducer as TypeReducer
 import Internal.TypeToString as TypeToString
-import Json.Encode
+import Json.Encode as Encode
 import Test exposing (..)
 
 
@@ -73,14 +73,14 @@ suite =
                             )
             , test "types are intersected" <|
                 \() ->
-                    TypeObject [ ( Required, "foo", Literal (Json.Encode.string "hello") ) ]
+                    TypeObject [ ( Required, "foo", Literal (Encode.string "hello") ) ]
                         |> TypeReducer.intersect
                             (TypeObject [ ( Required, "foo", String ) ])
                         |> Expect.equal
                             (TypeObject
                                 [ ( Required
                                   , "foo"
-                                  , Intersection [ String, Literal (Json.Encode.string "hello") ]
+                                  , Intersection [ String, Literal (Encode.string "hello") ]
                                   )
                                 ]
                             )

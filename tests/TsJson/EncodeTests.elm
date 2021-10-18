@@ -4,7 +4,7 @@ import Dict
 import Expect exposing (Expectation)
 import Json.Encode as Encode
 import Test exposing (Test, describe, only, skip, test, todo)
-import TsJson.Encode as Encoder exposing (Encoder, required)
+import TsJson.Encode as TsEncode exposing (Encoder, required)
 import TsType
 
 
@@ -13,9 +13,9 @@ suite =
     describe "encode"
         [ test "object" <|
             \() ->
-                Encoder.object
-                    [ required "first" .first Encoder.string
-                    , required "last" .last Encoder.string
+                TsEncode.object
+                    [ required "first" .first TsEncode.string
+                    , required "last" .last TsEncode.string
                     ]
                     |> expectEncodes
                         { input = { first = "Dillon", last = "Kearns" }
@@ -24,10 +24,10 @@ suite =
                         }
         , test "optional object" <|
             \() ->
-                Encoder.object
-                    [ required "first" .first Encoder.string
-                    , Encoder.optional "middle" .middle Encoder.string
-                    , required "last" .last Encoder.string
+                TsEncode.object
+                    [ required "first" .first TsEncode.string
+                    , TsEncode.optional "middle" .middle TsEncode.string
+                    , required "last" .last TsEncode.string
                     ]
                     |> expectEncodes
                         { input = { first = "Nyota", middle = Nothing, last = "Uhura" }
@@ -36,8 +36,8 @@ suite =
                         }
         , test "standalone string" <|
             \() ->
-                Encoder.string
-                    |> Encoder.map .first
+                TsEncode.string
+                    |> TsEncode.map .first
                     |> expectEncodes
                         { input = { first = "Dillon", last = "Kearns" }
                         , output = "\"Dillon\""
@@ -45,7 +45,7 @@ suite =
                         }
         , test "int" <|
             \() ->
-                Encoder.int
+                TsEncode.int
                     |> expectEncodes
                         { input = 123
                         , output = "123"
@@ -53,7 +53,7 @@ suite =
                         }
         , test "float" <|
             \() ->
-                Encoder.float
+                TsEncode.float
                     |> expectEncodes
                         { input = 123.45
                         , output = "123.45"
@@ -61,7 +61,7 @@ suite =
                         }
         , test "Encode.value escape hatch" <|
             \() ->
-                Encoder.value
+                TsEncode.value
                     |> expectEncodes
                         { input = Encode.list Encode.string [ "Hello", "World" ]
                         , output = """["Hello","World"]"""
@@ -69,7 +69,7 @@ suite =
                         }
         , test "list" <|
             \() ->
-                Encoder.list Encoder.string
+                TsEncode.list TsEncode.string
                     |> expectEncodes
                         { input = [ "Item 1", "Item 2" ]
                         , output = "[\"Item 1\",\"Item 2\"]"
@@ -77,7 +77,7 @@ suite =
                         }
         , test "tuple" <|
             \() ->
-                Encoder.tuple Encoder.string Encoder.int
+                TsEncode.tuple TsEncode.string TsEncode.int
                     |> expectEncodes
                         { input = ( "Item 1", 789 )
                         , output = "[\"Item 1\",789]"
@@ -85,7 +85,7 @@ suite =
                         }
         , test "triple" <|
             \() ->
-                Encoder.triple Encoder.string Encoder.int Encoder.int
+                TsEncode.triple TsEncode.string TsEncode.int TsEncode.int
                     |> expectEncodes
                         { input = ( "Item 1", 123, 789 )
                         , output = "[\"Item 1\",123,789]"
@@ -93,8 +93,8 @@ suite =
                         }
         , test "list of lists" <|
             \() ->
-                Encoder.list
-                    (Encoder.list Encoder.string)
+                TsEncode.list
+                    (TsEncode.list TsEncode.string)
                     |> expectEncodes
                         { input = [ [ "Item 1", "Item 2" ], [] ]
                         , output = "[[\"Item 1\",\"Item 2\"],[]]"
@@ -102,7 +102,7 @@ suite =
                         }
         , test "dict" <|
             \() ->
-                Encoder.dict identity Encoder.string
+                TsEncode.dict identity TsEncode.string
                     |> expectEncodes
                         { input = Dict.fromList [ ( "a", "123" ), ( "b", "456" ) ]
                         , output = """{"a":"123","b":"456"}"""
@@ -110,8 +110,8 @@ suite =
                         }
         , test "dict with unions" <|
             \() ->
-                Encoder.dict identity
-                    (Encoder.union
+                TsEncode.dict identity
+                    (TsEncode.union
                         (\vInfo vWarning vError value ->
                             case value of
                                 Info ->
@@ -123,10 +123,10 @@ suite =
                                 Error ->
                                     vError
                         )
-                        |> Encoder.variantLiteral (Encode.string "info")
-                        |> Encoder.variantLiteral (Encode.string "warning")
-                        |> Encoder.variantLiteral (Encode.string "error")
-                        |> Encoder.buildUnion
+                        |> TsEncode.variantLiteral (Encode.string "info")
+                        |> TsEncode.variantLiteral (Encode.string "warning")
+                        |> TsEncode.variantLiteral (Encode.string "error")
+                        |> TsEncode.buildUnion
                     )
                     |> expectEncodes
                         { input = Dict.fromList [ ( "a", Info ), ( "b", Warning ) ]
@@ -135,14 +135,14 @@ suite =
                         }
         , test "union type with one variant" <|
             \() ->
-                Encoder.union
+                TsEncode.union
                     (\vOnlyVariant value ->
                         case value of
                             OnlyVariant ->
                                 vOnlyVariant
                     )
-                    |> Encoder.variant0 "OnlyVariant"
-                    |> Encoder.buildUnion
+                    |> TsEncode.variant0 "OnlyVariant"
+                    |> TsEncode.buildUnion
                     |> expectEncodes
                         { input = OnlyVariant
                         , output = """{"tag":"OnlyVariant"}"""
@@ -150,7 +150,7 @@ suite =
                         }
         , test "union type with two variants" <|
             \() ->
-                Encoder.union
+                TsEncode.union
                     (\vSendHeartbeat vAlert value ->
                         case value of
                             SendPresenceHeartbeat ->
@@ -159,9 +159,9 @@ suite =
                             Alert string ->
                                 vAlert string
                     )
-                    |> Encoder.variant0 "SendPresenceHeartbeat"
-                    |> Encoder.variantObject "Alert" [ required "message" identity Encoder.string ]
-                    |> Encoder.buildUnion
+                    |> TsEncode.variant0 "SendPresenceHeartbeat"
+                    |> TsEncode.variantObject "Alert" [ required "message" identity TsEncode.string ]
+                    |> TsEncode.buildUnion
                     |> expectEncodes
                         { input = Alert "Hello!"
                         , output = """{"tag":"Alert","message":"Hello!"}"""
@@ -169,7 +169,7 @@ suite =
                         }
         , test "variant with encoders" <|
             \() ->
-                Encoder.union
+                TsEncode.union
                     (\vAdmin vRegular vGuest value ->
                         case value of
                             Admin name id ->
@@ -181,19 +181,19 @@ suite =
                             Guest ->
                                 vGuest ()
                     )
-                    |> Encoder.variant
-                        (Encoder.object
-                            [ required "name" .name Encoder.string
-                            , required "id" .id Encoder.int
+                    |> TsEncode.variant
+                        (TsEncode.object
+                            [ required "name" .name TsEncode.string
+                            , required "id" .id TsEncode.int
                             ]
                         )
-                    |> Encoder.variant
-                        (Encoder.object
-                            [ required "name" .name Encoder.string ]
+                    |> TsEncode.variant
+                        (TsEncode.object
+                            [ required "name" .name TsEncode.string ]
                         )
-                    |> Encoder.variant
-                        (Encoder.object [])
-                    |> Encoder.buildUnion
+                    |> TsEncode.variant
+                        (TsEncode.object [])
+                    |> TsEncode.buildUnion
                     |> expectEncodes
                         { input = Admin "Dillon" 123
                         , output = """{"name":"Dillon","id":123}"""
@@ -201,7 +201,7 @@ suite =
                         }
         , test "merge object to variant" <|
             \() ->
-                Encoder.union
+                TsEncode.union
                     (\vSendHeartbeat vAlert value ->
                         case value of
                             SendPresenceHeartbeat ->
@@ -210,9 +210,9 @@ suite =
                             Alert string ->
                                 vAlert string
                     )
-                    |> Encoder.variant0 "SendPresenceHeartbeat"
-                    |> Encoder.variantObject "Alert" [ required "message" identity Encoder.string ]
-                    |> Encoder.buildUnion
+                    |> TsEncode.variant0 "SendPresenceHeartbeat"
+                    |> TsEncode.variantObject "Alert" [ required "message" identity TsEncode.string ]
+                    |> TsEncode.buildUnion
                     |> expectEncodes
                         { input = Alert "Hello!"
                         , output = """{"tag":"Alert","message":"Hello!"}"""
@@ -221,7 +221,7 @@ suite =
         , describe "unions"
             [ test "string literal" <|
                 \() ->
-                    Encoder.union
+                    TsEncode.union
                         (\vInfo vWarning vError value ->
                             case value of
                                 Info ->
@@ -233,10 +233,10 @@ suite =
                                 Error ->
                                     vError
                         )
-                        |> Encoder.variantLiteral (Encode.string "info")
-                        |> Encoder.variantLiteral (Encode.string "warning")
-                        |> Encoder.variantLiteral (Encode.string "error")
-                        |> Encoder.buildUnion
+                        |> TsEncode.variantLiteral (Encode.string "info")
+                        |> TsEncode.variantLiteral (Encode.string "warning")
+                        |> TsEncode.variantLiteral (Encode.string "error")
+                        |> TsEncode.buildUnion
                         |> expectEncodes
                             { input = Warning
                             , output = "\"warning\""
@@ -273,7 +273,7 @@ expectEncodes :
     -> Expectation
 expectEncodes expect interop =
     expect.input
-        |> Encoder.encoder interop
+        |> TsEncode.encoder interop
         |> Encode.encode 0
         |> Expect.all
             [ \encodedString -> encodedString |> Expect.equal expect.output
@@ -295,7 +295,7 @@ expectEncodesNew cases expectedTypeDef interop =
                             (\( input, expectedOutput ) ->
                                 \() ->
                                     input
-                                        |> Encoder.encoder interop
+                                        |> TsEncode.encoder interop
                                         |> Encode.encode 0
                                         |> Expect.equal expectedOutput
                             )
@@ -306,5 +306,5 @@ expectEncodesNew cases expectedTypeDef interop =
 encoderType : Encoder input -> String
 encoderType encoder_ =
     encoder_
-        |> Encoder.tsType
+        |> TsEncode.tsType
         |> TsType.toString

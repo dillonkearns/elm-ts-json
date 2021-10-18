@@ -1,9 +1,9 @@
 module TsJson.DecodePipelineTests exposing (all)
 
 import Expect exposing (Expectation)
-import Json.Decode
+import Json.Decode as Decode
 import Test exposing (..)
-import TsJson.Decode as Decode exposing (Decoder, null, string)
+import TsJson.Decode as TsDecode exposing (Decoder, null, string)
 import TsJson.Decode.Pipeline exposing (optional, optionalAt, required, requiredAt)
 import TsType
 
@@ -13,9 +13,9 @@ import TsType
 runWith : String -> Decoder a -> { decoded : Result String a, tsType : String }
 runWith string decoder =
     { decoded =
-        Json.Decode.decodeString (Decode.decoder decoder) string
-            |> Result.mapError Json.Decode.errorToString
-    , tsType = Decode.tsType decoder |> TsType.toString
+        Decode.decodeString (TsDecode.decoder decoder) string
+            |> Result.mapError Decode.errorToString
+    , tsType = TsDecode.tsType decoder |> TsType.toString
     }
 
 
@@ -41,7 +41,7 @@ all =
         "Json.Decode.Pipeline"
         [ test "should decode basic example" <|
             \() ->
-                Decode.succeed Tuple.pair
+                TsDecode.succeed Tuple.pair
                     |> required "a" string
                     |> required "b" string
                     |> runWith """{"a":"foo","b":"bar"}"""
@@ -51,7 +51,7 @@ all =
                         }
         , test "should decode requiredAt fields" <|
             \() ->
-                Decode.succeed Tuple.pair
+                TsDecode.succeed Tuple.pair
                     |> requiredAt [ "a" ] string
                     |> requiredAt [ "b", "c" ] string
                     |> runWith """{"a":"foo","b":{"c":"bar"}}"""
@@ -61,7 +61,7 @@ all =
                         }
         , test "should decode optionalAt fields" <|
             \() ->
-                Decode.succeed Tuple.pair
+                TsDecode.succeed Tuple.pair
                     |> optionalAt [ "a", "b" ] string "--"
                     |> optionalAt [ "x", "y" ] string "--"
                     |> runWith """{"a":{},"x":{"y":"bar"}}"""
@@ -71,7 +71,7 @@ all =
                         }
         , test "optional succeeds if the field is not present" <|
             \() ->
-                Decode.succeed Tuple.pair
+                TsDecode.succeed Tuple.pair
                     |> optional "a" string "--"
                     |> optional "x" string "--"
                     |> runWith """{"x":"five"}"""
@@ -81,7 +81,7 @@ all =
                         }
         , test "optional succeeds with fallback if the field is present but null" <|
             \() ->
-                Decode.succeed Tuple.pair
+                TsDecode.succeed Tuple.pair
                     |> optional "a" string "--"
                     |> optional "x" string "--"
                     |> runWith """{"a":null,"x":"five"}"""
@@ -91,7 +91,7 @@ all =
                         }
         , test "optional succeeds with result of the given decoder if the field is null and the decoder decodes nulls" <|
             \() ->
-                Decode.succeed Tuple.pair
+                TsDecode.succeed Tuple.pair
                     |> optional "a" (null "null") "--"
                     |> optional "x" string "--"
                     |> runWith """{"a":null,"x":"five"}"""
@@ -101,14 +101,14 @@ all =
                         }
         , test "optional fails if the field is present but doesn't decode" <|
             \() ->
-                Decode.succeed Tuple.pair
+                TsDecode.succeed Tuple.pair
                     |> optional "a" string "--"
                     |> optional "x" string "--"
                     |> runWith """{"x":5}"""
                     |> expectErr
         , test "optionalAt fails if the field is present but doesn't decode" <|
             \() ->
-                Decode.succeed Tuple.pair
+                TsDecode.succeed Tuple.pair
                     |> optionalAt [ "a", "b" ] string "--"
                     |> optionalAt [ "x", "y" ] string "--"
                     |> runWith """{"a":{},"x":{"y":5}}"""

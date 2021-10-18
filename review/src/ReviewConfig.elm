@@ -53,13 +53,15 @@ config =
     --, NoImportingEverything.rule []
     , NoMissingTypeAnnotation.rule
 
-    --, NoInconsistentAliases.config
-    --    [ ( "Html.Attributes", "Attr" )
-    --    , ( "Json.Decode", "Decode" )
-    --    , ( "Json.Encode", "Encode" )
-    --    ]
-    --    |> NoInconsistentAliases.noMissingAliases
-    --    |> NoInconsistentAliases.rule
+    , NoInconsistentAliases.config
+       [ ( "TsJson.Decode", "TsDecode" )
+       , ( "TsJson.Encode", "TsEncode" )
+    --    , ( "TsJson.Codec", "TsCodec" )
+       , ( "Json.Decode", "Decode" )
+       , ( "Json.Encode", "Encode" )
+       ]
+       |> NoInconsistentAliases.noMissingAliases
+       |> NoInconsistentAliases.rule
     -- , Docs.NoMissing.rule
     --     { document = onlyExposed
     --     , from = exposedModules

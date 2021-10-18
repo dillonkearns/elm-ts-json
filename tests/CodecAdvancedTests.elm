@@ -2,12 +2,12 @@ module CodecAdvancedTests exposing (Semaphore(..), roundtripTest, suite)
 
 import Expect
 import Fuzz exposing (Fuzzer)
-import Json.Decode
-import Json.Encode as JE
+import Json.Decode as Decode
+import Json.Encode as Encode
 import Test exposing (Test, describe, fuzz, test)
 import TsJson.Codec as Codec exposing (Codec)
-import TsJson.Decode
-import TsJson.Encode
+import TsJson.Decode as TsDecode
+import TsJson.Encode as TsEncode
 import TsType
 
 
@@ -90,7 +90,7 @@ roundtripTest =
     fuzz semaphoreFuzzer "is a roundtrip" <|
         \value ->
             value
-                |> TsJson.Encode.encoder (Codec.encoder semaphoreCodec)
+                |> TsEncode.encoder (Codec.encoder semaphoreCodec)
                 |> decodeValue semaphoreCodec
                 |> Expect.equal (Ok value)
 
@@ -107,30 +107,30 @@ semaphoreFuzzer =
 shapesTests : List Test
 shapesTests =
     [ ( "Red decode"
-      , [ ( "color", JE.string "red" )
-        , ( "first", JE.int 42 )
-        , ( "second", JE.string "413" )
+      , [ ( "color", Encode.string "red" )
+        , ( "first", Encode.int 42 )
+        , ( "second", Encode.string "413" )
         ]
       , Ok <| Red 42 "413"
       )
     , ( "Yellow decode"
-      , [ ( "color", JE.string "yellow" )
-        , ( "extra", JE.null )
+      , [ ( "color", Encode.string "yellow" )
+        , ( "extra", Encode.null )
         ]
       , Ok Yellow
       )
     , ( "Green decode"
-      , [ ( "color", JE.string "green" )
-        , ( "value", JE.float -42 )
+      , [ ( "color", Encode.string "green" )
+        , ( "value", Encode.float -42 )
         ]
       , Ok <| Green -42
       )
     , ( "Missing fields fail"
-      , [ ( "color", JE.string "green" ) ]
+      , [ ( "color", Encode.string "green" ) ]
       , decodeString (Codec.fail "Expecting an OBJECT with a field named `value`") """{"color": "green"}"""
       )
     , ( "Wrong tag fail"
-      , [ ( "color", JE.string "gray" ) ]
+      , [ ( "color", Encode.string "gray" ) ]
       , decodeString (Codec.fail "color \"gray\" did not match") """{"color": "gray"}"""
       )
     ]
@@ -139,21 +139,21 @@ shapesTests =
                 Test.test name <|
                     \_ ->
                         fields
-                            |> JE.object
+                            |> Encode.object
                             |> decodeValue semaphoreCodec
                             |> Expect.equal expected
             )
 
 
-decodeValue : Codec a -> Json.Decode.Value -> Result Json.Decode.Error a
+decodeValue : Codec a -> Decode.Value -> Result Decode.Error a
 decodeValue codec =
     Codec.decoder codec
-        |> TsJson.Decode.decoder
-        |> Json.Decode.decodeValue
+        |> TsDecode.decoder
+        |> Decode.decodeValue
 
 
-decodeString : Codec a -> String -> Result Json.Decode.Error a
+decodeString : Codec a -> String -> Result Decode.Error a
 decodeString codec =
     Codec.decoder codec
-        |> TsJson.Decode.decoder
-        |> Json.Decode.decodeString
+        |> TsDecode.decoder
+        |> Decode.decodeString

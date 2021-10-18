@@ -13,9 +13,9 @@ This is a typed fork of [NoRedInk/elm-json-decode-pipeline](https://package.elm-
 
 import Internal.TsJsonType as TsType
 import Internal.TypeReducer as TypeReducer
-import Json.Decode
+import Json.Decode as Decode
 import Json.Encode
-import TsJson.Decode as Decode exposing (Decoder)
+import TsJson.Decode as TsDecode exposing (Decoder)
 import TsJson.Internal.Decode
 
 
@@ -50,14 +50,14 @@ import TsJson.Internal.Decode
 -}
 required : String -> Decoder a -> Decoder (a -> b) -> Decoder b
 required key valDecoder decoder =
-    custom (Decode.field key valDecoder) decoder
+    custom (TsDecode.field key valDecoder) decoder
 
 
 {-| Decode a required nested field.
 -}
 requiredAt : List String -> Decoder a -> Decoder (a -> b) -> Decoder b
 requiredAt path valDecoder decoder =
-    custom (Decode.at path valDecoder) decoder
+    custom (TsDecode.at path valDecoder) decoder
 
 
 {-| Decode a field that may be missing or have a null value. If the field is
@@ -105,44 +105,44 @@ values if you need to:
 -}
 optional : String -> Decoder a -> a -> Decoder (a -> b) -> Decoder b
 optional key valDecoder fallback decoder =
-    custom (optionalDecoder [ key ] (Decode.field key Decode.value) valDecoder fallback) decoder
+    custom (optionalDecoder [ key ] (TsDecode.field key TsDecode.value) valDecoder fallback) decoder
 
 
 {-| Decode an optional nested field.
 -}
 optionalAt : List String -> Decoder a -> a -> Decoder (a -> b) -> Decoder b
 optionalAt path valDecoder fallback decoder =
-    custom (optionalDecoder path (Decode.at path Decode.value) valDecoder fallback) decoder
+    custom (optionalDecoder path (TsDecode.at path TsDecode.value) valDecoder fallback) decoder
 
 
-optionalDecoder : List String -> Decoder Json.Decode.Value -> Decoder a -> a -> Decoder a
+optionalDecoder : List String -> Decoder Decode.Value -> Decoder a -> a -> Decoder a
 optionalDecoder path pathDecoder valDecoder fallback =
     let
         nullOr : Decoder a -> Decoder a
         nullOr decoder =
-            Decode.oneOf [ decoder, Decode.null fallback ]
+            TsDecode.oneOf [ decoder, TsDecode.null fallback ]
 
-        handleResult : Json.Decode.Value -> Json.Decode.Decoder a
+        handleResult : Decode.Value -> Decode.Decoder a
         handleResult input =
-            case Json.Decode.decodeValue (Decode.decoder pathDecoder) input of
+            case Decode.decodeValue (TsDecode.decoder pathDecoder) input of
                 Ok rawValue ->
                     -- The field was present, so now let's try to decode that value.
                     -- (If it was present but fails to decode, this should and will fail!)
-                    case rawValue |> Json.Decode.decodeValue (Decode.decoder (nullOr valDecoder)) of
+                    case rawValue |> Decode.decodeValue (TsDecode.decoder (nullOr valDecoder)) of
                         Ok finalResult ->
-                            Json.Decode.succeed finalResult
+                            Decode.succeed finalResult
 
                         Err finalErr ->
                             -- TODO is there some way to preserve the structure
                             -- of the original error instead of using toString here?
-                            Json.Decode.fail (Json.Decode.errorToString finalErr)
+                            Decode.fail (Decode.errorToString finalErr)
 
                 Err _ ->
                     -- The field was not present, so use the fallback.
-                    Json.Decode.succeed fallback
+                    Decode.succeed fallback
     in
-    TsJson.Internal.Decode.Decoder (Json.Decode.value |> Json.Decode.andThen handleResult)
-        (optionalAtType path (Decode.tsType valDecoder))
+    TsJson.Internal.Decode.Decoder (Decode.value |> Decode.andThen handleResult)
+        (optionalAtType path (TsDecode.tsType valDecoder))
 
 
 optionalAtType : List String -> TsType.TsType -> TsType.TsType
@@ -188,7 +188,7 @@ pipeline. `harcoded` does not look at the JSON at all.
 -}
 hardcoded : a -> Decoder (a -> b) -> Decoder b
 hardcoded =
-    Decode.succeed >> custom
+    TsDecode.succeed >> custom
 
 
 {-| Run the given decoder and feed its result into the pipeline at this point.
@@ -228,4 +228,4 @@ Consider this example.
 -}
 custom : Decoder a -> Decoder (a -> b) -> Decoder b
 custom =
-    Decode.map2 (|>)
+    TsDecode.map2 (|>)

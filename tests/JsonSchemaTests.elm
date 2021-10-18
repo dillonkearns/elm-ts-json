@@ -5,7 +5,7 @@ import Internal.JsonSchema as JsonSchema
 import Internal.TsJsonType exposing (..)
 import Internal.TypeReducer as TypeReducer
 import Internal.TypeToString as TypeToString
-import Json.Encode
+import Json.Encode as Encode
 import Test exposing (..)
 
 
@@ -16,52 +16,52 @@ suite =
             \() ->
                 String
                     |> JsonSchema.toJsonSchema
-                    |> Json.Encode.encode 0
+                    |> Encode.encode 0
                     |> Expect.equal """{"type":"string"}"""
         , test "number" <|
             \() ->
                 Number
                     |> JsonSchema.toJsonSchema
-                    |> Json.Encode.encode 0
+                    |> Encode.encode 0
                     |> Expect.equal """{"type":"number"}"""
         , test "integer" <|
             \() ->
                 Integer
                     |> JsonSchema.toJsonSchema
-                    |> Json.Encode.encode 0
+                    |> Encode.encode 0
                     |> Expect.equal """{"type":"integer"}"""
         , test "boolean" <|
             \() ->
                 Boolean
                     |> JsonSchema.toJsonSchema
-                    |> Json.Encode.encode 0
+                    |> Encode.encode 0
                     |> Expect.equal """{"type":"boolean"}"""
         , test "array" <|
             \() ->
                 List String
                     |> JsonSchema.toJsonSchema
-                    |> Json.Encode.encode 0
+                    |> Encode.encode 0
                     |> Expect.equal """{"type":"array","items":{"type":"string"}}"""
         , test "unknown" <|
             \() ->
                 Unknown
                     |> JsonSchema.toJsonSchema
-                    |> Json.Encode.encode 0
+                    |> Encode.encode 0
                     |> Expect.equal """{}"""
         , test "literal string" <|
             \() ->
-                Literal (Json.Encode.string "literalString")
+                Literal (Encode.string "literalString")
                     |> JsonSchema.toJsonSchema
-                    |> Json.Encode.encode 0
+                    |> Encode.encode 0
                     |> Expect.equal """{"const":"literalString"}"""
         , test "union" <|
             \() ->
                 Union
-                    ( Literal (Json.Encode.string "guest")
-                    , [ Literal (Json.Encode.string "admin") ]
+                    ( Literal (Encode.string "guest")
+                    , [ Literal (Encode.string "admin") ]
                     )
                     |> JsonSchema.toJsonSchema
-                    |> Json.Encode.encode 0
+                    |> Encode.encode 0
                     |> Expect.equal """{"anyOf":[{"const":"guest"},{"const":"admin"}]}"""
         , test "intersection" <|
             \() ->
@@ -74,7 +74,7 @@ suite =
                         ]
                     ]
                     |> JsonSchema.toJsonSchema
-                    |> Json.Encode.encode 0
+                    |> Encode.encode 0
                     |> Expect.equal """{"allOf":[{"type":"object","properties":{"first":{"type":"string"}},"required":["first"]},{"type":"object","properties":{"last":{"type":"string"}},"required":["last"]}]}"""
         , test "tuple" <|
             \() ->
@@ -82,7 +82,7 @@ suite =
                     [ String, Boolean ]
                     Nothing
                     |> JsonSchema.toJsonSchema
-                    |> Json.Encode.encode 0
+                    |> Encode.encode 0
                     |> Expect.equal """{"items":[{"type":"string"},{"type":"boolean"}],"maxItems":2,"minItems":2,"type":"array"}"""
         , test "3-tuple" <|
             \() ->
@@ -90,7 +90,7 @@ suite =
                     [ String, Boolean, Number ]
                     Nothing
                     |> JsonSchema.toJsonSchema
-                    |> Json.Encode.encode 0
+                    |> Encode.encode 0
                     |> Expect.equal """{"items":[{"type":"string"},{"type":"boolean"},{"type":"number"}],"maxItems":3,"minItems":3,"type":"array"}"""
         , test "tuple with rest elements" <|
             \() ->
@@ -98,19 +98,19 @@ suite =
                     [ String, Boolean ]
                     (Just Number)
                     |> JsonSchema.toJsonSchema
-                    |> Json.Encode.encode 0
+                    |> Encode.encode 0
                     |> Expect.equal """{"additionalItems":{"type":"number"},"items":[{"type":"string"},{"type":"boolean"}],"minItems":2,"type":"array"}"""
         , test "object with uniform values" <|
             \() ->
                 ObjectWithUniformValues Boolean
                     |> JsonSchema.toJsonSchema
-                    |> Json.Encode.encode 0
+                    |> Encode.encode 0
                     |> Expect.equal """{"additionalProperties":{"type":"boolean"},"type":"object"}"""
         , test "array index" <|
             \() ->
                 ArrayIndex ( 1, Boolean ) []
                     |> JsonSchema.toJsonSchema
-                    |> Json.Encode.encode 0
+                    |> Encode.encode 0
                     |> Expect.equal """{"additionalItems":{},"items":[{},{"type":"boolean"}],"minItems":2,"type":"array"}"""
         , test "object with no required properties" <|
             \() ->
@@ -120,7 +120,7 @@ suite =
                     , ( Optional, "last", String )
                     ]
                     |> JsonSchema.toJsonSchema
-                    |> Json.Encode.encode 0
+                    |> Encode.encode 0
                     |> Expect.equal """{"type":"object","properties":{"first":{"type":"string"},"middle":{"type":"string"},"last":{"type":"string"}}}"""
         , test "object with some required properties" <|
             \() ->
@@ -130,7 +130,7 @@ suite =
                     , ( Required, "last", String )
                     ]
                     |> JsonSchema.toJsonSchema
-                    |> Json.Encode.encode 0
+                    |> Encode.encode 0
                     |> Expect.equal """{"type":"object","properties":{"first":{"type":"string"},"middle":{"type":"string"},"last":{"type":"string"}},"required":["first","last"]}"""
         ]
 
