@@ -2,6 +2,7 @@ module TsJson.Codec exposing
     ( Codec
     , decoder, encoder
     , string, bool, int, float
+    , literal, stringLiteral
     , maybe, list, array, dict, set, tuple, triple, result
     , ObjectCodec, object, field, maybeField, nullableField, buildObject
     , stringUnion
@@ -33,6 +34,11 @@ This module is a port of [`miniBill/elm-codec`](https://package.elm-lang.org/pac
 # Primitives
 
 @docs string, bool, int, float
+
+
+# Literals
+
+@docs literal, stringLiteral
 
 
 # Data Structures
@@ -488,6 +494,24 @@ stringUnion mappings =
                 )
                 (TsDecode.tsType unionDecoder)
         , decoder = unionDecoder
+        }
+
+
+{-| -}
+literal : value -> Json.Encode.Value -> Codec value
+literal mappedValue literalValue =
+    Codec
+        { encoder = TsEncode.literal literalValue
+        , decoder = TsDecode.literal mappedValue literalValue
+        }
+
+
+{-| -}
+stringLiteral : value -> String -> Codec value
+stringLiteral mappedValue literalValue =
+    Codec
+        { encoder = TsEncode.literal (Json.Encode.string literalValue)
+        , decoder = TsDecode.stringLiteral mappedValue literalValue
         }
 
 

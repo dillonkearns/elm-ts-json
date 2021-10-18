@@ -347,6 +347,28 @@ customTests =
             |> roundtripsTest "dark mode codec"
                 codec
                 "\"dark\" | \"light\""
+    , describe "literal" <|
+        let
+            codec : Codec String
+            codec =
+                Codec.literal "Hello" (JE.list JE.string [ "Hello" ])
+        in
+        [ ( "Ok test", Fuzz.constant "Hello" )
+        ]
+            |> roundtripsTest "dark mode codec"
+                codec
+                """["Hello"]"""
+    , describe "string literal" <|
+        let
+            codec : Codec ()
+            codec =
+                Codec.stringLiteral () "Hi"
+        in
+        [ ( "Ok test", Fuzz.constant () )
+        ]
+            |> roundtripsTest "dark mode codec"
+                codec
+                "\"Hi\""
     ]
 
 
