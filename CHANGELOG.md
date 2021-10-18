@@ -9,6 +9,27 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [2.1.0] - 2021-10-18
+
+### Added
+
+- `TsJson.Decode.discriminatedUnion` helper makes it easier to do simple unions
+  that use the discriminated union convention.
+- `TsJson.Decode.stringUnion` for simple enumeration-style string unions.
+- Added `stringLiteral` for `Codec` and `Decode` modules
+
+## [2.0.0] - 2021-10-11
+
+### Added
+
+- New Codec API
+
+### Changed
+
+- Decoder and Encoder types point to new internal type to avoid future breaking
+  changes. This won't actually break code, but Elm will mark it as a breaking
+  change because the underlying type is different.
+
 ## [1.1.0] - 2021-03-10
 
 ### Fixed
