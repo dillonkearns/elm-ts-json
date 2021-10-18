@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "Build up JSON Encoders/Decoders that have TypeScript type declarations.",
   "devDependencies": {
-    "elm-review": "^2.3.3",
+    "elm-review": "^2.6.1",
     "elm-test": "^0.19.1-revision6",
     "elm-tooling": "^1.3.0",
     "elm-verify-examples": "^5.0.0",

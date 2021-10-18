@@ -15,11 +15,11 @@ module TsJson.Encode exposing
 
   - FromElm Ports
 
-See [TsJson.Decode](TsJson.Decode) for the API used for Flags and ToElm Ports.
+See [TsJson.Decode](TsJson-Decode) for the API used for Flags and ToElm Ports.
 
 By building an `Encoder` with this API, you're also describing the source of truth for taking an Elm type and
 turning it into a JSON value with a TypeScript type. Note that there is no magic involved in this process.
-The `elm-ts-interop` CLI simply gets the [`typeDef`](#typeDef) from your `Encoder` to generate the
+The `elm-ts-interop` CLI simply gets the [`typeDef`](#tsType) from your `Encoder` to generate the
 TypeScript Declaration file for your compiled Elm code.
 
 @docs Encoder
@@ -469,7 +469,7 @@ value =
 {-| An [`Encoder`](#Encoder) represents turning an Elm input value into a JSON value that has a TypeScript type information.
 
 This `map` function allows you to transform the **Elm input value**, not the resulting JSON output. So this will feel
-different than using [`TsJson.Decode.map`](TsJson.Decode#map), or other familiar `map` functions
+different than using [`TsJson.Decode.map`](TsJson-Decode#map), or other familiar `map` functions
 that transform an **Elm output value**, such as `Maybe.map` and `Json.Decode.map`.
 
 Think of `TsJson.Encode.map` as changing **how to get the value that you want to turn into JSON**. For example,
