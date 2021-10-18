@@ -335,7 +335,24 @@ customTests =
             |> roundtripsTest "codec type"
                 codec
                 """{ args : [ number, number, number ]; tag : "Triple" } | { args : [ number ]; tag : "Single" }"""
+    , describe "stringUnion" <|
+        let
+            codec : Codec DarkMode
+            codec =
+                Codec.stringUnion [ ( "dark", Dark ), ( "light", Light ) ]
+        in
+        [ ( "dark", Fuzz.constant Dark )
+        , ( "light", Fuzz.constant Light )
+        ]
+            |> roundtripsTest "dark mode codec"
+                codec
+                "\"dark\" | \"light\""
     ]
+
+
+type DarkMode
+    = Dark
+    | Light
 
 
 type MyCustomType

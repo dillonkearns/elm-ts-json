@@ -4,6 +4,7 @@ module TsJson.Codec exposing
     , string, bool, int, float
     , maybe, list, array, dict, set, tuple, triple, result
     , ObjectCodec, object, field, maybeField, nullableField, buildObject
+    , stringUnion
     , CustomCodec, custom, buildCustom
     , variant0
     , namedVariant1, namedVariant2, namedVariant3, namedVariant4, namedVariant5, namedVariant6, namedVariant7, namedVariant8
@@ -45,6 +46,8 @@ This module is a port of [`miniBill/elm-codec`](https://package.elm-lang.org/pac
 
 
 # Custom Types
+
+@docs stringUnion
 
 @docs CustomCodec, custom, buildCustom
 
@@ -445,6 +448,44 @@ custom discriminant match =
         , decoder = Dict.empty
         , discriminant = discriminant
         }
+
+
+{-| -}
+stringUnion : List ( String, value ) -> Codec value
+stringUnion mappings =
+    let
+        unionDecoder : TsDecode.Decoder value
+        unionDecoder =
+            TsDecode.stringUnion mappings
+    in
+    TsJson.Internal.Codec.Codec
+        { encoder =
+            Encoder
+                (\decoded ->
+                    case find mappings decoded of
+                        Just gotValue ->
+                            gotValue |> Json.Encode.string
+
+                        Nothing ->
+                            Json.Encode.null
+                )
+                (TsDecode.tsType unionDecoder)
+        , decoder = unionDecoder
+        }
+
+
+find : List ( String, value ) -> value -> Maybe String
+find mappings mappedValue =
+    case mappings of
+        ( key, mapping ) :: rest ->
+            if mapping == mappedValue then
+                Just key
+
+            else
+                find rest mappedValue
+
+        [] ->
+            Nothing
 
 
 {-| Define a variant with 0 parameters for a custom type.
