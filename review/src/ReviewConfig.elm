@@ -35,6 +35,7 @@ config =
     , NoUnused.Exports.rule
     , NoUnused.Dependencies.rule
     , NoUnused.CustomTypeConstructorArgs.rule
+        |> ignoreForTests
 
     --, NoUnused.Variables.rule
     -- , NoUnused.CustomTypeConstructors.rule []
@@ -42,7 +43,7 @@ config =
     --, NoUnused.Patterns.rule
     , NoDebug.Log.rule
     , NoDebug.TodoOrToString.rule
-        |> Review.Rule.ignoreErrorsForDirectories [ "tests" ]
+        |> ignoreForTests
     , NoExposingEverything.rule
 
     --, NoImportingEverything.rule []
@@ -61,3 +62,9 @@ config =
                 rule
                     |> Review.Rule.ignoreErrorsForDirectories [ "src/List" ]
             )
+
+
+ignoreForTests : Rule -> Rule
+ignoreForTests rule =
+    rule
+        |> Review.Rule.ignoreErrorsForDirectories [ "tests" ]
