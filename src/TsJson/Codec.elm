@@ -432,10 +432,10 @@ You need to pass a pattern matching function, built like this:
                     Circle radius ->
                         vCircle radius
             )
-            |> Codec.namedVariant2 "rectangle" Rectangle Codec.int Codec.int
+            |> Codec.namedVariant2 "rectangle" Rectangle ( "width", Codec.int ) ( "height", Codec.int )
             |> Codec.positionalVariant1 "square" Square Codec.int
-            |> Codec.namedVariant1 "circle" Circle Codec.int
-            |> Codec.buildCustomObject
+            |> Codec.namedVariant1 "circle" Circle ( "radius", Codec.int )
+            |> Codec.buildCustom
 
     The `TsType` for `shapeCodec` is the following discriminated union:
 
