@@ -1,8 +1,12 @@
-module Internal.TypeToString exposing (toString)
+module Internal.TypeToString exposing
+    ( quoteObjectKey
+    , toString
+    )
 
 import Dict
 import Internal.TsJsonType exposing (..)
 import Json.Encode as Encode
+import Regex exposing (Regex)
 
 
 toString : TsType -> String
@@ -45,12 +49,16 @@ toString tsType_ =
                         |> List.sortBy (\( _, fieldName, _ ) -> fieldName)
                         |> List.map
                             (\( optionality, key, tsType__ ) ->
+                                let
+                                    quotedKey =
+                                        quoteObjectKey key
+                                in
                                 (case optionality of
                                     Required ->
-                                        key
+                                        quotedKey
 
                                     Optional ->
-                                        key ++ "?"
+                                        quotedKey ++ "?"
                                 )
                                     ++ " : "
                                     ++ toString tsType__
@@ -145,3 +153,33 @@ parenthesizeToString type_ =
 
     else
         toString type_
+
+
+doubleQuote : String -> String
+doubleQuote string =
+    "\"" ++ string ++ "\""
+
+
+identifierRegex : Regex
+identifierRegex =
+    Regex.fromString "^[a-zA-Z_][a-zA-Z0-9_]*$"
+        |> Maybe.withDefault Regex.never
+
+
+isIdentifier : String -> Bool
+isIdentifier =
+    Regex.find identifierRegex
+        >> List.isEmpty
+
+
+quoteObjectKey : String -> String
+quoteObjectKey key =
+    let
+        needsQuotes =
+            isIdentifier key
+    in
+    if needsQuotes then
+        doubleQuote key
+
+    else
+        key
