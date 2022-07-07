@@ -335,6 +335,23 @@ customTests =
             |> roundtripsTest "codec type"
                 codec
                 """{ args : [ number, number, number ]; tag : "Triple" } | { args : [ number ]; tag : "Single" }"""
+    , describe "proper quotes for object keys" <|
+        let
+            codec : Codec (Newtype Int)
+            codec =
+                TsCodec.custom (Just "my-discriminator")
+                    (\f v ->
+                        case v of
+                            Newtype a ->
+                                f a
+                    )
+                    |> TsCodec.namedVariant1 "new-type" Newtype ( "my-int", TsCodec.int )
+                    |> TsCodec.buildCustom
+        in
+        [ ( "int", Fuzz.map Newtype Fuzz.int ) ]
+            |> roundtripsTest "codec type"
+                codec
+                """{ "my-discriminator" : "new-type"; "my-int" : number }"""
     , describe "stringUnion" <|
         let
             codec : Codec DarkMode
