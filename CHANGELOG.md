@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [2.1.1] - 2022-08-24
+
+### Fixed
+
+- Object keys are correctly quoted in cases where unquoted keys cause invalid syntax. See [#12](https://github.com/dillonkearns/elm-ts-json/pull/12). Thank you [@pabra](https://github.com/pabra) for the fix!
+
 ## [2.1.0] - 2021-10-18
 
 ### Added

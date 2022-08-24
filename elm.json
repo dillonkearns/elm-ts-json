@@ -3,7 +3,7 @@
     "name": "dillonkearns/elm-ts-json",
     "summary": "JSON Encoders and Decoders with TypeScript type information.",
     "license": "BSD-3-Clause",
-    "version": "2.1.0",
+    "version": "2.1.1",
     "exposed-modules": [
         "TsJson.Encode",
         "TsJson.Decode",
