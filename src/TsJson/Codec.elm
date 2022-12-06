@@ -91,13 +91,13 @@ This module is a port of [`miniBill/elm-codec`](https://package.elm-lang.org/pac
 import Array exposing (Array)
 import Dict exposing (Dict)
 import Internal.TsJsonType as TsType exposing (TsType)
-import Json.Decode as Decode exposing (Decoder)
+import Json.Decode as Decode
 import Json.Encode as Encode
 import Set exposing (Set)
 import TsJson.Decode as TsDecode
 import TsJson.Encode as TsEncode exposing (Encoder, Property)
 import TsJson.Internal.Codec exposing (Codec(..))
-import TsJson.Internal.Decode
+import TsJson.Internal.Decode exposing (Decoder(..))
 import TsJson.Internal.Encode exposing (Encoder(..), UnionBuilder(..), UnionEncodeValue(..))
 
 
@@ -1260,7 +1260,7 @@ buildCustom (CustomCodec am) =
         discriminant =
             am.discriminant |> Maybe.withDefault "tag"
 
-        decoder_ : Decoder a
+        decoder_ : Decode.Decoder a
         decoder_ =
             Decode.field discriminant Decode.string
                 |> Decode.andThen
@@ -1331,13 +1331,77 @@ fail msg =
         }
 
 
+typePlaceholder : TsType.TsType -> Codec a
+typePlaceholder tsType_ =
+    Codec
+        { decoder = Decoder (Decode.fail "") tsType_
+        , encoder = Encoder (\_ -> Encode.null) tsType_
+        }
+
+
+tsJsonRecursiveStringValue : Encode.Value
+tsJsonRecursiveStringValue =
+    Encode.string "_____elm-ts-json-recursive-type-string_____"
+
+
 {-| Create a `Codec` for a recursive data structure.
 The argument to the function you need to pass is the fully formed `Codec`.
 -}
 recursive : (Codec a -> Codec a) -> Codec a
 recursive f =
-    f <|
-        lazy (\() -> recursive f)
+    let
+        resolvedType : TsType
+        resolvedType =
+            case f (typePlaceholder (TsType.Literal tsJsonRecursiveStringValue)) of
+                Codec info ->
+                    info.decoder
+                        |> TsDecode.tsType
+                        |> fixType
+    in
+    case f (lazy (\() -> recursive f)) of
+        Codec info ->
+            Codec
+                { decoder = Decoder (info.decoder |> TsDecode.decoder) resolvedType
+                , encoder = Encoder (info.encoder |> TsEncode.encoder) resolvedType
+                }
+
+
+fixType : TsType -> TsType
+fixType resolvedType =
+    case resolvedType of
+        TsType.Literal literalValue ->
+            if literalValue == tsJsonRecursiveStringValue then
+                -- TODO this could be a point for using a special TsType, like `TsType.RecursiveReference <hash>` (where hash might be an Int or a String).
+                TsType.Literal (Encode.string "RecursiveReference")
+
+            else
+                TsType.Literal literalValue
+
+        TsType.List innerType ->
+            TsType.List (fixType innerType)
+
+        TsType.ArrayIndex listFirst listRest ->
+            TsType.ArrayIndex (listFirst |> Tuple.mapSecond fixType) (listRest |> List.map (Tuple.mapSecond fixType))
+
+        TsType.Tuple tsTypes maybeTsType ->
+            TsType.Tuple (tsTypes |> List.map fixType) (maybeTsType |> Maybe.map fixType)
+
+        TsType.TypeObject properties ->
+            properties
+                |> List.map (\( optionality, name, innerType ) -> ( optionality, name, fixType innerType ))
+                |> TsType.TypeObject
+
+        TsType.ObjectWithUniformValues innerType ->
+            TsType.ObjectWithUniformValues (fixType innerType)
+
+        TsType.Union ( innerFirst, innerRest ) ->
+            TsType.Union ( fixType innerFirst, innerRest |> List.map fixType )
+
+        TsType.Intersection innerTypes ->
+            TsType.Intersection (innerTypes |> List.map fixType)
+
+        _ ->
+            resolvedType
 
 
 {-| Create a `Codec` that produces null as JSON and always decodes as the same value.
