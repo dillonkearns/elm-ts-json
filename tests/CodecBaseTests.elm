@@ -364,6 +364,18 @@ customTests =
             |> roundtripsTest "dark mode codec"
                 codec
                 "\"dark\" | \"light\""
+    , describe "intUnion" <|
+        let
+            codec : Codec DarkMode
+            codec =
+                TsCodec.intUnion [ ( 0, Dark ), ( 1, Light ) ]
+        in
+        [ ( "dark", Fuzz.constant Dark )
+        , ( "light", Fuzz.constant Light )
+        ]
+            |> roundtripsTest "dark mode codec"
+                codec
+                "0 | 1"
     , describe "literal" <|
         let
             codec : Codec String

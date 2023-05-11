@@ -5,7 +5,7 @@ module TsJson.Codec exposing
     , literal, stringLiteral
     , maybe, list, array, dict, set, tuple, triple, result
     , ObjectCodec, object, field, maybeField, nullableField, buildObject
-    , stringUnion
+    , stringUnion, intUnion
     , CustomCodec, custom, buildCustom
     , variant0
     , namedVariant1, namedVariant2, namedVariant3, namedVariant4, namedVariant5, namedVariant6, namedVariant7, namedVariant8
@@ -53,7 +53,7 @@ This module is a port of [`miniBill/elm-codec`](https://package.elm-lang.org/pac
 
 # Custom Types
 
-@docs stringUnion
+@docs stringUnion, intUnion
 
 @docs CustomCodec, custom, buildCustom
 
@@ -497,6 +497,48 @@ stringUnion mappings =
         }
 
 
+{-| Simple one-to-one mapping of Elm values to TypeScript strings (no arguments, just like values like an enumeration).
+
+    import TsJson.Codec exposing (Codec)
+
+    type DarkMode
+        = Dark
+        | Light
+
+    darkModeCodec : Codec DarkMode
+    darkModeCodec =
+        Codec.intUnion [ ( 0, Dark ), ( 1, Light ) ]
+
+The `TsType` for `darkModeCodec` is the following union:
+
+```typescript
+0 | 1
+```
+
+-}
+intUnion : List ( Int, value ) -> Codec value
+intUnion mappings =
+    let
+        unionDecoder : TsDecode.Decoder value
+        unionDecoder =
+            TsDecode.intUnion mappings
+    in
+    TsJson.Internal.Codec.Codec
+        { encoder =
+            Encoder
+                (\decoded ->
+                    case find mappings decoded of
+                        Just gotValue ->
+                            gotValue |> Encode.int
+
+                        Nothing ->
+                            Encode.null
+                )
+                (TsDecode.tsType unionDecoder)
+        , decoder = unionDecoder
+        }
+
+
 {-| -}
 literal : value -> Encode.Value -> Codec value
 literal mappedValue literalValue =
@@ -515,7 +557,7 @@ stringLiteral mappedValue literalValue =
         }
 
 
-find : List ( String, value ) -> value -> Maybe String
+find : List ( comparable, value ) -> value -> Maybe comparable
 find mappings mappedValue =
     case mappings of
         ( key, mapping ) :: rest ->
