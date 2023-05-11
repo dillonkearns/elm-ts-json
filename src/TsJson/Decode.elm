@@ -10,6 +10,7 @@ module TsJson.Decode exposing
     , map2, andMap
     , literal, null
     , stringLiteral, stringUnion
+    , intUnion
     , discriminatedUnion
     , andThen, AndThenContinuation, andThenInit, andThenDecoder
     , value, unknownAndThen, maybe
@@ -124,6 +125,8 @@ TypeScript tuples are much like an Elm tuples, except two key differences:
 @docs literal, null
 
 @docs stringLiteral, stringUnion
+
+@docs intUnion
 
 
 ## Discriminated Unions
@@ -615,6 +618,59 @@ stringUnion unionMappings =
                 |> List.map
                     (\( mapKey, _ ) ->
                         Literal (Encode.string mapKey)
+                    )
+            )
+        )
+
+
+{-| A convenience function for building a union out of int literals.
+
+    import TsJson.Decode as TsDecode
+
+    type Severity
+        = Info
+        | Warning
+        | Error
+
+    TsDecode.intUnion
+        [ ( 1, Info )
+        , ( 2, Warning )
+        , ( 3, Error )
+        ]
+        |> TsDecode.runExample """1"""
+    --> { decoded = Ok Info
+    --> , tsType = "1 | 2 | 3"
+    --> }
+
+-}
+intUnion :
+    List ( Int, value )
+    -> Decoder value
+intUnion unionMappings =
+    Decoder
+        (Decode.int
+            |> Decode.andThen
+                (\key ->
+                    case unionMappings |> Dict.fromList |> Dict.get key of
+                        Just mapped ->
+                            Decode.succeed mapped
+
+                        Nothing ->
+                            Decode.fail <|
+                                "I was expecting an int union with one of these string values: "
+                                    ++ "[ "
+                                    ++ (unionMappings
+                                            |> List.map (\( mapKey, _ ) -> "\"" ++ String.fromInt mapKey ++ "\"")
+                                            |> String.join ", "
+                                       )
+                                    ++ " ]"
+                )
+        )
+        (TypeReducer.union
+            (unionMappings
+                |> List.map
+                    (\( mapKey, _ ) ->
+                        Literal (Encode.int mapKey)
                     )
             )
         )
