@@ -483,7 +483,7 @@ recursiveTests =
                         |> TsCodec.buildCustom
                 )
             )
-            """{ args : [ number, JsonValue ]; tag : "(::)" } | { tag : "[]" }"""
+            """{ args : [ number, "RecursiveReference" ]; tag : "(::)" } | { tag : "[]" }"""
 
 
 mapAndThenTests : List Test
