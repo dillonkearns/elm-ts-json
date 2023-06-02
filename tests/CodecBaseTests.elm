@@ -196,6 +196,30 @@ objectTests =
                                 Err _ ->
                                     Expect.pass
                        )
+        , test "a nullableField returns the value" <|
+            \_ ->
+                """{ "f": 1 }"""
+                    |> decodeString nullableCodec
+                    |> (\r ->
+                            case r of
+                                Ok { f } ->
+                                    Expect.equal (Just 1) f
+
+                                Err _ ->
+                                    Expect.fail "Should have suceeded"
+                       )
+        , test "a nullableField hides decoder errors" <|
+            \_ ->
+                """{ "f": "string" }"""
+                    |> decodeString nullableCodec
+                    |> (\r ->
+                            case r of
+                                Ok _ ->
+                                    Expect.pass
+
+                                Err _ ->
+                                    Expect.fail "Functionality has changed"
+                       )
         , test "a nullableField produces a field with a null value on encoding Nothing" <|
             \_ ->
                 { f = Nothing }
@@ -206,6 +230,30 @@ objectTests =
                 "{}"
                     |> decodeString maybeCodec
                     |> Expect.equal (Ok { f = Nothing })
+        , test "a maybeField returns the value" <|
+            \_ ->
+                """{ "f": 1 }"""
+                    |> decodeString maybeCodec
+                    |> (\r ->
+                            case r of
+                                Ok { f } ->
+                                    Expect.equal (Just 1) f
+
+                                Err _ ->
+                                    Expect.fail "Should have succeeded"
+                       )
+        , test "a maybeField hides decoder errors" <|
+            \_ ->
+                """{ "f": "string" }"""
+                    |> decodeString maybeCodec
+                    |> (\r ->
+                            case r of
+                                Ok _ ->
+                                    Expect.pass
+
+                                Err _ ->
+                                    Expect.fail "Functionality has changed"
+                       )
         , test "a maybeField doesn't produce a field on encoding Nothing" <|
             \_ ->
                 { f = Nothing }
