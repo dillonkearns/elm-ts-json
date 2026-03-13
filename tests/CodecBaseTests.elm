@@ -96,7 +96,7 @@ basicTests =
         [ roundtrips Fuzz.int TsCodec.int
         ]
     , describe "Codec.float"
-        [ roundtrips Fuzz.float TsCodec.float
+        [ roundtrips Fuzz.niceFloat TsCodec.float
         ]
     , describe "Codec.bool"
         [ roundtrips Fuzz.bool TsCodec.bool
@@ -127,7 +127,7 @@ containersTests =
         ]
     , describe "Codec.tuple"
         [ roundtrips
-            (Fuzz.tuple ( Fuzz.int, Fuzz.int ))
+            (Fuzz.pair Fuzz.int Fuzz.int)
             (TsCodec.tuple TsCodec.int TsCodec.int)
         ]
     ]
@@ -424,7 +424,7 @@ roundtripsTest testName codec expectedTsType fuzzers =
 
 bimapTests : List Test
 bimapTests =
-    [ roundtripsWithin Fuzz.float <|
+    [ roundtripsWithin Fuzz.niceFloat <|
         TsCodec.map
             (\x -> x * 2)
             (\x -> x / 2)

@@ -1,4 +1,4 @@
-module CodecAdvancedTests exposing (Semaphore(..), roundtripTest, suite)
+module CodecAdvancedTests exposing (Semaphore, roundtripTest, suite)
 
 import Expect
 import Fuzz exposing (Fuzzer)
@@ -100,7 +100,7 @@ semaphoreFuzzer =
     Fuzz.oneOf
         [ Fuzz.map2 Red Fuzz.int Fuzz.string
         , Fuzz.constant Yellow
-        , Fuzz.map Green Fuzz.float
+        , Fuzz.map Green Fuzz.niceFloat
         ]
 
 

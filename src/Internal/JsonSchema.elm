@@ -2,7 +2,7 @@ module Internal.JsonSchema exposing (toJsonSchema, toJsonSchemaTopLevel)
 
 import Dict
 import Internal.TsJsonType exposing (PropertyOptionality(..), TsType(..))
-import Json.Decode
+import Json.Decode as Decode
 import Json.Encode as Encode
 import List.NonEmpty
 
@@ -110,7 +110,7 @@ toJsonSchemaHelp tsType =
                         literalValues
                             |> List.all
                                 (\v ->
-                                    case Json.Decode.decodeValue Json.Decode.string v of
+                                    case Decode.decodeValue Decode.string v of
                                         Ok _ ->
                                             True
 
