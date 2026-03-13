@@ -2,6 +2,7 @@ module Internal.JsonSchema exposing (toJsonSchema, toJsonSchemaTopLevel)
 
 import Dict
 import Internal.TsJsonType exposing (PropertyOptionality(..), TsType(..))
+import Json.Decode
 import Json.Encode as Encode
 import List.NonEmpty
 
@@ -87,12 +88,50 @@ toJsonSchemaHelp tsType =
             [ ( "const", literalJson ) ]
 
         Union nonEmptyTypes ->
-            [ ( "anyOf"
-              , nonEmptyTypes
-                    |> List.NonEmpty.toList
-                    |> Encode.list toJsonSchema
-              )
-            ]
+            let
+                allMembers =
+                    List.NonEmpty.toList nonEmptyTypes
+
+                literalValues =
+                    allMembers
+                        |> List.filterMap
+                            (\t ->
+                                case t of
+                                    Literal v ->
+                                        Just v
+
+                                    _ ->
+                                        Nothing
+                            )
+            in
+            if List.length literalValues == List.length allMembers then
+                let
+                    allStrings =
+                        literalValues
+                            |> List.all
+                                (\v ->
+                                    case Json.Decode.decodeValue Json.Decode.string v of
+                                        Ok _ ->
+                                            True
+
+                                        Err _ ->
+                                            False
+                                )
+                in
+                (if allStrings then
+                    [ ( "type", Encode.string "string" ) ]
+
+                 else
+                    []
+                )
+                    ++ [ ( "enum", Encode.list identity literalValues ) ]
+
+            else
+                [ ( "anyOf"
+                  , allMembers
+                        |> Encode.list toJsonSchema
+                  )
+                ]
 
         Tuple tupleTypes maybeRestType ->
             case maybeRestType of

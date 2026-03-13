@@ -54,7 +54,7 @@ suite =
                     |> JsonSchema.toJsonSchema
                     |> Encode.encode 0
                     |> Expect.equal """{"const":"literalString"}"""
-        , test "union" <|
+        , test "union of string literals becomes enum" <|
             \() ->
                 Union
                     ( Literal (Encode.string "guest")
@@ -62,7 +62,16 @@ suite =
                     )
                     |> JsonSchema.toJsonSchema
                     |> Encode.encode 0
-                    |> Expect.equal """{"anyOf":[{"const":"guest"},{"const":"admin"}]}"""
+                    |> Expect.equal """{"type":"string","enum":["guest","admin"]}"""
+        , test "union with non-literal members uses anyOf" <|
+            \() ->
+                Union
+                    ( String
+                    , [ Number ]
+                    )
+                    |> JsonSchema.toJsonSchema
+                    |> Encode.encode 0
+                    |> Expect.equal """{"anyOf":[{"type":"string"},{"type":"number"}]}"""
         , test "intersection" <|
             \() ->
                 Intersection
