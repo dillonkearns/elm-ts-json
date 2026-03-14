@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [2.1.2] - 2026-03-14
+
+### Changed
+
+- JSON Schema output now uses `enum` instead of `const` for literal values, improving compatibility with LLM tool-use providers (Anthropic, OpenAI, etc.).
+- JSON Schema output for unions of literal values uses `enum` with a `type` field when all values are strings, producing cleaner and more standard schemas.
+
 ## [2.1.1] - 2022-08-24
 
 ### Fixed
