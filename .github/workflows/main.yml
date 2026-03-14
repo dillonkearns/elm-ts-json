@@ -59,25 +59,7 @@ jobs:
       # - name: prettier
       #   run: npx --no-install prettier --check .
       - name: Build elm docs
-        id: docs
-        continue-on-error: true
         run: npx --no-install elm make --docs docs.json
-      - name: Commit generated docs for elm-doc-preview
-        uses: EndBug/add-and-commit@v9
-        with:
-          add: "docs.json"
-          author_name: GitHub Actions
-          author_email: dillon@incrementalelm.com
-          message: "Update docs.json from CI for elm-doc-preview."
-          push: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - uses: ouzi-dev/commit-status-updater@v2
-        with:
-          status: ${{ steps.docs.outcome }}
-          url: "https://elm-doc-preview.netlify.app/?repo=dillonkearns%2Felm-ts-interop&version=${{ github.SHA }}"
-          description: "View Elm doc preview."
-          name: "Elm Docs"
       - name: Elm Publish
         uses: dillonkearns/elm-publish-action@v2
         with:
