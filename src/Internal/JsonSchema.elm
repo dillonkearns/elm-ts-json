@@ -85,7 +85,22 @@ toJsonSchemaHelp tsType =
             []
 
         Literal literalJson ->
-            [ ( "const", literalJson ) ]
+            let
+                isString =
+                    case Decode.decodeValue Decode.string literalJson of
+                        Ok _ ->
+                            True
+
+                        Err _ ->
+                            False
+            in
+            (if isString then
+                [ ( "type", Encode.string "string" ) ]
+
+             else
+                []
+            )
+                ++ [ ( "enum", Encode.list identity [ literalJson ] ) ]
 
         Union nonEmptyTypes ->
             let

@@ -53,7 +53,7 @@ suite =
                 Literal (Encode.string "literalString")
                     |> JsonSchema.toJsonSchema
                     |> Encode.encode 0
-                    |> Expect.equal """{"const":"literalString"}"""
+                    |> Expect.equal """{"type":"string","enum":["literalString"]}"""
         , test "union of string literals becomes enum" <|
             \() ->
                 Union
