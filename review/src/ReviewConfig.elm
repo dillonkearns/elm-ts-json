@@ -21,6 +21,7 @@ import NoExposingEverything
 import NoImportingEverything
 import NoInconsistentAliases
 import NoMissingTypeAnnotation
+import NoMissingTypeAnnotationInLetIn
 import NoModuleOnExposedNames
 import NoUnused.CustomTypeConstructorArgs
 import NoUnused.CustomTypeConstructors
@@ -52,6 +53,7 @@ config =
 
     --, NoImportingEverything.rule []
     , NoMissingTypeAnnotation.rule
+    , NoMissingTypeAnnotationInLetIn.rule
 
     , NoInconsistentAliases.config
        [ ( "TsJson.Decode", "TsDecode" )

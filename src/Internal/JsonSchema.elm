@@ -2,6 +2,7 @@ module Internal.JsonSchema exposing (toJsonSchema, toJsonSchemaTopLevel)
 
 import Dict
 import Internal.TsJsonType exposing (PropertyOptionality(..), TsType(..))
+import Json.Decode as Decode
 import Json.Encode as Encode
 import List.NonEmpty
 
@@ -84,15 +85,72 @@ toJsonSchemaHelp tsType =
             []
 
         Literal literalJson ->
-            [ ( "const", literalJson ) ]
+            let
+                isString : Bool
+                isString =
+                    case Decode.decodeValue Decode.string literalJson of
+                        Ok _ ->
+                            True
+
+                        Err _ ->
+                            False
+            in
+            (if isString then
+                [ ( "type", Encode.string "string" ) ]
+
+             else
+                []
+            )
+                ++ [ ( "enum", Encode.list identity [ literalJson ] ) ]
 
         Union nonEmptyTypes ->
-            [ ( "anyOf"
-              , nonEmptyTypes
-                    |> List.NonEmpty.toList
-                    |> Encode.list toJsonSchema
-              )
-            ]
+            let
+                allMembers : List TsType
+                allMembers =
+                    List.NonEmpty.toList nonEmptyTypes
+
+                literalValues : List Encode.Value
+                literalValues =
+                    allMembers
+                        |> List.filterMap
+                            (\t ->
+                                case t of
+                                    Literal v ->
+                                        Just v
+
+                                    _ ->
+                                        Nothing
+                            )
+            in
+            if List.length literalValues == List.length allMembers then
+                let
+                    allStrings : Bool
+                    allStrings =
+                        literalValues
+                            |> List.all
+                                (\v ->
+                                    case Decode.decodeValue Decode.string v of
+                                        Ok _ ->
+                                            True
+
+                                        Err _ ->
+                                            False
+                                )
+                in
+                (if allStrings then
+                    [ ( "type", Encode.string "string" ) ]
+
+                 else
+                    []
+                )
+                    ++ [ ( "enum", Encode.list identity literalValues ) ]
+
+            else
+                [ ( "anyOf"
+                  , allMembers
+                        |> Encode.list toJsonSchema
+                  )
+                ]
 
         Tuple tupleTypes maybeRestType ->
             case maybeRestType of
@@ -128,6 +186,7 @@ toJsonSchemaHelp tsType =
 
         ArrayIndex first rest ->
             let
+                dict : Dict.Dict Int TsType
                 dict =
                     Dict.fromList (first :: rest)
 

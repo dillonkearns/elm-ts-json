@@ -12,9 +12,11 @@ suite =
             List.map
                 (\key ->
                     let
+                        quotedKey : String
                         quotedKey =
                             doubleQuoteforTest key
 
+                        testName : String
                         testName =
                             "key " ++ key ++ " should be quoted " ++ quotedKey
                     in
@@ -28,6 +30,7 @@ suite =
             List.map
                 (\key ->
                     let
+                        testName : String
                         testName =
                             "key " ++ key ++ " should not be quoted"
                     in

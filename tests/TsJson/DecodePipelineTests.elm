@@ -31,8 +31,11 @@ isError result =
 
 expectErr : { a | decoded : Result err ok } -> Expectation
 expectErr result =
-    isError result.decoded
-        |> Expect.true ("Expected an Err but got " ++ Debug.toString result)
+    if isError result.decoded then
+        Expect.pass
+
+    else
+        Expect.fail ("Expected an Err but got " ++ Debug.toString result)
 
 
 all : Test
