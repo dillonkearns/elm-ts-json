@@ -41,6 +41,7 @@ roundtrips fuzzer codec =
     fuzz fuzzer "is a roundtrip" <|
         \value ->
             let
+                encoded : Encode.Value
                 encoded =
                     value
                         |> TsEncode.encoder (TsCodec.encoder codec)
@@ -172,12 +173,14 @@ objectTests =
         ]
     , describe "nullableField vs maybeField" <|
         let
+            nullableCodec : Codec { f : Maybe Int }
             nullableCodec =
                 TsCodec.object
                     (\f -> { f = f })
                     |> TsCodec.nullableField "f" .f TsCodec.int
                     |> TsCodec.buildObject
 
+            maybeCodec : Codec { f : Maybe Int }
             maybeCodec =
                 TsCodec.object
                     (\f -> { f = f })
@@ -263,6 +266,7 @@ customTests =
         ]
     , describe "with 2 ctors, 0,1 args" <|
         let
+            match : TsEncode.UnionEncodeValue -> (Int -> TsEncode.UnionEncodeValue) -> Maybe Int -> TsEncode.UnionEncodeValue
             match fnothing fjust value =
                 case value of
                     Nothing ->
@@ -271,12 +275,14 @@ customTests =
                     Just v ->
                         fjust v
 
+            codec : Codec (Maybe Int)
             codec =
                 TsCodec.custom Nothing match
                     |> TsCodec.variant0 "Nothing" Nothing
                     |> TsCodec.positionalVariant1 "Just" Just TsCodec.int
                     |> TsCodec.buildCustom
 
+            fuzzers : List ( String, Fuzzer (Maybe Int) )
             fuzzers =
                 [ ( "1st ctor", Fuzz.constant Nothing )
                 , ( "2nd ctor", Fuzz.map Just Fuzz.int )

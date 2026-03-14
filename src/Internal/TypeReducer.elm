@@ -23,9 +23,11 @@ deduplicateBy toComparable list =
 union : List TsType -> TsType
 union tsTypes =
     let
+        withoutNevers : List TsType
         withoutNevers =
             tsTypes |> List.filter ((/=) TsNever)
 
+        hadNevers : Bool
         hadNevers =
             List.length tsTypes /= List.length withoutNevers
     in
@@ -65,6 +67,7 @@ mergeFields fields1 fields2 =
 simplifyIntersection : List TsType -> TsType
 simplifyIntersection types =
     let
+        thing : TsType
         thing =
             case types |> deduplicateBy TypeToString.toString of
                 [ single ] ->

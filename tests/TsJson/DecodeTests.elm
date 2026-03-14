@@ -101,6 +101,7 @@ suite =
         , test "andThen" <|
             \() ->
                 let
+                    example : AndThenContinuation (Int -> Decoder String)
                     example =
                         andThenInit
                             (\v1Decoder v2PlusDecoder version ->

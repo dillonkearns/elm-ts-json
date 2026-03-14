@@ -86,6 +86,7 @@ toJsonSchemaHelp tsType =
 
         Literal literalJson ->
             let
+                isString : Bool
                 isString =
                     case Decode.decodeValue Decode.string literalJson of
                         Ok _ ->
@@ -104,9 +105,11 @@ toJsonSchemaHelp tsType =
 
         Union nonEmptyTypes ->
             let
+                allMembers : List TsType
                 allMembers =
                     List.NonEmpty.toList nonEmptyTypes
 
+                literalValues : List Encode.Value
                 literalValues =
                     allMembers
                         |> List.filterMap
@@ -121,6 +124,7 @@ toJsonSchemaHelp tsType =
             in
             if List.length literalValues == List.length allMembers then
                 let
+                    allStrings : Bool
                     allStrings =
                         literalValues
                             |> List.all
@@ -182,6 +186,7 @@ toJsonSchemaHelp tsType =
 
         ArrayIndex first rest ->
             let
+                dict : Dict.Dict Int TsType
                 dict =
                     Dict.fromList (first :: rest)
 

@@ -886,9 +886,11 @@ variant_ :
     -> CustomCodec b v
 variant_ name argTypes matchPiece decoderPiece (CustomCodec am) =
     let
+        discriminant : String
         discriminant =
             am.discriminant |> Maybe.withDefault "tag"
 
+        thing : Encoder (List Encode.Value)
         thing =
             TsEncode.object
                 [ TsEncode.required discriminant identity (TsEncode.literal (Encode.string name))
@@ -899,6 +901,7 @@ variant_ name argTypes matchPiece decoderPiece (CustomCodec am) =
         enc =
             thing |> TsEncode.encoder
 
+        thisType : TsType
         thisType =
             TsType.TypeObject
                 [ ( TsType.Required, discriminant, TsType.Literal (Encode.string name) )
@@ -925,6 +928,7 @@ namedVariant_ :
     -> CustomCodec b v
 namedVariant_ name argTypes matchPiece decoderPiece (CustomCodec am) =
     let
+        discriminant : String
         discriminant =
             am.discriminant |> Maybe.withDefault "tag"
 

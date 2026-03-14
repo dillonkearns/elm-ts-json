@@ -50,6 +50,7 @@ toString tsType_ =
                         |> List.map
                             (\( optionality, key, tsType__ ) ->
                                 let
+                                    quotedKey : String
                                     quotedKey =
                                         quoteObjectKey key
                                 in
@@ -72,6 +73,7 @@ toString tsType_ =
 
         Tuple tsTypes maybeRestType ->
             let
+                restTypePart : Maybe String
                 restTypePart =
                     maybeRestType
                         |> Maybe.map
@@ -101,6 +103,7 @@ toString tsType_ =
 
         ArrayIndex ( index, tsType ) otherIndices ->
             let
+                dict : Dict.Dict Int TsType
                 dict =
                     Dict.fromList
                         (( index, tsType )
@@ -140,6 +143,7 @@ parenthesize string =
 parenthesizeToString : TsType -> String
 parenthesizeToString type_ =
     let
+        needsParens : Bool
         needsParens =
             case type_ of
                 Union types ->
@@ -175,6 +179,7 @@ isIdentifier =
 quoteObjectKey : String -> String
 quoteObjectKey key =
     let
+        needsQuotes : Bool
         needsQuotes =
             isIdentifier key
     in

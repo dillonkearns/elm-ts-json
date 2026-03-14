@@ -494,6 +494,7 @@ unknownAndThen function (Decoder innerDecoder innerType) =
 andThen : AndThenContinuation (value -> Decoder decodesTo) -> Decoder value -> Decoder decodesTo
 andThen (StaticAndThen function tsTypes) (Decoder innerDecoder innerType) =
     let
+        andThenDecoder_ : value -> Decode.Decoder decodesTo
         andThenDecoder_ =
             \value_ ->
                 case function value_ of
@@ -538,6 +539,7 @@ discriminatedUnion :
     -> Decoder decoded
 discriminatedUnion discriminantField decoders =
     let
+        table : Dict.Dict String (Decoder decoded)
         table =
             Dict.fromList decoders
     in
@@ -767,6 +769,7 @@ is for the malformed version to fail, which is exactly what this function will d
 optionalField : String -> Decoder value -> Decoder (Maybe value)
 optionalField fieldName (Decoder innerDecoder innerType) =
     let
+        finishDecoding : Decode.Value -> Decode.Decoder (Maybe value)
         finishDecoding json =
             case Decode.decodeValue (Decode.field fieldName Decode.value) json of
                 Ok val ->
