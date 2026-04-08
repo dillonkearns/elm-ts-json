@@ -318,6 +318,30 @@ customTests =
             |> roundtripsTest "codec type"
                 codec
                 """{ args : [ number, number ]; tag : "Just" } | { tag : "Nothing" }"""
+    , describe "with 2 ctors, 0,2 args, custom discriminant" <|
+        let
+            match : TsEncode.UnionEncodeValue -> (Int -> Int -> TsEncode.UnionEncodeValue) -> Maybe ( Int, Int ) -> TsEncode.UnionEncodeValue
+            match fnothing fjust value =
+                case value of
+                    Nothing ->
+                        fnothing
+
+                    Just ( v1, v2 ) ->
+                        fjust v1 v2
+
+            codec : Codec (Maybe ( Int, Int ))
+            codec =
+                TsCodec.custom (Just "MyTag") match
+                    |> TsCodec.variant0 "Nothing" Nothing
+                    |> TsCodec.positionalVariant2 "Just" (\first second -> Just ( first, second )) TsCodec.int TsCodec.int
+                    |> TsCodec.buildCustom
+        in
+        [ ( "1st ctor", Fuzz.constant Nothing )
+        , ( "2nd ctor", Fuzz.map2 (\a b -> Just ( a, b )) Fuzz.int Fuzz.int )
+        ]
+            |> roundtripsTest "codec type"
+                codec
+                """{ MyTag : "Just"; args : [ number, number ] } | { MyTag : "Nothing" }"""
     , describe "with 3 ctors, 0,3 args" <|
         let
             codec : Codec MyCustomType
