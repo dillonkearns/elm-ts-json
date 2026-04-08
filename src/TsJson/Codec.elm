@@ -551,7 +551,7 @@ positionalVariant1 :
     -> Codec arg1
     -> CustomCodec ((arg1 -> TsEncode.UnionEncodeValue) -> c) v
     -> CustomCodec c v
-positionalVariant1 name constructor arg1Codec codec =
+positionalVariant1 name constructor arg1Codec (CustomCodec codec) =
     variant_ name
         [ tsType arg1Codec
         ]
@@ -563,9 +563,9 @@ positionalVariant1 name constructor arg1Codec codec =
         )
         (Decode.map constructor
             (variantArgDecoder 0 arg1Codec)
-            |> variantArgsDecoder name
+            |> variantArgsDecoder codec.discriminant name
         )
-        codec
+        (CustomCodec codec)
 
 
 {-| Define a variant with 2 parameters for a custom type.
@@ -577,7 +577,7 @@ positionalVariant2 :
     -> Codec arg2
     -> CustomCodec ((arg1 -> arg2 -> TsEncode.UnionEncodeValue) -> c) v
     -> CustomCodec c v
-positionalVariant2 name constructor arg1Codec arg2Codec codec =
+positionalVariant2 name constructor arg1Codec arg2Codec (CustomCodec codec) =
     variant_ name
         [ tsType arg1Codec
         , tsType arg2Codec
@@ -592,9 +592,9 @@ positionalVariant2 name constructor arg1Codec arg2Codec codec =
         (Decode.map2 constructor
             (variantArgDecoder 0 arg1Codec)
             (variantArgDecoder 1 arg2Codec)
-            |> variantArgsDecoder name
+            |> variantArgsDecoder codec.discriminant name
         )
-        codec
+        (CustomCodec codec)
 
 
 {-| Define a variant with 3 parameters for a custom type.
@@ -607,7 +607,7 @@ positionalVariant3 :
     -> Codec arg3
     -> CustomCodec ((arg1 -> arg2 -> arg3 -> TsEncode.UnionEncodeValue) -> partial) v
     -> CustomCodec partial v
-positionalVariant3 name constructor arg1Codec arg2Codec arg3Codec codec =
+positionalVariant3 name constructor arg1Codec arg2Codec arg3Codec (CustomCodec codec) =
     variant_ name
         [ tsType arg1Codec
         , tsType arg2Codec
@@ -625,9 +625,9 @@ positionalVariant3 name constructor arg1Codec arg2Codec arg3Codec codec =
             (variantArgDecoder 0 arg1Codec)
             (variantArgDecoder 1 arg2Codec)
             (variantArgDecoder 2 arg3Codec)
-            |> variantArgsDecoder name
+            |> variantArgsDecoder codec.discriminant name
         )
-        codec
+        (CustomCodec codec)
 
 
 {-| Define a variant with 3 parameters for a custom type.
@@ -641,7 +641,7 @@ positionalVariant4 :
     -> Codec arg4
     -> CustomCodec ((arg1 -> arg2 -> arg3 -> arg4 -> TsEncode.UnionEncodeValue) -> partial) v
     -> CustomCodec partial v
-positionalVariant4 name constructor arg1Codec arg2Codec arg3Codec arg4Codec codec =
+positionalVariant4 name constructor arg1Codec arg2Codec arg3Codec arg4Codec (CustomCodec codec) =
     variant_ name
         [ tsType arg1Codec
         , tsType arg2Codec
@@ -662,9 +662,9 @@ positionalVariant4 name constructor arg1Codec arg2Codec arg3Codec arg4Codec code
             (variantArgDecoder 1 arg2Codec)
             (variantArgDecoder 2 arg3Codec)
             (variantArgDecoder 3 arg4Codec)
-            |> variantArgsDecoder name
+            |> variantArgsDecoder codec.discriminant name
         )
-        codec
+        (CustomCodec codec)
 
 
 {-| Define a variant with 3 parameters for a custom type.
@@ -679,7 +679,7 @@ positionalVariant5 :
     -> Codec arg5
     -> CustomCodec ((arg1 -> arg2 -> arg3 -> arg4 -> arg5 -> TsEncode.UnionEncodeValue) -> partial) v
     -> CustomCodec partial v
-positionalVariant5 name constructor arg1Codec arg2Codec arg3Codec arg4Codec arg5Codec codec =
+positionalVariant5 name constructor arg1Codec arg2Codec arg3Codec arg4Codec arg5Codec (CustomCodec codec) =
     variant_ name
         [ tsType arg1Codec
         , tsType arg2Codec
@@ -703,9 +703,9 @@ positionalVariant5 name constructor arg1Codec arg2Codec arg3Codec arg4Codec arg5
             (variantArgDecoder 2 arg3Codec)
             (variantArgDecoder 3 arg4Codec)
             (variantArgDecoder 4 arg5Codec)
-            |> variantArgsDecoder name
+            |> variantArgsDecoder codec.discriminant name
         )
-        codec
+        (CustomCodec codec)
 
 
 {-| Define a variant with 3 parameters for a custom type.
@@ -721,7 +721,7 @@ positionalVariant6 :
     -> Codec arg6
     -> CustomCodec ((arg1 -> arg2 -> arg3 -> arg4 -> arg5 -> arg6 -> TsEncode.UnionEncodeValue) -> partial) v
     -> CustomCodec partial v
-positionalVariant6 name constructor arg1Codec arg2Codec arg3Codec arg4Codec arg5Codec arg6Codec codec =
+positionalVariant6 name constructor arg1Codec arg2Codec arg3Codec arg4Codec arg5Codec arg6Codec (CustomCodec codec) =
     variant_ name
         [ tsType arg1Codec
         , tsType arg2Codec
@@ -748,9 +748,9 @@ positionalVariant6 name constructor arg1Codec arg2Codec arg3Codec arg4Codec arg5
             (variantArgDecoder 3 arg4Codec)
             (variantArgDecoder 4 arg5Codec)
             (variantArgDecoder 5 arg6Codec)
-            |> variantArgsDecoder name
+            |> variantArgsDecoder codec.discriminant name
         )
-        codec
+        (CustomCodec codec)
 
 
 {-| Define a variant with 3 parameters for a custom type.
@@ -767,7 +767,7 @@ positionalVariant7 :
     -> Codec arg7
     -> CustomCodec ((arg1 -> arg2 -> arg3 -> arg4 -> arg5 -> arg6 -> arg7 -> TsEncode.UnionEncodeValue) -> partial) v
     -> CustomCodec partial v
-positionalVariant7 name constructor arg1Codec arg2Codec arg3Codec arg4Codec arg5Codec arg6Codec arg7Codec codec =
+positionalVariant7 name constructor arg1Codec arg2Codec arg3Codec arg4Codec arg5Codec arg6Codec arg7Codec (CustomCodec codec) =
     variant_ name
         [ tsType arg1Codec
         , tsType arg2Codec
@@ -797,9 +797,9 @@ positionalVariant7 name constructor arg1Codec arg2Codec arg3Codec arg4Codec arg5
             (variantArgDecoder 4 arg5Codec)
             (variantArgDecoder 5 arg6Codec)
             (variantArgDecoder 6 arg7Codec)
-            |> variantArgsDecoder name
+            |> variantArgsDecoder codec.discriminant name
         )
-        codec
+        (CustomCodec codec)
 
 
 {-| Define a variant with 3 parameters for a custom type.
@@ -817,7 +817,7 @@ positionalVariant8 :
     -> Codec arg8
     -> CustomCodec ((arg1 -> arg2 -> arg3 -> arg4 -> arg5 -> arg6 -> arg7 -> arg8 -> TsEncode.UnionEncodeValue) -> partial) v
     -> CustomCodec partial v
-positionalVariant8 name constructor arg1Codec arg2Codec arg3Codec arg4Codec arg5Codec arg6Codec arg7Codec arg8Codec codec =
+positionalVariant8 name constructor arg1Codec arg2Codec arg3Codec arg4Codec arg5Codec arg6Codec arg7Codec arg8Codec (CustomCodec codec) =
     variant_ name
         [ tsType arg1Codec
         , tsType arg2Codec
@@ -850,9 +850,9 @@ positionalVariant8 name constructor arg1Codec arg2Codec arg3Codec arg4Codec arg5
             (variantArgDecoder 5 arg6Codec)
             (variantArgDecoder 6 arg7Codec)
             (variantArgDecoder 7 arg8Codec)
-            |> variantArgsDecoder name
+            |> variantArgsDecoder codec.discriminant name
         )
-        codec
+        (CustomCodec codec)
 
 
 variantArgDecoder : Int -> Codec a -> Decode.Decoder a
@@ -860,8 +860,8 @@ variantArgDecoder index codec =
     decoder codec |> TsDecode.decoder |> Decode.index index
 
 
-variantArgsDecoder : String -> Decode.Decoder a -> Decode.Decoder a
-variantArgsDecoder expectedTagName argsDecoder =
+variantArgsDecoder : Maybe String -> String -> Decode.Decoder a -> Decode.Decoder a
+variantArgsDecoder discriminant expectedTagName argsDecoder =
     Decode.map2 (\() v -> v)
         (Decode.string
             |> Decode.andThen
@@ -872,7 +872,7 @@ variantArgsDecoder expectedTagName argsDecoder =
                     else
                         Decode.fail ("Expected the following tag: " ++ expectedTagName)
                 )
-            |> Decode.field "tag"
+            |> Decode.field (Maybe.withDefault "tag" discriminant)
         )
         (Decode.field "args" argsDecoder)
 
