@@ -342,6 +342,40 @@ customTests =
             |> roundtripsTest "codec type"
                 codec
                 """{ MyTag : "Just"; args : [ number, number ] } | { MyTag : "Nothing" }"""
+    , describe "custom discriminant decodes correctly" <|
+        let
+            match : TsEncode.UnionEncodeValue -> (Int -> TsEncode.UnionEncodeValue) -> Maybe Int -> TsEncode.UnionEncodeValue
+            match fnothing fjust value =
+                case value of
+                    Nothing ->
+                        fnothing
+
+                    Just v ->
+                        fjust v
+
+            codec : Codec (Maybe Int)
+            codec =
+                TsCodec.custom (Just "kind") match
+                    |> TsCodec.variant0 "Nothing" Nothing
+                    |> TsCodec.positionalVariant1 "Just" Just TsCodec.int
+                    |> TsCodec.buildCustom
+        in
+        [ test "decodes positional variant with custom discriminant" <|
+            \_ ->
+                """{"kind": "Just", "args": [42]}"""
+                    |> Decode.decodeString (TsCodec.decoder codec |> TsDecode.decoder)
+                    |> Expect.equal (Ok (Just 42))
+        , test "decodes variant0 with custom discriminant" <|
+            \_ ->
+                """{"kind": "Nothing"}"""
+                    |> Decode.decodeString (TsCodec.decoder codec |> TsDecode.decoder)
+                    |> Expect.equal (Ok Nothing)
+        , test "rejects wrong discriminant field name" <|
+            \_ ->
+                """{"tag": "Just", "args": [42]}"""
+                    |> Decode.decodeString (TsCodec.decoder codec |> TsDecode.decoder)
+                    |> Expect.err
+        ]
     , describe "with 3 ctors, 0,3 args" <|
         let
             codec : Codec MyCustomType
