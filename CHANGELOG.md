@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [2.1.3] - 2026-04-08
+
+### Fixed
+
+- `positionalVariant` decoders now respect custom discriminant fields set via `custom`. Previously, they hardcoded `"tag"` as the discriminant field name, causing decode failures when a custom discriminant was used. See [#20](https://github.com/dillonkearns/elm-ts-json/pull/20). Thank you [@kageurufu](https://github.com/kageurufu) for the fix!
+
 ## [2.1.2] - 2026-03-14
 
 ### Changed
